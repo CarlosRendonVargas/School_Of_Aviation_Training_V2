@@ -1,0 +1,36 @@
+{
+  "appId": "com.escuela.rac141",
+  "appName": "RAC 141 Aviación",
+  "webDir": "dist/capacitor/www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0a0c10",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#0a0c10"
+    }
+  },
+  "android": {
+    "backgroundColor": "#0a0c10",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0a0c10",
+    "preferredContentMode": "mobile",
+    "scheme": "rac141"
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  }
+}

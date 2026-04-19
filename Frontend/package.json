@@ -1,0 +1,38 @@
+{
+  "name": "rac141-escuela-aviacion",
+  "version": "1.0.0",
+  "description": "Sistema RAC 141 Colombia",
+  "productName": "School Of Training Aviation",
+  "author": "Escuela de Aviación",
+  "private": true,
+  "scripts": {
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "build:pwa": "quasar build -m pwa",
+    "build:android": "quasar build -m capacitor -T android",
+    "lint": "eslint --ext .js,.vue ./src"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.12",
+    "axios": "^1.7.9",
+    "chart.js": "^4.4.7",
+    "dayjs": "^1.11.13",
+    "pinia": "^2.3.1",
+    "quasar": "^2.17.4",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@quasar/app-vite": "^2.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "sass": "^1.83.4",
+    "vite": "^6.0.7"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

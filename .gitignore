@@ -1,0 +1,17 @@
+/Backend/vendor/
+/Backend/storage/*.key
+/Backend/.env
+/Backend/public/storage
+/Backend/storage/framework/cache/data/*
+/Backend/storage/framework/sessions/*
+/Backend/storage/framework/testing/*
+/Backend/storage/framework/views/*
+/Backend/storage/logs/*
+
+/Frontend/node_modules/
+/Frontend/.quasar/
+/Frontend/dist/
+/Frontend/.env
+/Frontend/.env.xampp
+/Frontend/.env.local
+/Frontend/node_modules/

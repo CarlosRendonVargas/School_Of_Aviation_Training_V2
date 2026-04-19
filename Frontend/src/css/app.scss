@@ -1,0 +1,187 @@
+// src/css/app.scss — Global Design System: SCHOOL OF AVIATION PREMIUM (RAC 141)
+
+// Premium Typography
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --rac-bg: #05070a;
+  --rac-card-bg: rgba(15, 23, 42, 0.65);
+  --rac-primary: #A10B13; // COLOR CORPORATIVO ROJO
+  --rac-secondary: #0f172a;
+  --rac-accent: #f8fafc;
+  --rac-emerald: #10b981;
+  --rac-amber: #f59e0b;
+  --rac-border: rgba(255, 255, 255, 0.08);
+  --rac-glass-blur: blur(12px);
+  --rac-shadow-glow: 0 8px 32px rgba(161, 11, 19, 0.15);
+}
+
+body { 
+  font-family: 'Outfit', sans-serif; 
+  background-color: var(--rac-bg); 
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(161, 11, 19, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(161, 11, 19, 0.03) 0%, transparent 40%);
+  background-attachment: fixed;
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono { font-family: 'JetBrains Mono', monospace !important; }
+.font-head { font-family: 'Syne', sans-serif !important; }
+
+// Premium Card System
+.card-rac {
+  background: var(--rac-card-bg) !important;
+  backdrop-filter: var(--rac-glass-blur);
+  border: 1px solid var(--rac-border);
+  border-radius: 16px;
+  box-shadow: var(--rac-shadow-glow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(161, 11, 19, 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  &:hover { 
+    transform: translateY(-4px);
+    border-color: rgba(161, 11, 19, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+    &::before { opacity: 1; }
+  }
+}
+
+// Global Glassmorphism Class
+.premium-glass-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+// Improved Badges
+.rac-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &.activo    { background: rgba(16, 185, 129, 0.1);  color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+  &.vencido   { background: rgba(161, 11, 19, 0.1);   color: #fb7185; border: 1px solid rgba(161, 11, 19, 0.2); }
+  &.proximo   { background: rgba(245, 158, 11, 0.1);  color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+  &.info      { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }
+}
+
+// High-End Tables
+.rac-table {
+  background: transparent !important;
+  .q-table__top, .q-table__bottom { 
+    background: transparent;
+    color: #94a3b8;
+  }
+  
+  thead tr th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 2px solid rgba(161, 11, 19, 0.2);
+    font-weight: 700;
+  }
+  
+  tbody tr {
+    transition: background 0.2s;
+    &:hover { background: rgba(161, 11, 19, 0.03) !important; }
+    td { border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+  }
+}
+
+// Global Buttons Enhancement
+.q-btn.premium-btn {
+  border-radius: 10px;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  &:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(161, 11, 19, 0.2); }
+  &:active { transform: scale(0.95); }
+}
+
+// Glass Button (Floating Effect)
+.glass-btn {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  &:hover { background: rgba(255, 255, 255, 0.08); }
+}
+
+// Sidebar Customization
+.menu-item {
+  border-radius: 12px;
+  margin: 4px 12px;
+  padding: 8px 12px;
+  transition: all 0.3s;
+  color: #94a3b8;
+  
+  .q-item__section--avatar { min-width: 40px; }
+  
+  &:hover { 
+    background: rgba(255, 255, 255, 0.05); 
+    color: white;
+  }
+  
+  &.q-router-link--active {
+    background: linear-gradient(90deg, rgba(161, 11, 19, 0.2), transparent) !important;
+    color: #f8fafc !important;
+    border-left: 3px solid var(--rac-primary);
+    .q-icon { color: var(--rac-primary) !important; filter: drop-shadow(0 0 5px rgba(161, 11, 19, 0.5)); }
+  }
+}
+
+// Gradients and Glows
+.bg-primary-gradient { background: linear-gradient(135deg, #A10B13 0%, #6b070c 100%); }
+
+// Animated Glows
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 5px rgba(161, 11, 19, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(161, 11, 19, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(161, 11, 19, 0.2); }
+}
+
+.glow-primary { animation: glow-pulse 3s infinite; }
+
+// Scrollbar Styling
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(161, 11, 19, 0.3); }
+
+// Layout Utilities
+.rac-page-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.text-gradient-white {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
