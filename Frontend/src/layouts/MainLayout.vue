@@ -58,7 +58,7 @@
                   <q-item-section avatar><q-icon name="person_outline" size="20px" /></q-item-section>
                   <q-item-section>Mi Perfil Aeronáutico</q-item-section>
                 </q-item>
-                <q-item clickable v-ripple @click="$router.push('/perfil')" class="border-radius-8">
+                <q-item clickable v-ripple @click="$router.push('/configuracion')" class="border-radius-8">
                   <q-item-section avatar><q-icon name="settings" size="20px" /></q-item-section>
                   <q-item-section>Configuración</q-item-section>
                 </q-item>
@@ -139,7 +139,7 @@
     </q-drawer>
 
     <!-- ═══════ MAIN VIEWPORT ═══════ -->
-    <q-page-container class="main-container">
+    <q-page-container class="main-container" :class="$q.screen.lt.md ? 'mobile-container' : ''">
       <router-view v-slot="{ Component, route: routeProp }">
         <transition 
           name="fade-slide"
@@ -152,16 +152,18 @@
     </q-page-container>
 
     <!-- ═══════ MOBILE NAV ═══════ -->
-    <div v-if="$q.screen.lt.md" class="mobile-nav-bar glass-morphism">
+    <div v-if="$q.screen.lt.md" class="mobile-nav-bar">
       <q-tabs
         dense
-        active-color="primary"
-        indicator-color="transparent"
+        active-color="red-9"
+        indicator-color="red-9"
         class="text-grey-6 full-width"
-        style="height: 60px"
+        style="height: 56px"
+        no-caps
       >
         <q-route-tab v-for="item in menuMovil" :key="item.to" 
-          :to="item.to" :icon="item.icono" :label="item.label" no-caps />
+          :to="item.to" :icon="item.icono" :label="item.label"
+          class="mobile-tab-item" />
       </q-tabs>
     </div>
 
@@ -279,14 +281,20 @@ onMounted(() => {
   min-height: 100vh;
 }
 
+// Add bottom padding on mobile to avoid content hidden behind nav bar
+.mobile-container {
+  padding-bottom: 72px !important;
+}
+
 .glow-avatar {
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
 .premium-avatar-btn:hover .glow-avatar {
   transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(161, 11, 19, 0.3);
 }
 
 .border-radius-8 { border-radius: 8px; }
@@ -295,25 +303,40 @@ onMounted(() => {
   background: linear-gradient(0deg, rgba(255,255,255,0.02) 0%, transparent 100%);
 }
 
+// Mobile Bottom Navigation Bar
 .mobile-nav-bar {
   position: fixed;
-  bottom: 0px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 60px;
-  background: rgba(5, 7, 10, 0.85);
-  backdrop-filter: blur(15px);
-  border-top: 1px solid rgba(255,255,255,0.06);
+  // Support iPhone notch / safe area
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(5, 7, 10, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.07);
   z-index: 2000;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.4);
 }
 
-/* Transitions */
-.fade-slide-enter-active, .fade-slide-leave-active {
-  transition: all 0.25s ease-out;
+.mobile-tab-item {
+  font-size: 10px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px;
+  min-width: 0 !important;
+  padding: 0 4px !important;
 }
-.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
-.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* Page Transitions */
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.22s ease-out;
+}
+.fade-slide-enter-from { opacity: 0; transform: translateY(8px); }
+.fade-slide-leave-to   { opacity: 0; transform: translateY(-8px); }
 
 .hide-mobile {
-  @media (max-width: 600px) { display: none; }
+  @media (max-width: 600px) { display: none !important; }
 }
 </style>

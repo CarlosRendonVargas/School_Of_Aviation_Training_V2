@@ -72,11 +72,15 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       try {
         await api.post('/auth/logout')
+      } catch (error) {
+        console.warn('Sesión ya invalidada en el backend o error al cerrar sesión.')
       } finally {
         this.token   = null
         this.usuario = null
         localStorage.removeItem('rac141_token')
         localStorage.removeItem('rac141_usuario')
+        // El interceptor de axios en boot/axios.js también redirige al login si hubo 401,
+        // pero aquí nos aseguramos de limpiar el estado sin fallar
       }
     },
 

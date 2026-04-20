@@ -1,135 +1,100 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
-      <q-page class="window-height row items-center justify-center"
-        style="background: radial-gradient(ellipse at top, #0d1520 0%, #0a0c10 70%)">
-
-    <div class="col-xs-11 col-sm-8 col-md-4 col-lg-3" style="max-width:400px; z-index:1">
-
-      <!-- Logo -->
-      <div class="text-center q-mb-xl">
-        <div class="row justify-center items-center q-mb-md">
-          <img src="https://i.ibb.co/8DW6rNGm/LOGO.jpg"
-            style="height:100px; width:auto; object-fit:contain; border-radius:8px;">
+      <q-page class="window-height row items-center justify-center login-page-bg overflow-hidden">
+        
+        <!-- ELEMENTOS ATMOSFÉRICOS -->
+        <div class="absolute-full overflow-hidden no-pointer-events">
+          <div class="glow-orb orb-1"></div>
+          <div class="glow-orb orb-2"></div>
         </div>
-        <div class="font-head text-white" style="font-size:26px; font-weight:800; letter-spacing:.5px; line-height: 1.1;">
-          SCHOOL <span style="color: #A10B13;">OF</span> TRAINING<br>
-          <span style="font-size: 14px; letter-spacing: 4px; font-family: 'JetBrains Mono', monospace; font-weight: normal; color: #94a3b8;">AVIATION</span>
-        </div>
-        <div class="font-mono q-mt-md" style="font-size:10px; color:#475569; letter-spacing:2px; text-transform:uppercase">
-          Recuperar Contraseña
-        </div>
-      </div>
 
-      <q-card flat style="background:#0f1218; border:1px solid rgba(255,255,255,.09); border-radius:14px">
-        <q-card-section class="q-pa-xl">
-
-          <!-- Paso 1: ingresar email -->
-          <template v-if="paso === 1">
-            <div style="font-size:13px; color:#94a3b8; margin-bottom:20px; line-height:1.6">
-              Ingrese su correo electrónico. Le enviaremos un enlace para restablecer su contraseña.
-            </div>
-
-            <q-form @submit.prevent="enviarSolicitud" class="q-gutter-md">
-              <div>
-                <div class="font-mono q-mb-xs" style="font-size:10px; color:#64748b; letter-spacing:1px; text-transform:uppercase">
-                  Correo electrónico
-                </div>
-                <q-input v-model="email" type="email" outlined dense dark bg-color="grey-10"
-                  placeholder="usuario@escuela.com" :disable="cargando"
-                  :rules="[v => !!v || 'Requerido', v => /.+@.+\..+/.test(v) || 'Email inválido']"
-                  lazy-rules>
-                  <template #prepend><q-icon name="email" color="grey-6" size="18px" /></template>
-                </q-input>
-              </div>
-
-              <q-btn type="submit" unelevated color="primary" class="full-width"
-                style="height:44px; border-radius:8px; font-weight:600"
-                :loading="cargando" :disable="cargando"
-                label="Enviar instrucciones" />
-            </q-form>
-          </template>
-
-          <!-- Paso 2: confirmación enviada -->
-          <template v-else-if="paso === 2">
-            <div class="text-center q-py-md">
-              <q-icon name="mark_email_read" color="positive" size="56px" class="q-mb-md" />
-              <div class="font-head text-white" style="font-size:18px; font-weight:700; margin-bottom:8px">
-                Correo enviado
-              </div>
-              <div style="font-size:13px; color:#94a3b8; line-height:1.6">
-                Si el correo <strong class="text-primary">{{ email }}</strong> está registrado en el sistema,
-                recibirá un enlace para restablecer su contraseña.
-              </div>
-              <div class="q-mt-md font-mono" style="font-size:11px; color:#475569">
-                Revise también su carpeta de spam.
-              </div>
-            </div>
-          </template>
-
-          <!-- Paso 3: nueva contraseña (viene del link del correo con ?token=) -->
-          <template v-else-if="paso === 3">
-            <div style="font-size:13px; color:#94a3b8; margin-bottom:20px">
-              Ingrese su nueva contraseña.
-            </div>
-            <q-form @submit.prevent="resetearPassword" class="q-gutter-md">
-              <q-input v-model="formReset.password" :type="showPwd1 ? 'text' : 'password'"
-                outlined dense dark bg-color="grey-10" label="Nueva contraseña"
-                :rules="[v => !!v || 'Requerido', v => v.length >= 8 || 'Mínimo 8 caracteres']"
-                lazy-rules>
-                <template #append>
-                  <q-icon :name="showPwd1 ? 'visibility_off' : 'visibility'" class="cursor-pointer"
-                    color="grey-6" @click="showPwd1 = !showPwd1" />
-                </template>
-              </q-input>
-
-              <q-input v-model="formReset.password_confirmation" :type="showPwd2 ? 'text' : 'password'"
-                outlined dense dark bg-color="grey-10" label="Confirmar contraseña"
-                :rules="[v => v === formReset.password || 'Las contraseñas no coinciden']"
-                lazy-rules>
-                <template #append>
-                  <q-icon :name="showPwd2 ? 'visibility_off' : 'visibility'" class="cursor-pointer"
-                    color="grey-6" @click="showPwd2 = !showPwd2" />
-                </template>
-              </q-input>
-
-              <q-banner v-if="errorMsg" dense rounded
-                style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#fca5a5; border-radius:8px; font-size:13px">
-                <template #avatar><q-icon name="error_outline" color="negative" /></template>
-                {{ errorMsg }}
-              </q-banner>
-
-              <q-btn type="submit" unelevated color="primary" class="full-width"
-                style="height:44px; border-radius:8px; font-weight:600"
-                :loading="cargando" label="Restablecer contraseña" />
-            </q-form>
-          </template>
-
-          <!-- Paso 4: éxito reset -->
-          <template v-else-if="paso === 4">
-            <div class="text-center q-py-md">
-              <q-icon name="lock_reset" color="positive" size="56px" class="q-mb-md" />
-              <div class="font-head text-white" style="font-size:18px; font-weight:700; margin-bottom:8px">
-                Contraseña restablecida
-              </div>
-              <div style="font-size:13px; color:#94a3b8; margin-bottom:24px">
-                Su contraseña fue actualizada exitosamente.
-              </div>
-              <q-btn unelevated color="primary" label="Ir al login" to="/login" no-caps
-                style="border-radius:8px; padding:10px 32px; font-weight:600" />
-            </div>
-          </template>
-
-          <!-- Volver al login -->
-          <div class="text-center q-mt-lg" v-if="paso !== 4">
-            <router-link to="/login" style="font-size:12px; color:#60a5fa; text-decoration:none">
-              ← Volver al inicio de sesión
-            </router-link>
+        <div class="col-xs-11 col-sm-6 col-md-4 col-lg-3 animate-fade" style="max-width: 420px; z-index: 10;">
+          
+          <!-- BRANDING -->
+          <div class="text-center q-mb-xl">
+             <div class="logo-container q-mb-lg">
+                <img src="https://i.ibb.co/8DW6rNGm/LOGO.jpg" class="premium-logo shadow-24" />
+             </div>
+             <div class="font-head text-white text-h4 text-weight-bolder tracking-tighter line-height-1">
+               RECUPERACIÓN <span class="text-red-9">.</span>
+             </div>
+             <div class="font-mono text-grey-5 q-mt-xs tracking-widest uppercase" style="font-size: 11px">
+               Soporte Técnico de Red
+             </div>
           </div>
-        </q-card-section>
-      </q-card>
-    </div>
-  </q-page>
+
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top">
+            <q-card-section class="q-pa-none">
+
+              <!-- PASO 1: SOLICITUD -->
+              <template v-if="paso === 1">
+                <div class="text-caption text-grey-5 font-mono q-mb-xl text-center line-height-1" style="font-size: 11px">
+                  INGRESE SU EMAIL REGISTRADO PARA RECIBIR INSTRUCCIONES DE RESTABLECIMIENTO.
+                </div>
+                <q-form @submit.prevent="enviarSolicitud" class="q-gutter-y-lg">
+                   <div>
+                      <div class="text-caption text-grey-6 font-mono q-mb-xs uppercase" style="font-size: 9px">Correo de Recuperación</div>
+                      <q-input v-model="email" type="email" filled dark dense class="premium-input-login" placeholder="usuario@mail.com" :rules="[v => !!v || 'Requerido']" hide-bottom-space>
+                         <template #prepend><q-icon name="send" color="red-9" size="20px" /></template>
+                      </q-input>
+                   </div>
+                   <q-btn type="submit" unelevated color="red-9" class="full-width premium-btn q-py-md" :loading="cargando" label="Enviar Vínculo" />
+                </q-form>
+              </template>
+
+              <!-- PASO 2: CONFIRMACIÓN -->
+              <template v-else-if="paso === 2">
+                <div class="text-center q-py-md">
+                   <q-icon name="mark_email_read" color="emerald" size="80px" class="q-mb-lg shadow-glow-emerald" />
+                   <div class="text-h6 text-white font-head q-mb-md">Enlace de Seguridad Enviada</div>
+                   <div class="text-caption text-grey-5 font-mono line-height-1" style="font-size: 11px">
+                      SI EL CORREO <span class="text-white text-weight-bold">{{ email }}</span> EXISTE, RECIBIRÁ INSTRUCCIONES EN UNOS MINUTOS. REVISTE SU BANDEJA DE SPAM.
+                   </div>
+                   <q-btn flat color="red-9" label="Volver al Login" to="/login" class="q-mt-xl font-mono text-weight-bold" />
+                </div>
+              </template>
+
+              <!-- PASO 3: NUEVA CLAVE -->
+              <template v-else-if="paso === 3">
+                <div class="text-caption text-grey-5 font-mono q-mb-xl text-center" style="font-size: 11px">ESTABLECE TU NUEVA CREDENCIAL DE ACCESO.</div>
+                <q-form @submit.prevent="resetearPassword" class="q-gutter-y-lg">
+                   <q-input v-model="formReset.password" :type="showPwd1 ? 'text' : 'password'" filled dark dense label="NUEVA CONTRASEÑA" class="premium-input-login" stack-label :rules="[v => v.length >= 8 || 'Mínimo 8 caracteres']" hide-bottom-space>
+                      <template #prepend><q-icon name="lock" color="emerald" /></template>
+                      <template #append><q-icon :name="showPwd1 ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd1 = !showPwd1" /></template>
+                   </q-input>
+                   <q-input v-model="formReset.password_confirmation" :type="showPwd2 ? 'text' : 'password'" filled dark dense label="CONFIRMAR" class="premium-input-login" stack-label :rules="[v => v === formReset.password || 'Error coincidencia']" hide-bottom-space>
+                      <template #prepend><q-icon name="verified_user" color="emerald" /></template>
+                      <template #append><q-icon :name="showPwd2 ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showPwd2 = !showPwd2" /></template>
+                   </q-input>
+                   <q-btn type="submit" unelevated color="red-9" class="full-width premium-btn q-py-md shadow-24" :loading="cargando" label="Actualizar Credencial" />
+                </q-form>
+              </template>
+
+              <!-- PASO 4: ÉXITO -->
+              <template v-else-if="paso === 4">
+                <div class="text-center q-py-md">
+                   <q-icon name="verified" color="emerald" size="80px" class="q-mb-lg shadow-glow-emerald" />
+                   <div class="text-h6 text-white font-head q-mb-md">Acceso Restablecido</div>
+                   <div class="text-caption text-grey-5 font-mono q-mb-xl" style="font-size: 11px">TU CUENTA HA SIDO ASEGURADA CON LA NUEVA CONTRASEÑA.</div>
+                   <q-btn unelevated color="red-9" label="Iniciar Sesión" to="/login" class="full-width premium-btn q-py-md" />
+                </div>
+              </template>
+
+              <!-- Volver lateral -->
+              <div class="text-center q-mt-xl" v-if="paso !== 4 && paso !== 2">
+                <q-btn flat no-caps dense color="grey-7" label="← Volver al inicio" to="/login" size="sm" class="font-mono" />
+              </div>
+
+            </q-card-section>
+          </q-card>
+
+          <div class="text-center q-mt-xl opacity-30 font-mono text-grey-5" style="font-size: 9px">
+             OPERACIÓN SEGURA · 256-BIT ENCRYPTION
+          </div>
+        </div>
+
+      </q-page>
     </q-page-container>
   </q-layout>
 </template>
@@ -147,10 +112,8 @@ const $q      = useQuasar()
 const paso     = ref(1)
 const email    = ref('')
 const cargando = ref(false)
-const errorMsg = ref('')
 const showPwd1 = ref(false)
 const showPwd2 = ref(false)
-
 const formReset = ref({ token: '', email: '', password: '', password_confirmation: '' })
 
 async function enviarSolicitud() {
@@ -159,23 +122,21 @@ async function enviarSolicitud() {
     await api.post('/auth/forgot-password', { email: email.value })
     paso.value = 2
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al enviar el correo. Intente nuevamente.' })
+    $q.notify({ color: 'negative', message: 'Error en servidor de correo.' })
   } finally { cargando.value = false }
 }
 
 async function resetearPassword() {
   cargando.value = true
-  errorMsg.value = ''
   try {
     await api.post('/auth/reset-password', formReset.value)
     paso.value = 4
   } catch (e) {
-    errorMsg.value = e.response?.data?.mensaje || 'Token inválido o expirado. Solicite un nuevo enlace.'
+    $q.notify({ color: 'negative', message: e.response?.data?.mensaje || 'Tóken expirado.' })
   } finally { cargando.value = false }
 }
 
 onMounted(() => {
-  // Si viene del link del correo con ?token=xxx&email=yyy
   const token = route.query.token
   const emailParam = route.query.email
   if (token && emailParam) {
@@ -185,3 +146,31 @@ onMounted(() => {
   }
 })
 </script>
+
+<style lang="scss" scoped>
+.login-page-bg { background: #05070a; position: relative; }
+.glow-orb {
+  position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.15; pointer-events: none;
+  &.orb-1 { width: 600px; height: 600px; top: -100px; right: -100px; background: radial-gradient(circle, #A10B13 0%, transparent 70%); }
+  &.orb-2 { width: 500px; height: 500px; bottom: -100px; left: -100px; background: radial-gradient(circle, #05070a 0%, #A10B13 70%); }
+}
+.premium-logo { height: 90px; width: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(161, 11, 19, 0.2); }
+.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+.border-red-top { border-top: 4px solid #A10B13 !important; }
+.premium-input-login {
+  :deep(.q-field__control) {
+    border-radius: 12px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    transition: all 0.3s ease;
+    &::before, &::after { display: none; }
+    &:hover { background: rgba(255,255,255,0.05) !important; border-color: rgba(161,11,19,0.3) !important; }
+  }
+  &.q-field--focused :deep(.q-field__control) { background: rgba(161, 11, 19, 0.05) !important; border-color: #A10B13 !important; box-shadow: 0 0 15px rgba(161, 11, 19, 0.2); }
+}
+.animate-fade { animation: loginAppear 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; }
+@keyframes loginAppear { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.text-emerald { color: #10b981; }
+.shadow-glow-emerald { filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4)); }
+.line-height-1 { line-height: 1.4; }
+</style>

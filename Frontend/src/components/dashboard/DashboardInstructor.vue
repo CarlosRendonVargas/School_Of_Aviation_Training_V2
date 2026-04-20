@@ -32,10 +32,10 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
-import { api } from 'boot/axios'
-const cargando = ref(true); const data = ref(null)
-onMounted(async () => { try { const { data: r } = await api.get('/dashboard'); data.value = r.data } finally { cargando.value = false } })
+const props = defineProps({
+  data:     { type: Object,  default: null },
+  cargando: { type: Boolean, default: false },
+})
 </script>
 <style lang="scss" scoped>
 .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; .stat-value { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; } .stat-label { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 3px; } }

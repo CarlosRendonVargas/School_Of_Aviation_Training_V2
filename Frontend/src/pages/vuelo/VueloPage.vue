@@ -1,98 +1,88 @@
 <template>
-  <q-page padding style="padding-bottom: 80px">
+  <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
 
-    <!-- ══ Encabezado ══ -->
-    <div class="row items-center justify-between q-mb-lg">
-      <div>
-        <div class="font-mono q-mb-xs" style="font-size:10px;color:#475569;letter-spacing:2px;text-transform:uppercase">
-          RAC 61 · RAC 91.417 · Módulo 03
+    <!-- ══ Encabezado de Operaciones Vuelo ══ -->
+    <div class="row items-center justify-between q-mb-xl rac-page-header">
+      <div class="row items-center">
+        <q-icon name="flight_takeoff" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
+        <div>
+          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">REGLAMENTOS AERONÁUTICOS · RAC 61 / 91 · LOGBOOK</div>
+          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Operaciones de Vuelo</h1>
         </div>
-        <div class="font-head text-white" style="font-size:22px;font-weight:700">Control de Vuelo</div>
       </div>
       <q-btn
         v-if="puedeRegistrar"
-        unelevated no-caps icon="add" label="Nueva bitácora"
-        style="background:#A10B13;color:white;border-radius:8px;padding:8px 16px;font-weight:600"
+        color="red-9" icon="add_box" label="Certificar Misión"
+        class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder"
         @click="$router.push('/vuelo/nueva-bitacora')"
       />
     </div>
 
-    <!-- ══ KPIs ══ -->
-    <div class="row q-col-gutter-md q-mb-lg">
-      <div class="col-6 col-md-3" v-for="kpi in kpis" :key="kpi.label">
-        <div class="kpi-card">
-          <div class="kpi-icon" :style="`background:${kpi.bg}`">
+    <!-- ══ KPIs de Operación ══ -->
+    <div class="row q-col-gutter-md q-mb-xl">
+      <div class="col-6 col-sm-6 col-md-3" v-for="kpi in kpis" :key="kpi.label">
+        <q-card class="premium-glass-card q-pa-md q-pa-sm-lg border-red-low shadow-inner flex items-center overflow-hidden welcome-hero">
+          <div class="hero-glow"></div>
+          <div class="kpi-icon-premium q-mr-md flex flex-center shadow-24 flex-shrink-0" :style="`background: ${kpi.bg}`">
             <q-icon :name="kpi.icon" :color="kpi.color" size="22px" />
           </div>
-          <div>
-            <div class="kpi-num" :style="`color:${kpi.textColor || '#e2e8f0'}`">
-              <q-skeleton v-if="cargando" type="text" width="50px" dark />
-              <span v-else>{{ kpi.valor }}</span>
+          <div class="relative-position min-w-0 col">
+            <div class="text-h5 text-weight-bolder font-mono text-white line-height-1">
+              {{ kpi.valor }}
             </div>
-            <div class="kpi-lbl">{{ kpi.label }}</div>
+            <div class="text-caption text-grey-6 uppercase font-mono tracking-widest q-mt-xs" style="font-size:9px">
+              {{ kpi.label }}
+            </div>
           </div>
-        </div>
+        </q-card>
       </div>
     </div>
 
-    <!-- ══ Flota operativa ══ -->
-    <div class="section-title q-mb-sm">FLOTA OPERATIVA</div>
-    <div class="row q-col-gutter-sm q-mb-xl">
-      <template v-if="cargandoAeronaves">
-        <div class="col-12 col-sm-6 col-md-4" v-for="n in 3" :key="n">
-          <q-skeleton type="rect" height="100px" dark />
-        </div>
-      </template>
-      <template v-else>
-        <div class="col-12 col-sm-6 col-md-4"
-          v-for="av in aeronaves" :key="av.id"
-        >
-          <div class="aeronave-card" :class="estadoClass(av.estado)">
-            <div class="row items-start justify-between q-mb-xs">
-              <div>
-                <div class="font-head text-white" style="font-size:16px;font-weight:700">{{ av.matricula }}</div>
-                <div style="font-size:12px;color:#94a3b8">{{ av.modelo }} · {{ av.fabricante }}</div>
-              </div>
-              <q-chip dense :color="estadoColor(av.estado)" text-color="white"
-                :label="av.estado?.toUpperCase()" style="font-size:10px;font-family:monospace" />
-            </div>
-            <div class="row q-col-gutter-xs q-mt-sm">
-              <div class="col-6">
-                <div class="av-stat-lbl">HORAS CÉLULA</div>
-                <div class="av-stat-val">{{ Number(av.horas_celula_total || 0).toFixed(1) }}h</div>
-              </div>
-              <div class="col-6">
-                <div class="av-stat-lbl">DESDE O/H</div>
-                <div class="av-stat-val">{{ Number(av.horas_desde_oh || 0).toFixed(1) }}h</div>
-              </div>
-            </div>
-            <div class="row q-mt-sm items-center q-gutter-xs">
-              <q-chip v-if="av.mel_abiertos_count > 0" dense color="warning" text-color="dark"
-                :label="`${av.mel_abiertos_count} MEL`" style="font-size:10px" />
-              <q-chip v-if="av.ads_pendientes_count > 0" dense color="negative" text-color="white"
-                :label="`${av.ads_pendientes_count} AD`" style="font-size:10px" />
-              <span v-if="!av.mel_abiertos_count && !av.ads_pendientes_count"
-                style="font-size:11px;color:#4ade80">✓ Sin ítems abiertos</span>
-            </div>
-          </div>
-        </div>
-        <div v-if="!aeronaves.length" class="col-12 text-center q-py-xl text-grey-6">
-          <q-icon name="flight_off" size="40px" class="q-mb-sm" /><br>Sin aeronaves registradas
-        </div>
-      </template>
+    <!-- ══ Monitor de Estatus de Flota (HK) ══ -->
+    <div class="row items-center q-mb-lg">
+      <q-icon name="dashboard" color="red-9" size="20px" class="q-mr-sm shadow-inner" />
+      <div class="text-subtitle1 font-head text-white text-weight-bolder tracking-tighter uppercase">Disponibilidad Operacional de Flota</div>
     </div>
 
-    <!-- ══ Bitácoras recientes ══ -->
-    <div class="row items-center justify-between q-mb-sm">
-      <div class="section-title">BITÁCORAS DE VUELO</div>
-      <q-input
-        v-model="busqueda"
-        dense dark outlined placeholder="Buscar..."
-        style="width:180px"
-        input-style="font-size:12px"
-        bg-color="grey-10"
-      >
-        <template #prepend><q-icon name="search" color="grey-6" size="16px" /></template>
+    <div class="row q-col-gutter-lg q-mb-xl">
+      <div class="col-12 col-sm-6 col-lg-4" v-for="av in aeronaves" :key="av.id">
+        <q-card class="premium-glass-card hover-row shadow-24 overflow-hidden border-red-low" :style="`border-left: 4px solid ${estadoColorRaw(av.estado)} !important`">
+          <q-card-section class="q-pa-xl">
+            <div class="row justify-between items-start q-mb-lg">
+              <div>
+                <div class="text-h5 text-white font-head text-weight-bolder uppercase">{{ av.matricula }}</div>
+                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:10px">{{ av.modelo || 'ENTRENADOR' }}</div>
+              </div>
+              <q-badge :color="estadoColor(av.estado)" class="font-mono text-weight-bolder q-px-md" :label="av.estado?.toUpperCase()" />
+            </div>
+            
+            <q-separator dark class="q-my-lg opacity-10" />
+            
+            <div class="row q-col-gutter-lg">
+              <div class="col-6">
+                <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:9px">Tiempo Célula</div>
+                <div class="text-h6 font-mono text-grey-3 text-weight-bold">{{ Number(av.horas_celula_total || 0).toFixed(1) }}H</div>
+              </div>
+              <div class="col-6 text-right">
+                <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:9px">Nivel Aeronveg.</div>
+                <div class="text-emerald font-mono text-weight-bold" v-if="av.estado === 'disponible'">OPERATIVO</div>
+                <div class="text-red-9 font-mono text-weight-bold" v-else>GROUNDED</div>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- ══ Registro de Auditória (Logbook) ══ -->
+    <div class="logbook-header q-mb-xl">
+      <div class="row items-center">
+        <q-icon name="history" color="red-9" size="20px" class="q-mr-sm" />
+        <div class="text-subtitle1 font-head text-white text-weight-bolder tracking-tighter uppercase">Manifiesto de Operaciones</div>
+      </div>
+      <q-input v-model="busqueda" dense filled dark class="premium-input-login logbook-search"
+        placeholder="Buscar HK, ICAO o Misión...">
+        <template #prepend><q-icon name="search" color="red-9" /></template>
       </q-input>
     </div>
 
@@ -100,49 +90,44 @@
       :rows="bitacorasFiltradas"
       :columns="columnas"
       row-key="id"
-      dark flat
+      class="rac-table shadow-24 border-red-low"
+      flat dark
       :loading="cargandoBitacoras"
-      :rows-per-page-options="[10, 20, 50]"
-      :rows-per-page="10"
-      style="background:#0f1218;border:1px solid rgba(255,255,255,.07);border-radius:12px"
-      table-header-style="color:#475569;font-size:10px;letter-spacing:1px;font-family:'JetBrains Mono',monospace"
     >
+      <template #body-cell-fecha="props">
+         <q-td :props="props" class="font-mono text-grey-5">{{ props.value }}</q-td>
+      </template>
+
+      <template #body-cell-aeronave="props">
+         <q-td :props="props" class="text-center">
+            <q-badge outline color="red-9" :label="props.value" class="font-mono text-weight-bolder shadow-24" />
+         </q-td>
+      </template>
+
       <template #body-cell-tipo_vuelo="props">
-        <q-td :props="props">
-          <q-chip dense :color="colorTipoVuelo(props.value)" text-color="white"
-            :label="props.value?.toUpperCase()" style="font-size:10px;font-family:monospace" />
+        <q-td :props="props" class="text-center">
+          <q-badge :color="colorTipoVueloBadge(props.value)" class="text-weight-bold font-mono q-px-md">{{ props.value?.toUpperCase() }}</q-badge>
         </q-td>
       </template>
 
       <template #body-cell-horas_totales="props">
-        <q-td :props="props" class="font-mono" style="color:#f8fafc; font-weight:700">
-          {{ Number(props.value).toFixed(1) }}h
+        <q-td :props="props" class="text-right">
+          <span class="font-mono text-weight-bolder text-red-9" style="font-size: 16px">
+            {{ Number(props.value).toFixed(1) }}
+          </span>
+          <span class="text-grey-7 font-mono q-ml-xs uppercase" style="font-size:10px">H</span>
         </q-td>
       </template>
 
       <template #body-cell-firma_instructor="props">
-        <q-td :props="props">
-          <q-icon :name="props.value ? 'verified' : 'pending'"
-            :color="props.value ? 'positive' : 'grey-6'" size="18px" />
+        <q-td :props="props" class="text-center">
+          <q-icon 
+            :name="props.value ? 'verified_user' : 'pending_actions'"
+            :color="props.value ? 'emerald' : 'red-9'" size="24px" class="glow-symbol"
+          >
+            <q-tooltip class="bg-dark text-white font-mono uppercase">{{ props.value ? 'MISIÓN CERTIFICADA UAEAC' : 'REQUIERE APROBACIÓN TÉCNICA' }}</q-tooltip>
+          </q-icon>
         </q-td>
-      </template>
-
-      <template #body-cell-estudiante="props">
-        <q-td :props="props" style="font-size:12px;color:#e2e8f0">
-          {{ nombreCorto(props.row.estudiante?.persona) }}
-        </q-td>
-      </template>
-
-      <template #body-cell-aeronave="props">
-        <q-td :props="props" class="font-mono" style="color:#94a3b8;font-size:12px">
-          {{ props.row.aeronave?.matricula }}
-        </q-td>
-      </template>
-
-      <template #no-data>
-        <div class="full-width text-center text-grey-6 q-py-xl">
-          <q-icon name="menu_book" size="36px" class="q-mb-sm" /><br>Sin bitácoras registradas
-        </div>
       </template>
     </q-table>
 
@@ -154,176 +139,98 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
 
-const authStore = useAuthStore()
-const cargando          = ref(true)
-const cargandoAeronaves = ref(true)
-const cargandoBitacoras = ref(true)
+const authStore         = useAuthStore()
+const cargandoBitacoras = ref(false)
 const aeronaves         = ref([])
 const bitacoras         = ref([])
 const busqueda          = ref('')
 
-const puedeRegistrar = computed(() =>
-  ['instructor', 'admin', 'dir_ops'].includes(authStore.rol)
-)
+const puedeRegistrar = computed(() => ['instructor', 'admin', 'dir_ops'].includes(authStore.rol))
 
-// ── KPIs ──────────────────────────────────────────────────────
-const totalHoras = computed(() =>
-  bitacoras.value.reduce((s, b) => s + (Number(b.horas_totales) || 0), 0).toFixed(1)
-)
-const totalVuelos  = computed(() => bitacoras.value.length)
-const disponibles  = computed(() => aeronaves.value.filter(a => a.estado === 'disponible').length)
-const aterrizajes  = computed(() =>
-  bitacoras.value.reduce((s, b) => s + (b.aterrizajes || 0), 0)
-)
+const totalHoras = computed(() => bitacoras.value.reduce((s, b) => s + (Number(b.horas_totales) || 0), 0).toFixed(1))
+const aterrizajes = computed(() => bitacoras.value.reduce((s, b) => s + (b.aterrizajes || 0), 0))
 
 const kpis = computed(() => [
-  { label: 'Horas de vuelo', valor: `${totalHoras.value}h`, icon: 'schedule', color: 'red-4',   bg: 'rgba(161,11,19,.12)',     textColor: '#fca5a5' },
-  { label: 'Vuelos totales', valor: totalVuelos.value,      icon: 'flight',   color: 'red-8',   bg: 'rgba(107,7,12,.12)',     textColor: '#94a3b8' },
-  { label: 'Aeronaves disp.', valor: disponibles.value,    icon: 'airplanemode_active', color: 'green-4', bg: 'rgba(74,222,128,.12)', textColor: '#4ade80' },
-  { label: 'Aterrizajes',    valor: aterrizajes.value,     icon: 'moving',   color: 'amber-4',  bg: 'rgba(251,191,36,.12)',     textColor: '#fbbf24' },
+  { label: 'Experiencia Flota', valor: `${totalHoras.value}H`, icon: 'speed', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+  { label: 'Ciclos de Vuelo', valor: bitacoras.value.length, icon: 'vibration', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+  { label: 'Aterrizajes (Atz)', valor: aterrizajes.value, icon: 'flight_land', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+  { label: 'Aeronaves Oper.', valor: aeronaves.value.length, icon: 'shield', color: 'emerald', bg: 'rgba(16,185,129,0.05)' },
 ])
 
-// ── Tabla bitácoras ────────────────────────────────────────────
 const columnas = [
-  { name: 'fecha',          label: 'FECHA',       field: 'fecha',          align: 'left',   sortable: true },
-  { name: 'estudiante',     label: 'ESTUDIANTE',  field: 'estudiante',     align: 'left' },
-  { name: 'aeronave',       label: 'AERONAVE',    field: 'aeronave',       align: 'left' },
-  { name: 'origen_icao',    label: 'ORIGEN',      field: 'origen_icao',    align: 'center', style: 'font-family:monospace' },
-  { name: 'destino_icao',   label: 'DESTINO',     field: 'destino_icao',   align: 'center', style: 'font-family:monospace' },
-  { name: 'tipo_vuelo',     label: 'TIPO',        field: 'tipo_vuelo',     align: 'center' },
-  { name: 'horas_totales',  label: 'HORAS',       field: 'horas_totales',  align: 'center', sortable: true },
-  { name: 'aterrizajes',    label: 'ATZ',         field: 'aterrizajes',    align: 'center' },
-  { name: 'firma_instructor', label: 'FIRMA',     field: 'firma_instructor', align: 'center' },
+  { name: 'fecha', label: 'FECHA OPER.', field: 'fecha', align: 'left' },
+  { name: 'aeronave', label: 'MATRÍCULA HK', field: row => row.aeronave?.matricula, align: 'center' },
+  { name: 'destino_icao', label: 'RUTA TÁCTICA', field: row => `${row.origen_icao} → ${row.destino_icao}`, align: 'center' },
+  { name: 'tipo_vuelo', label: 'MISIÓN', field: 'tipo_vuelo', align: 'center' },
+  { name: 'horas_totales', label: 'BLOCK TIME', field: 'horas_totales', align: 'right' },
+  { name: 'firma_instructor', label: 'VALIDACIÓN', field: 'firma_instructor', align: 'center' },
 ]
 
 const bitacorasFiltradas = computed(() => {
   if (!busqueda.value) return bitacoras.value
   const q = busqueda.value.toLowerCase()
-  return bitacoras.value.filter(b =>
-    b.aeronave?.matricula?.toLowerCase().includes(q) ||
-    b.origen_icao?.toLowerCase().includes(q) ||
-    b.destino_icao?.toLowerCase().includes(q) ||
-    b.tipo_vuelo?.toLowerCase().includes(q)
-  )
+  return bitacoras.value.filter(b => b.aeronave?.matricula?.toLowerCase().includes(q) || b.tipo_vuelo?.toLowerCase().includes(q) || b.origen_icao?.toLowerCase().includes(q))
 })
 
-// ── Helpers ────────────────────────────────────────────────────
-const nombreCorto = (persona) => {
-  if (!persona) return '—'
-  const n = persona.nombres?.split(' ')[0] || ''
-  const a = persona.apellidos?.split(' ')[0] || ''
-  return `${n} ${a}`.trim() || '—'
-}
+const estadoColor = (e) => ({ disponible: 'emerald', mantenimiento: 'orange-9', baja: 'red-9' }[e] || 'grey-8')
+const estadoColorRaw = (e) => ({ disponible: '#10b981', mantenimiento: '#f59e0b', baja: '#A10B13' }[e] || '#64748b')
+const colorTipoVueloBadge = (t) => ({ local: 'blue-10', navegacion: 'purple-10', noche: 'grey-10', sim: 'grey-7' }[t] || 'red-10')
 
-const estadoClass = (e) => ({
-  disponible:    'estado-disponible',
-  mantenimiento: 'estado-mantenimiento',
-  baja:          'estado-baja',
-}[e] || '')
-
-const estadoColor = (e) => ({
-  disponible:    'positive',
-  mantenimiento: 'warning',
-  baja:          'negative',
-}[e] || 'grey')
-
-const colorTipoVuelo = (t) => ({
-  local:      'blue-8',
-  navegacion: 'cyan-8',
-  noche:      'purple-8',
-  ifr:        'deep-orange-8',
-  sim:        'grey-7',
-}[t] || 'grey-7')
-
-// ── Carga de datos ─────────────────────────────────────────────
 async function cargarDatos() {
-  cargando.value = true
-  await Promise.all([cargarAeronaves(), cargarBitacoras()])
-  cargando.value = false
-}
-
-async function cargarAeronaves() {
-  cargandoAeronaves.value = true
-  try {
-    const { data } = await api.get('/aeronaves')
-    aeronaves.value = data.data || []
-  } catch { aeronaves.value = [] }
-  finally { cargandoAeronaves.value = false }
-}
-
-async function cargarBitacoras() {
   cargandoBitacoras.value = true
   try {
-    const { data } = await api.get('/bitacoras')
-    bitacoras.value = data.data?.data || data.data || []
-  } catch { bitacoras.value = [] }
-  finally { cargandoBitacoras.value = false }
+    const [a, b] = await Promise.all([api.get('/aeronaves'), api.get('/bitacoras')])
+    aeronaves.value = a.data.data || a.data || []
+    bitacoras.value = b.data.data?.data || b.data.data || b.data || []
+  } finally { cargandoBitacoras.value = false }
 }
 
 onMounted(cargarDatos)
 </script>
 
-<style scoped>
-.section-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: #475569;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+<style lang="scss" scoped>
+.animate-fade { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.pulsate { animation: pulsate 2s infinite; }
+@keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
+.shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+.text-emerald { color: #10b981; }
+.line-height-1 { line-height: 1.1; }
+.min-w-0 { min-width: 0; }
+.flex-shrink-0 { flex-shrink: 0; }
+.truncate-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.kpi-icon-premium {
+  width: 48px; height: 48px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+  @media (max-width: 599px) { width: 38px; height: 38px; border-radius: 10px; }
 }
 
-/* KPI cards */
-.kpi-card {
-  background: #0f1218;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.hover-row { transition: all 0.2s; &:hover { background: rgba(255,255,255,0.03); } }
+
+// Logbook header: row on desktop, column on mobile
+.logbook-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 24px;
 }
-.kpi-icon {
-  width: 44px; height: 44px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.kpi-num {
-  font-size: 22px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  line-height: 1;
-}
-.kpi-lbl {
-  font-size: 10px;
-  color: #475569;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 4px;
+.logbook-search {
+  width: 100%; max-width: 340px;
+  @media (max-width: 599px) { max-width: 100%; }
 }
 
-/* Aeronave cards */
-.aeronave-card {
-  background: #0f1218;
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid rgba(255,255,255,.08);
-  transition: border-color .2s;
+.premium-input-login {
+  :deep(.q-field__control) {
+    border-radius: 12px !important; background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    &::before, &::after { display: none; }
+    &:hover { border-color: rgba(161,11,19,0.5) !important; }
+  }
 }
-.aeronave-card:hover { border-color: rgba(255,255,255,.18); }
-.estado-disponible    { border-left: 3px solid #4ade80; }
-.estado-mantenimiento { border-left: 3px solid #fbbf24; }
-.estado-baja          { border-left: 3px solid #ef4444; }
 
-.av-stat-lbl {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: #475569;
-  letter-spacing: 1px; text-transform: uppercase;
-}
-.av-stat-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px; color: #e2e8f0;
-  font-weight: 600;
-}
+.welcome-hero { position: relative; }
+.hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); pointer-events: none; }
+.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+.glow-symbol  { filter: drop-shadow(0 0 5px rgba(255,255,255,0.1)); }
 </style>

@@ -1,122 +1,178 @@
 <template>
-  <div class="q-pa-lg">
-    <div v-if="cargando" class="flex flex-center" style="height: 70vh">
-      <q-spinner-cube color="primary" size="60px" />
+  <div class="q-pa-md admin-dashboard animate-fade">
+    
+    <div v-if="cargando" class="flex flex-center" style="height: 60vh">
+      <q-spinner-cube color="red-9" size="60px" />
     </div>
 
-    <div v-else class="admin-dashboard animate-fade">
-      <!-- ═══════ WELCOME HERO SECTION ═══════ -->
+    <div v-else>
+      <!-- ═══════ HERO: BRIEFING OPERATIVO ═══════ -->
       <div class="row q-col-gutter-lg q-mb-xl">
         <div class="col-12">
-          <q-card class="welcome-hero overflow-hidden">
-            <div class="hero-bg"></div>
-            <q-card-section class="row items-center q-pa-xl relative-position">
-              <div class="col-12 col-md-8">
-                <div class="text-overline text-red-3 font-mono tracking-wider q-mb-xs">MÓDULO 08 · ADMINISTRACIÓN FINANCIERA</div>
-                <h1 class="text-h3 font-head text-weight-bolder text-white q-my-none">Resumen Directivo</h1>
-                <p class="text-subtitle1 text-grey-4 q-mt-md max-width-600">
-                  Control centralizado de ingresos, matrículas vigentes y carteras pendientes bajo estándares de cumplimiento RAC 141.
-                </p>
-                <div class="row q-gutter-sm q-mt-lg">
-                  <q-btn unelevated color="primary" label="Nueva Matrícula" icon="add_circle" class="premium-btn" to="/financiero" />
-                  <q-btn outline color="white" label="Ver Reportes" icon="analytics" class="premium-btn glass-btn" />
+          <q-card class="premium-glass-card overflow-hidden welcome-hero">
+            <div class="hero-glow"></div>
+            <q-card-section class="q-pa-xl relative-position">
+              <div class="row items-center">
+                <div class="col-12 col-md-8">
+                  <div class="text-overline text-red-9 font-mono tracking-widest q-mb-xs">MÓDULO DE INTELIGENCIA · RAC 141</div>
+                  <h1 class="text-h3 font-head text-weight-bolder text-white q-my-none">Centro de Comando</h1>
+                  <p class="text-subtitle1 text-grey-5 q-mt-md max-width-600 line-height-1">
+                    Supervisión en tiempo real de la operación académica, estados de cartera y cumplimiento regulatorio.
+                  </p>
+                  <div class="row q-gutter-md q-mt-xl">
+                    <q-btn unelevated color="red-9" label="Nueva Matrícula" icon="person_add" class="premium-btn shadow-10" to="/financiero" />
+                    <q-btn outline color="white" label="Reporte Mensual" icon="analytics" class="premium-btn" @click="generarReporte" :loading="generandoReporte" />
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-4 hide-mobile text-right">
-                <q-icon name="insights" size="180px" color="white" style="opacity: 0.05" />
+                <div class="col-md-4 hide-mobile text-right opacity-10">
+                  <q-icon name="security" size="200px" />
+                </div>
               </div>
             </q-card-section>
           </q-card>
         </div>
       </div>
 
-      <!-- ═══════ KPI GRID ═══════ -->
+      <!-- ═══════ GRID DE INDICADORES (KPIs) ═══════ -->
       <div class="row q-col-gutter-lg q-mb-xl">
         <div v-for="kpi in kpiCards" :key="kpi.label" class="col-12 col-sm-6 col-md-3">
-          <q-card class="kpi-card-modern border-radius-16">
+          <q-card class="premium-glass-card kpi-modern-card">
             <q-card-section class="q-pa-lg">
-              <div class="row items-center justify-between q-mb-sm">
-                <span class="text-caption text-grey-5 font-mono uppercase tracking-wider">{{ kpi.label }}</span>
-                <div class="kpi-icon-box" :style="`background: ${kpi.bg}`">
-                  <q-icon :name="kpi.icon" :color="kpi.color" size="20px" />
+              <div class="row items-center justify-between q-mb-md">
+                <div class="kpi-icon" :style="`background: ${kpi.bg}`">
+                  <q-icon :name="kpi.icon" :color="kpi.color" size="22px" />
                 </div>
+                <q-badge outline :color="kpi.trendColor" class="font-mono text-weight-bold" style="font-size:10px">
+                  <q-icon :name="kpi.trendIcon" class="q-mr-xs" /> {{ kpi.trendText }}
+                </q-badge>
               </div>
-              <div class="text-h4 font-head text-weight-bold text-white q-mt-sm">
+              <div class="text-h4 font-mono text-weight-bolder text-white q-mt-sm">
                 {{ kpi.value }}
               </div>
-              <div class="row items-center q-mt-sm">
-                <q-icon :name="kpi.trendIcon" :color="kpi.trendColor" size="16px" />
-                <span :class="`text-caption text-${kpi.trendColor} q-ml-xs font-mono`">{{ kpi.trendText }}</span>
+              <div class="text-caption text-grey-6 uppercase font-mono tracking-widest q-mt-xs" style="font-size:9px">
+                {{ kpi.label }}
               </div>
             </q-card-section>
-            <div class="kpi-progress-bar" :style="`background: ${kpi.colorHex}; width: ${kpi.progress}%`"></div>
+            <div class="kpi-accent-bar" :style="`background: ${kpi.colorHex}`"></div>
           </q-card>
         </div>
       </div>
 
-      <!-- ═══════ TRENDS AND ACTIONS ═══════ -->
-      <div class="row q-col-gutter-lg">
-        <!-- Chart Section -->
+      <!-- ═══════ ANÁLISIS Y ACCIÓN ═══════ -->
+      <div class="row q-col-gutter-xl">
+        <!-- Gráfica de Tendencias -->
         <div class="col-12 col-md-8">
-          <q-card class="card-rac q-pa-lg" style="height: 100%">
+          <q-card class="premium-glass-card q-pa-xl" style="height: 100%">
             <div class="row justify-between items-center q-mb-xl">
               <div>
-                <div class="text-h6 font-head text-weight-bold text-white">Flujo de Matrículas</div>
-                <div class="text-caption text-grey-6">Comparativa histórica de admisiones (6 meses)</div>
+                <div class="text-h6 font-head text-white">Tráfico de Admisiones</div>
+                <div class="text-caption text-grey-6 font-mono">Fluctuación de registros históricos (6 meses)</div>
               </div>
-              <q-btn-dropdown flat color="grey-5" label="Filtros" icon="filter_list" size="sm" dropdown-icon="expand_more">
-                <q-list dark style="background: #0f172a">
-                  <q-item clickable v-close-popup><q-item-section>Este Año</q-item-section></q-item>
-                  <q-item clickable v-close-popup><q-item-section>Año Pasado</q-item-section></q-item>
-                </q-list>
-              </q-btn-dropdown>
+              <q-icon name="insights" color="red-9" size="24px" />
             </div>
             
-            <div class="chart-wrapper rounded-borders overflow-hidden">
-               <canvas ref="chartCanvas" style="height: 300px; width: 100%"></canvas>
+            <div class="chart-container">
+               <canvas ref="chartCanvas" style="height: 320px; width: 100%"></canvas>
             </div>
           </q-card>
         </div>
 
-        <!-- Quick Actions Section -->
+        <!-- Acciones Directivas -->
         <div class="col-12 col-md-4">
-          <q-card class="card-rac q-pa-lg" style="height: 100%">
-            <div class="text-h6 font-head text-weight-bold text-white q-mb-lg">Tareas de Control</div>
+          <q-card class="premium-glass-card q-pa-xl" style="height: 100%">
+            <div class="text-h6 font-head text-white q-mb-xl">Briefing de Tareas</div>
             
-            <q-list class="q-gutter-y-md">
+            <q-list class="q-gutter-y-lg">
               <q-item v-for="action in quickActions" :key="action.label" 
                 clickable v-ripple 
-                class="action-item border-radius-12"
+                class="premium-glass-card action-brief-item"
                 :to="action.to"
               >
                 <q-item-section avatar>
-                  <div class="action-icon-circle" :style="`background: ${action.bg}`">
+                  <div class="brief-icon-box" :style="`background: ${action.bg}`">
                     <q-icon :name="action.icon" :color="action.color" size="20px" />
                   </div>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold text-white">{{ action.label }}</q-item-label>
-                  <q-item-label caption class="text-grey-6">{{ action.desc }}</q-item-label>
+                  <q-item-label class="text-weight-bold text-grey-2">{{ action.label }}</q-item-label>
+                  <q-item-label caption class="text-grey-6 font-mono" style="font-size:10px">{{ action.desc }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-icon name="chevron_right" color="grey-8" />
+                  <q-icon name="chevron_right" color="red-9" />
                 </q-item-section>
               </q-item>
             </q-list>
 
-            <q-card class="bg-primary-gradient q-mt-xl border-radius-16 cursor-pointer" @click="$router.push('/cumplimiento')">
-               <q-card-section class="q-pa-md row items-center no-wrap">
+            <q-card class="q-mt-xl bg-red-10 border-radius-16 cursor-pointer glow-red" @click="$router.push('/seguridad')">
+               <q-card-section class="q-pa-lg row items-center no-wrap">
                   <div class="col">
-                    <div class="text-weight-bold text-white">Auditoría RAC 141</div>
-                    <div class="text-caption text-white opacity-70">Verificar cumplimiento de bitácoras</div>
+                    <div class="text-weight-bold text-white font-head uppercase tracking-wider">Cumplimiento RAC</div>
+                    <div class="text-caption text-white opacity-70 font-mono" style="font-size:10px">Auditoría Digital UAEAC</div>
                   </div>
-                  <q-btn round color="black" icon="arrow_forward" size="sm" class="q-ml-md" to="/cumplimiento" />
+                  <q-btn round color="black-20" icon="security" size="sm" class="q-ml-md shadow-24" />
                </q-card-section>
             </q-card>
           </q-card>
         </div>
       </div>
     </div>
+
+    <!-- ════ DIÁLOGO: REPORTE MENSUAL EJECUTIVO ════ -->
+    <q-dialog v-model="dialogReporte" backdrop-filter="blur(25px)">
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20 overflow-hidden" style="width: min(700px, 95vw)">
+        <div class="rac-dialog-header welcome-hero q-pa-xl" style="padding: 40px !important;">
+            <div class="hero-glow"></div>
+            <div class="row items-center justify-between">
+                <div class="col">
+                   <div class="font-mono text-white opacity-50 uppercase tracking-widest" style="font-size:10px">Resumen Operativo Mensual</div>
+                   <div class="text-h4 text-white font-head text-weight-bolder">REPORTE RAC 141</div>
+                </div>
+                <q-btn flat round icon="close" v-close-popup color="white" class="bg-white-10" />
+            </div>
+        </div>
+
+        <div class="q-pa-xl q-gutter-y-lg text-white">
+            <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-6">
+                    <div class="text-grey-5 font-mono uppercase q-mb-xs" style="font-size:10px">Ingresos del Mes</div>
+                    <div class="text-h5 font-mono text-weight-bolder text-emerald" style="color: #10b981">{{ formatMoney(data.ingresos_mes) }}</div>
+                </div>
+                <div class="col-12 col-sm-6 text-right">
+                    <div class="text-grey-5 font-mono uppercase q-mb-xs" style="font-size:10px">Nuevas Matrículas</div>
+                    <div class="text-h5 font-mono text-weight-bolder text-red-4">{{ data.nuevas_matriculas_mes }}</div>
+                </div>
+            </div>
+
+            <q-separator dark class="opacity-10" />
+
+            <div class="row q-col-gutter-md">
+                <div class="col-4 text-center">
+                    <div class="text-h6 text-red-9">{{ data.estudiantes_activos }}</div>
+                    <div class="text-caption text-grey-6 uppercase" style="font-size: 8px">Estudiantes</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="text-h6 text-amber">{{ data.facturas_pendientes }}</div>
+                    <div class="text-caption text-grey-6 uppercase" style="font-size: 8px">Pendientes</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="text-h6 text-red-10">{{ data.facturas_vencidas }}</div>
+                    <div class="text-caption text-grey-6 uppercase" style="font-size: 8px">Vencidas</div>
+                </div>
+            </div>
+
+            <div class="q-mt-xl bg-black-20 q-pa-lg rounded-12 border-red-low" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(161, 11, 19, 0.2); border-radius: 12px;">
+                <div class="text-caption text-grey-5 italic" style="font-size: 11px">
+                    Este reporte consolida el flujo financiero y académico del mes en curso para la auditoría interna de la Escuela de Aviación.
+                </div>
+            </div>
+
+            <div class="row justify-center q-mt-lg">
+                <q-btn unelevated color="red-9" icon="print" label="Descargar / Imprimir" @click="window.print()" class="premium-btn q-px-xl q-py-md text-weight-bolder" no-caps />
+            </div>
+        </div>
+      </q-card>
+    </q-dialog>
+
   </div>
 </template>
 
@@ -134,7 +190,6 @@ const data = ref({
   ingresos_mes: 0,
   facturas_pendientes: 0,
   facturas_vencidas: 0,
-  nuevas_matriculas_mes: 0,
   flujo_matriculas: []
 })
 
@@ -142,36 +197,35 @@ let chartInst = null
 
 const kpiCards = computed(() => [
   { 
-    label: 'Ingresos del Mes', 
+    label: 'Recaudo Mensual', 
     value: formatMoney(data.value.ingresos_mes), 
-    icon: 'account_balance_wallet', color: 'emerald', colorHex: '#10b981', bg: 'rgba(16,185,129,0.1)',
-    trendIcon: 'trending_up', trendText: '+12% vs mes ant.', trendColor: 'emerald', progress: 75
+    icon: 'account_balance', color: 'emerald', colorHex: '#10b981', bg: 'rgba(16,185,129,0.1)',
+    trendIcon: 'trending_up', trendText: '+12%', trendColor: 'emerald'
   },
   { 
-    label: 'Estudiantes Activos', 
+    label: 'Alumnos en Fase', 
     value: data.value.estudiantes_activos, 
-    icon: 'school', color: 'red-5', colorHex: '#A10B13', bg: 'rgba(161,11,19,0.1)',
-    trendIcon: 'group', trendText: 'Expedientes RAC', trendColor: 'grey-5', progress: 100
+    icon: 'groups', color: 'red-9', colorHex: '#A10B13', bg: 'rgba(161,11,19,0.1)',
+    trendIcon: 'military_tech', trendText: 'Expedientes', trendColor: 'red-9'
   },
   { 
-    label: 'Facts. Pendientes', 
+    label: 'Cartera Pendiente', 
     value: data.value.facturas_pendientes, 
-    icon: 'receipt_long', color: 'amber', colorHex: '#f59e0b', bg: 'rgba(245,158,11,0.1)',
-    trendIcon: 'hourglass_empty', trendText: 'Por recaudar', trendColor: 'amber', progress: 40
+    icon: 'pending_actions', color: 'orange-9', colorHex: '#f59e0b', bg: 'rgba(245,158,11,0.1)',
+    trendIcon: 'schedule', trendText: 'Pendiente', trendColor: 'orange-9'
   },
   { 
-    label: 'Facts. Vencidas', 
+    label: 'Cuentas Vencidas', 
     value: data.value.facturas_vencidas, 
-    icon: 'warning', color: 'red-8', colorHex: '#6b070c', bg: 'rgba(107,7,12,0.1)',
-    trendIcon: 'error_outline', trendText: 'Requiere atención', trendColor: 'red-4', progress: 15
+    icon: 'warning', color: 'red-10', colorHex: '#6b070c', bg: 'rgba(107,7,12,0.1)',
+    trendIcon: 'error', trendText: 'Crítico', trendColor: 'red-10'
   }
 ])
 
 const quickActions = [
-  { label: 'Caja y Pagos', desc: 'Registrar abonos y depósitos', icon: 'payments', color: 'emerald', bg: 'rgba(16,185,129,0.1)', to: '/financiero' },
-  { label: 'Facturación', desc: 'Gestionar facturas electrónicas', icon: 'receipt', color: 'red-5', bg: 'rgba(161,11,19,0.1)', to: '/financiero' },
-  { label: 'Matrículas', desc: 'Ver expedientes académicos', icon: 'group_add', color: 'red-4', bg: 'rgba(161,11,19,0.05)', to: '/academico' },
-  { label: 'Seguridad', desc: 'Auditoría de accesos y logs', icon: 'security', color: 'grey-5', bg: 'rgba(255,255,255,0.05)', to: '/seguridad' }
+  { label: 'Caja y Pagos', desc: 'Saldos y Recaudos', icon: 'payments', color: 'emerald', bg: 'rgba(16,185,129,0.1)', to: '/financiero' },
+  { label: 'Facturación', desc: 'Control de Facturas', icon: 'receipt', color: 'red-9', bg: 'rgba(161,11,19,0.1)', to: '/financiero' },
+  { label: 'Matrículas', desc: 'Dossiers Académicos', icon: 'school', color: 'red-9', bg: 'rgba(161,11,19,0.1)', to: '/academico' }
 ]
 
 const initChart = () => {
@@ -180,7 +234,7 @@ const initChart = () => {
 
   const ctx = chartCanvas.value.getContext('2d')
   const gradient = ctx.createLinearGradient(0, 0, 0, 300)
-  gradient.addColorStop(0, 'rgba(161, 11, 19, 0.3)')
+  gradient.addColorStop(0, 'rgba(161, 11, 19, 0.4)')
   gradient.addColorStop(1, 'rgba(161, 11, 19, 0)')
 
   chartInst = new Chart(ctx, {
@@ -192,14 +246,12 @@ const initChart = () => {
         data: data.value.flujo_matriculas.map(x => x.total),
         borderColor: '#A10B13',
         backgroundColor: gradient,
-        borderWidth: 4,
-        tension: 0.45,
+        borderWidth: 3,
+        tension: 0.4,
         fill: true,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#A10B13',
-        pointBorderWidth: 3,
-        pointRadius: 6,
-        pointHoverRadius: 8
+        pointBackgroundColor: '#A10B13',
+        pointBorderColor: '#fff',
+        pointRadius: 5
       }]
     },
     options: {
@@ -207,8 +259,8 @@ const initChart = () => {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono' } } },
+        x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono' } } }
       }
     }
   })
@@ -216,75 +268,47 @@ const initChart = () => {
 
 const formatMoney = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v || 0)
 
+const generandoReporte = ref(false)
+const dialogReporte = ref(false)
+
+const generarReporte = () => {
+    generandoReporte.value = true
+    setTimeout(() => {
+        generandoReporte.value = false
+        dialogReporte.value = true
+    }, 1500)
+}
+
 onMounted(async () => {
   try {
     const res = await api.get('/dashboard')
     if (res.data?.data) {
       data.value = res.data.data
       await nextTick()
-      setTimeout(initChart, 500)
+      setTimeout(initChart, 300)
     }
-  } catch (e) { console.error(e) } finally { cargando.value = false }
+  } finally { cargando.value = false }
 })
 
 onBeforeUnmount(() => { if (chartInst) chartInst.destroy() })
 </script>
 
 <style lang="scss" scoped>
-.welcome-hero {
-  background: #0f172a;
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 24px;
-  position: relative;
-  .hero-bg {
-    position: absolute;
-    top: 0; right: 0; bottom: 0; left: 0;
-    background: radial-gradient(circle at 80% 20%, rgba(161, 11, 19, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, rgba(161, 11, 19, 0.1) 0%, transparent 40%);
-    filter: blur(40px);
-  }
+.animate-fade { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.welcome-hero { position: relative; border-left: 5px solid #A10B13; }
+.hero-glow {
+  position: absolute; top:0; right:0; bottom:0; left:0;
+  background: radial-gradient(circle at 70% 30%, rgba(161, 11, 19, 0.15) 0%, transparent 60%);
 }
-
-.max-width-600 { max-width: 600px; }
-
-.kpi-card-modern {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.06);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  &:hover {
-    border-color: rgba(255,255,255,0.15);
-    background: rgba(15, 23, 42, 0.8);
-    transform: translateY(-5px);
-  }
-  .kpi-icon-box {
-    width: 40px; height: 40px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .kpi-progress-bar {
-    height: 3px; position: absolute; bottom: 0; left: 0;
-    opacity: 0.7;
-  }
-}
-
-.action-item {
-  background: rgba(255,255,255,0.02);
-  transition: all 0.2s;
-  &:hover {
-    background: rgba(255,255,255,0.05);
-    transform: translateX(5px);
-  }
-}
-
-.action-icon-circle {
-  width: 44px; height: 44px; border-radius: 50%;
+.kpi-icon {
+  width: 44px; height: 44px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
 }
-
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-.opacity-70 { opacity: 0.7; }
+.kpi-accent-bar { height: 4px; border-radius: 0 0 12px 12px; opacity: 0.8; }
+.action-brief-item { border: none !important; margin-bottom: 8px; transition: all 0.2s; &:hover { transform: translateX(5px); background: rgba(255,255,255,0.05) !important; } }
+.brief-icon-box { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.glow-red { box-shadow: 0 0 20px rgba(161, 11, 19, 0.2); }
+.line-height-1 { line-height: 1.5; }
 </style>

@@ -1,461 +1,742 @@
 <template>
-  <q-page class="q-pa-md rac-page">
-    <div class="row items-center q-mb-md">
-      <q-icon name="school" size="32px" color="teal-4" class="q-mr-sm icon-teal-glow" />
-      <div>
-        <h1 class="text-h5 text-white font-head q-my-none">Módulo 02: Gestión Académica RAC 141</h1>
-        <div class="text-grey-5 font-mono text-caption">Control de Programas (PIA), Expedientes y Progreso de Instrucción</div>
+  <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
+
+    <!-- ══ Encabezado de Instrucción Premium ══ -->
+    <div class="row items-center justify-between q-mb-xl rac-page-header">
+      <div class="row items-center">
+        <q-icon name="school" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
+        <div>
+          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">CENTRO DE INSTRUCCIÓN AERONÁUTICA · RAC 141</div>
+          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Gestión Académica</h1>
+        </div>
       </div>
     </div>
 
-    <div class="q-mt-md">
-      <q-card class="premium-glass-card shadow-12 custom-tabs-card">
-        <q-tabs
-          v-model="tab"
-          dense
-          class="text-grey"
-          active-color="teal-4"
-          indicator-color="teal-4"
-          align="justify"
-          narrow-indicator
-        >
-          <q-tab name="programas" icon="menu_book" label="Programas (PIA)" />
-          <q-tab name="estudiantes" icon="groups" label="Estudiantes / Expedientes" />
-          <q-tab name="notas" icon="grade" label="Calificaciones" />
-        </q-tabs>
+    <!-- ══ Contenedor Principal (Tabs de Cristal) ══ -->
+    <q-card class="premium-glass-card overflow-hidden shadow-24 rounded-20 bonus-grid">
+      <q-tabs
+        v-model="tab"
+        dense
+        class="text-grey-5 border-bottom-border"
+        active-color="red-9"
+        indicator-color="red-9"
+        align="left"
+        no-caps
+        style="padding-left: 10px"
+      >
+        <q-tab name="programas"   icon="menu_book"      :label="$q.screen.gt.xs ? 'Programas (PIA)' : ''" />
+        <q-tab name="estudiantes" icon="groups"         :label="$q.screen.gt.xs ? 'Archivo Digital' : ''" />
+        <q-tab name="vuelo"       icon="flight_takeoff" :label="$q.screen.gt.xs ? 'Fase de Vuelo' : ''" />
+      </q-tabs>
 
-        <q-separator color="grey-8" />
-
-        <q-tab-panels v-model="tab" animated class="bg-transparent text-white">
-          <!-- PROGRAMAS PANEL -->
-          <q-tab-panel name="programas">
-            <div class="row justify-between items-center q-mb-md">
-                <div class="text-h6 font-head">Programas de Instrucción Autorizados</div>
-                <q-btn color="teal-4" icon="add" label="Nuevo Programa" outline rounded class="glass-btn" @click="abrirNuevoPrograma" />
+      <q-tab-panels v-model="tab" animated class="bg-transparent text-white" style="min-height:600px">
+        
+        <!-- ════ SECCIÓN: PROGRAMAS (PIA) ════ -->
+        <q-tab-panel name="programas" class="q-pa-xl">
+          <div class="row justify-between items-center q-mb-xl">
+            <div>
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Programas Autorizados UAEAC</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">PPA / PCA / IFR / ME · Acreditados por la UAEAC · RAC 141</div>
             </div>
+            <q-btn color="red-9" icon="add" label="Nuevo Registro PIA"
+              class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder"
+              @click="abrirNuevoPrograma" />
+          </div>
 
-            <div class="row q-col-gutter-md">
-                <div v-for="prog in programas" :key="prog.id" class="col-12 col-sm-6 col-md-4">
-                    <q-card class="bg-dark-light border-teal-left premium-hover-card">
-                        <q-card-section>
-                            <div class="row justify-between items-start">
-                                <div class="text-overline text-teal-4">{{ prog.codigo }}</div>
-                                <q-chip size="xs" color="grey-9" text-color="white">{{ prog.tipo }}</q-chip>
-                            </div>
-                            <div class="text-h6 q-mt-sm">{{ prog.nombre }}</div>
-                            <div class="text-caption text-grey-5 q-mt-xs">{{ prog.descripcion || 'Sin descripción' }}</div>
-                        </q-card-section>
-                        <q-separator dark inset />
-                        <q-card-actions align="right">
-                            <q-btn flat color="teal-3" label="Ver Syllabus" size="sm" icon="visibility" @click="verSyllabus(prog)" />
-                            <q-btn flat color="grey-5" label="Editar" size="sm" icon="edit" @click="editarPrograma(prog)" />
-                        </q-card-actions>
-                    </q-card>
+          <div v-if="loadingProgramas" class="row justify-center q-pa-xl">
+            <q-spinner-dots color="red-9" size="48px" />
+          </div>
+
+          <div v-else-if="!programas.length" class="text-center q-pa-xl text-grey-7 font-mono uppercase tracking-widest">
+            <q-icon name="menu_book" size="80px" class="opacity-10 q-mb-md" />
+            <div>Sin programas PIA registrados.</div>
+          </div>
+
+          <div v-else class="row q-col-gutter-lg">
+            <div v-for="(prog, idx) in programas" :key="prog.id"
+              class="col-12 col-sm-6 col-lg-4 animate-slide-up"
+              :style="`animation-delay: ${idx * 0.07}s`">
+
+              <q-card class="premium-glass-card border-red-low hover-card h-full flex column no-wrap shadow-24 rounded-20">
+                <q-card-section class="q-pa-lg col">
+                  <div class="row justify-between items-start q-mb-md">
+                    <q-badge color="red-10" class="font-mono text-weight-bolder q-px-md q-py-xs shadow-24" :label="prog.codigo" />
+                    <div class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:9px">{{ prog.tipo || 'ENTRENAMIENTO' }}</div>
+                  </div>
+                  <div class="text-h6 text-white font-head text-weight-bolder q-mb-sm line-height-1" style="font-size: 18px">{{ prog.nombre }}</div>
+                  <div class="text-caption text-grey-6 line-height-1 q-mb-lg" style="min-height: 40px">
+                    {{ prog.descripcion || 'Manual de instrucción de vuelo y tierra aprobado según RAC 141.' }}
+                  </div>
+                  
+                  <div class="row q-col-gutter-sm bg-black-20 rounded-12 q-pa-sm shadow-inner border-red-low">
+                    <div class="col-6 text-left">
+                      <div class="text-caption text-grey-7 font-mono uppercase tracking-widest" style="font-size:8px">VUELO</div>
+                      <div class="text-subtitle1 text-red-9 text-weight-bolder font-mono">{{ prog.horas_vuelo_min }}<span class="text-caption text-grey-6">H</span></div>
+                    </div>
+                    <div class="col-6 text-right">
+                      <div class="text-caption text-grey-7 font-mono uppercase tracking-widest" style="font-size:8px">TIERRA</div>
+                      <div class="text-subtitle1 text-white text-weight-bolder font-mono">{{ prog.horas_tierra_min }}<span class="text-caption text-grey-6">H</span></div>
+                    </div>
+                  </div>
+                </q-card-section>
+                
+                <q-separator dark class="opacity-5" />
+                
+                <q-card-actions align="between" class="q-px-lg q-py-md">
+                  <div class="row q-gutter-xs">
+                    <q-btn flat round color="red-9" icon="delete" size="sm" @click.stop="eliminarPrograma(prog)" />
+                    <q-btn flat round color="grey-6" icon="edit" size="sm" @click.stop="editarPrograma(prog)" />
+                  </div>
+                  <q-btn flat color="red-9" label="Syllabus RAC 141" icon="auto_stories" size="sm"
+                    @click.stop="verSyllabus(prog)" no-caps
+                    class="font-mono text-weight-bolder" />
+                </q-card-actions>
+              </q-card>
+            </div>
+          </div>
+        </q-tab-panel>
+
+        <!-- ════ SECCIÓN: EXPEDIENTES DIGITALES ════ -->
+        <q-tab-panel name="estudiantes" class="q-pa-xl">
+          <div class="row items-center justify-between q-mb-xl flex-wrap q-gutter-y-md">
+            <div class="col-12 col-sm-auto">
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Archivo Académico (RAC 141.77)</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">Control Central de Alumnos y Trazabilidad Académica</div>
+            </div>
+            <div class="col-12 col-sm-auto row q-gutter-sm">
+              <q-input v-model="filtroBusqueda" dense filled dark class="premium-input-login"
+                style="width:100%; min-width:280px" placeholder="Búsqueda de expediente..."
+                @keyup.enter="cargarDatos">
+                <template #prepend><q-icon name="manage_search" color="red-9" /></template>
+              </q-input>
+              <q-btn color="red-10" icon="person_add" label="Matricular Cadete" @click="abrirNuevoEstudiante" class="premium-btn q-px-md" />
+            </div>
+          </div>
+
+          <q-table :rows="estudiantes" :columns="columnsEstudiantes" row-key="id"
+            dark class="rac-table shadow-24 rounded-20" flat
+            :loading="loadingEstudiantes" :rows-per-page-options="[10,20,50]">
+            <template #body-cell-nombre="props">
+              <q-td :props="props">
+                <div class="row items-center q-gutter-md cursor-pointer" @click="$router.push(`/estudiantes/${props.row.id}`)">
+                  <q-avatar size="36px" class="shadow-24 border-red-low">
+                    <img :src="`https://ui-avatars.com/api/?name=${props.row.persona?.nombres}&background=A10B13&color=fff`" />
+                  </q-avatar>
+                  <div>
+                    <div class="text-weight-bolder text-white font-head hover-red" style="font-size:15px">{{ props.row.persona?.nombres }} {{ props.row.persona?.apellidos }}</div>
+                    <div class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:9px">EXP: {{ props.row.num_expediente }}</div>
+                  </div>
                 </div>
-            </div>
-          </q-tab-panel>
-
-          <!-- ESTUDIANTES PANEL -->
-          <q-tab-panel name="estudiantes">
-            <div class="row justify-between items-center q-mb-md">
-                <div class="text-h6 font-head">Expedientes Estudiantiles (RAC 141.77)</div>
-                <div class="row items-center q-gutter-sm">
-                    <q-input v-model="filtroBusqueda" dense outlined dark color="teal" placeholder="Buscar por nombre o documento..." class="bg-dark-light" @keyup.enter="cargarEstudiantes">
-                        <template v-slot:append>
-                            <q-icon name="search" />
-                        </template>
-                    </q-input>
+              </q-td>
+            </template>
+            <template #body-cell-estado="props">
+              <q-td :props="props" class="text-center">
+                <q-badge outline :color="getEstadoColor(props.row.estado)"
+                  :label="$q.screen.gt.xs ? props.row.estado?.toUpperCase() : props.row.estado?.slice(0,3).toUpperCase()"
+                  class="text-weight-bolder font-mono q-px-md q-py-xs shadow-24" />
+              </q-td>
+            </template>
+            <template #body-cell-acciones="props">
+              <q-td :props="props" class="text-right">
+                <div class="row items-center justify-end q-gutter-sm">
+                  <q-btn flat round color="emerald" icon="history_edu" size="sm" @click="abrirNuevaNota(props.row)" class="shadow-inner">
+                    <q-tooltip class="bg-emerald font-mono uppercase">Registrar Calificación</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round color="blue-9" icon="medical_services" size="sm" @click="abrirNuevoCertificado(props.row)" class="shadow-inner">
+                    <q-tooltip class="bg-blue-9 font-mono uppercase">Registrar Cert. Médico</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round color="red-9" icon="visibility" size="md"
+                    @click="$router.push(`/estudiantes/${props.row.id}`)"
+                    class="shadow-inner premium-hover-card">
+                    <q-tooltip class="bg-dark font-mono uppercase">Ver Detalle Académico</q-tooltip>
+                  </q-btn>
                 </div>
+              </q-td>
+            </template>
+          </q-table>
+        </q-tab-panel>
+
+        <!-- ════ SECCIÓN: FASE DE VUELO ════ -->
+        <q-tab-panel name="vuelo" class="q-pa-xl">
+          <div class="row justify-between items-center q-mb-xl">
+            <div>
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Registro de Misiones de Instrucción</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">Control de Instrucción Práctica y Calificaciones RAC 141</div>
             </div>
+            <q-btn color="red-9" icon="flight_takeoff" label="Autorizar Nueva Misión"
+              class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder"
+              @click="abrirRegistroVuelo" />
+          </div>
 
-            <q-table
-              :rows="estudiantes"
-              :columns="columnsEstudiantes"
-              row-key="id"
-              class="rac-table bg-transparent text-white"
-              flat
-              bordered
-              :loading="loadingEstudiantes"
-              v-model:pagination="pagination"
-              @request="cargarEstudiantes"
-            >
-              <template v-slot:body-cell-nombre="props">
-                <q-td :props="props" class="text-weight-bold">
-                  {{ props.row.persona?.nombres }} {{ props.row.persona?.apellidos }}
-                  <div class="text-caption text-grey-6">{{ props.row.num_expediente }}</div>
-                </q-td>
-              </template>
-              <template v-slot:body-cell-estado="props">
-                <q-td :props="props">
-                  <q-chip :color="getEstadoColor(props.row.estado)" text-color="white" size="sm">
-                    {{ props.row.estado.toUpperCase() }}
-                  </q-chip>
-                </q-td>
-              </template>
-              <template v-slot:body-cell-progreso="props">
-                <q-td :props="props" class="text-center" style="width: 150px">
-                  <q-linear-progress :value="0.35" color="teal-4" size="10px" rounded class="q-mt-sm" />
-                  <div class="text-caption text-grey-5">35% del curso</div>
-                </q-td>
-              </template>
-              <template v-slot:body-cell-acciones="props">
-                <q-td :props="props" class="text-right">
-                  <q-btn flat round color="teal-4" icon="account_circle" size="sm" @click="verDetalleEstudiante(props.row)">
-                    <q-tooltip>Ver Expediente Completo</q-tooltip>
-                  </q-btn>
-                  <q-btn flat round color="blue-4" icon="medical_services" size="sm" @click="verCertMedicos(props.row)">
-                    <q-tooltip>Certificados Médicos (RAC 61/67)</q-tooltip>
-                  </q-btn>
-                </q-td>
-              </template>
-            </q-table>
-          </q-tab-panel>
+          <q-table :rows="misionesVuelo" :columns="columnsVuelos" row-key="id"
+            dark class="rac-table shadow-24 rounded-20" flat
+            :loading="loadingVuelo" :rows-per-page-options="[10,20,50]">
+            <template #body-cell-fecha="props">
+              <q-td :props="props" class="font-mono text-grey-3">{{ props.row.fecha }}</q-td>
+            </template>
+            <template #body-cell-matricula="props">
+              <q-td :props="props" class="text-center">
+                <q-badge outline color="red-9" :label="props.row.matricula"
+                  class="font-mono text-weight-bolder q-px-lg" />
+              </q-td>
+            </template>
+            <template #body-cell-duracion="props">
+              <q-td :props="props" class="text-right font-mono text-red-9 text-weight-bolder text-h6">
+                {{ Number(props.row.horas || 0).toFixed(1) }}H
+              </q-td>
+            </template>
+            <template #body-cell-calificacion="props">
+              <q-td :props="props" class="text-center">
+                <q-badge :color="props.row.calificacion === 'S' ? 'emerald' : (props.row.calificacion === 'NA' ? 'grey-8' : 'red-10')"
+                  :label="props.row.calificacion || 'N/A'"
+                  class="font-mono text-weight-bolder q-px-lg shadow-24" />
+              </q-td>
+            </template>
+          </q-table>
+        </q-tab-panel>
 
-          <!-- NOTAS PANEL -->
-          <q-tab-panel name="notas">
-             <div class="row justify-between items-center q-mb-md">
-                <div class="text-h6 font-head">Registro de Calificaciones Teóricas</div>
-                <q-btn color="orange-8" icon="add_chart" label="Ingresar Nota" outline rounded class="glass-btn" @click="dialogNota = true" />
+      </q-tab-panels>
+    </q-card>
+
+    <q-dialog v-model="dialogPrograma" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(900px, 95vw);">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+          <div class="row items-center">
+            <q-icon name="edit_note" color="red-9" size="32px" class="q-mr-md glow-primary" />
+            <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">
+              {{ modoPrograma === 'crear' ? 'Nuevo Programa UAEAC' : 'Actualizar PIA' }}
             </div>
-            <p class="text-grey-5 font-mono text-caption">Las notas registradas aquí afectan directamente el cumplimiento del PIA (Programa de Instrucción Autorizado).</p>
-            
-            <!-- Aquí iría un listado de notas recientes o filtros por curso -->
-            <div class="q-pa-xl text-center">
-                <q-icon name="pending_actions" size="64px" color="grey-8" />
-                <div class="text-grey-7 q-mt-md">Selecciona un programa o estudiante para gestionar calificaciones.</div>
-            </div>
-          </q-tab-panel>
-        </q-tab-panels>
-      </q-card>
-    </div>
+          </div>
+          <q-btn flat round dense icon="close" @click="dialogPrograma = false" color="grey-6" class="bg-black-20 hover-red" />
+        </div>
 
-    <!-- Modal Detalle Expediente -->
-    <q-dialog v-model="dialogExpediente" full-width full-height>
-      <q-card class="bg-dark text-white">
-        <q-toolbar class="bg-teal-9 text-white">
-          <q-avatar icon="person" color="teal-7" />
-          <q-toolbar-title>
-            Expediente Digital: {{ estudianteTemp?.persona?.nombres }} {{ estudianteTemp?.persona?.apellidos }}
-            <span class="text-caption q-ml-md font-mono">{{ estudianteTemp?.num_expediente }}</span>
-          </q-toolbar-title>
-          <q-btn flat round dense icon="close" v-close-popup />
-        </q-toolbar>
-
-        <q-card-section class="row q-col-gutter-lg">
+        <q-form @submit.prevent="guardarPrograma" class="q-gutter-y-lg">
+          <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-4">
-                <q-card class="bg-dark-light bordered">
-                    <q-card-section>
-                        <div class="text-h6 text-teal-4 q-mb-md">Información General</div>
-                        <q-list dense dark padding>
-                            <q-item>
-                                <q-item-section avatar><q-icon name="fingerprint" color="teal-3" /></q-item-section>
-                                <q-item-section>
-                                    <q-item-label caption>Documento</q-item-label>
-                                    <q-item-label>{{ estudianteTemp?.persona?.num_documento }}</q-item-label>
-                                </q-item-section>
-                            </q-item>
-                            <q-item>
-                                <q-item-section avatar><q-icon name="flight_takeoff" color="teal-3" /></q-item-section>
-                                <q-item-section>
-                                    <q-item-label caption>Programa</q-item-label>
-                                    <q-item-label>{{ estudianteTemp?.programa?.nombre }}</q-item-label>
-                                </q-item-section>
-                            </q-item>
-                            <q-item>
-                                <q-item-section avatar><q-icon name="event" color="teal-3" /></q-item-section>
-                                <q-item-section>
-                                    <q-item-label caption>Fecha Ingreso</q-item-label>
-                                    <q-item-label>{{ estudianteTemp?.fecha_ingreso }}</q-item-label>
-                                </q-item-section>
-                            </q-item>
-                        </q-list>
-                    </q-card-section>
-                </q-card>
+              <q-input v-model="progForm.codigo" label="CÓDIGO UAEAC" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-select v-model="progForm.tipo" :options="['PPL', 'CPL', 'ATPL', 'HABILITACION']" label="CATEGORÍA RAC" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="progForm.rac_referencia" label="RAC REFERENCIA" placeholder="61.109" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-12">
+              <q-input v-model="progForm.nombre" label="NOMBRE DEL PROGRAMA ACADÉMICO" filled dark class="premium-input-login" stack-label />
             </div>
 
-            <div class="col-12 col-md-8">
-                <q-card class="bg-dark-light bordered">
-                    <q-card-section>
-                        <div class="text-h6 text-teal-4 q-mb-md">Progreso de Instrucción RAC 61</div>
-                        <div class="row q-col-gutter-sm text-center">
-                            <div class="col-4">
-                                <q-circular-progress
-                                    show-value
-                                    font-size="12px"
-                                    :value="45"
-                                    size="80px"
-                                    :thickness="0.2"
-                                    color="teal-4"
-                                    track-color="grey-9"
-                                    class="q-ma-md"
-                                >
-                                    45.5h
-                                </q-circular-progress>
-                                <div class="text-caption">Horas Voladas</div>
-                            </div>
-                            <!-- Más estadísticas aquí -->
-                        </div>
-                    </q-card-section>
-                </q-card>
+            <div class="col-12 text-grey-6 font-mono text-uppercase q-mt-md" style="font-size:10px; letter-spacing: 2px;">REQUISITOS MÍNIMOS DE EXPERIENCIA (HORAS)</div>
+            
+            <div class="col-6 col-md-3">
+              <q-input v-model.number="progForm.horas_vuelo_min" type="number" label="VUELO TOTAL" filled dark class="premium-input-login" stack-label />
             </div>
-        </q-card-section>
+            <div class="col-6 col-md-3">
+              <q-input v-model.number="progForm.horas_tierra_min" type="number" label="Tierra/Teoría" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-6 col-md-3">
+              <q-input v-model.number="progForm.horas_dual_min" type="number" label="INSTR. DUAL" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-6 col-md-3">
+              <q-input v-model.number="progForm.horas_solo_min" type="number" label="VUELO SOLO" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-6 col-md-4">
+              <q-input v-model.number="progForm.horas_ifr_min" type="number" label="HORAS IFR/SIM" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-6 col-md-4">
+              <q-input v-model.number="progForm.horas_noche_min" type="number" label="HORAS NOCHE" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model.number="progForm.horas_sim_max" type="number" label="MÁX SIMULADOR" filled dark class="premium-input-login" stack-label />
+            </div>
+          </div>
+          <q-btn type="submit" color="red-10" class="full-width premium-btn q-py-lg shadow-24"
+            label="Guardar Configuración de Programa" icon="save"
+            :loading="guardandoPrograma" />
+        </q-form>
       </q-card>
     </q-dialog>
 
-    <!-- Modal Programa -->
-    <q-dialog v-model="dialogPrograma" persistent>
-        <q-card class="bg-dark text-white" style="width: 500px; max-width: 80vw;">
-            <q-card-section class="bg-teal-9">
-                <div class="text-h6">{{ formPrograma.id ? 'Editar Programa' : 'Nuevo Programa' }}</div>
-            </q-card-section>
-            <q-form @submit.prevent="guardarPrograma">
-                <q-card-section class="q-gutter-md">
-                    <q-input v-model="formPrograma.codigo" label="Código" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <q-input v-model="formPrograma.nombre" label="Nombre" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <q-select v-model="formPrograma.tipo" :options="['Avión', 'Helicóptero']" label="Tipo" outlined dense dark bg-color="grey-10" />
-                    
-                    <div class="row q-col-gutter-sm">
-                      <div class="col-6"><q-input v-model="formPrograma.horas_tierra_min" type="number" step="0.1" label="Hrs Tierra" outlined dense dark bg-color="grey-10" /></div>
-                      <div class="col-6"><q-input v-model="formPrograma.horas_vuelo_min" type="number" step="0.1" label="Hrs Vuelo Total" outlined dense dark bg-color="grey-10" /></div>
-                      <div class="col-6"><q-input v-model="formPrograma.horas_dual_min" type="number" step="0.1" label="Hrs Dual" outlined dense dark bg-color="grey-10" /></div>
-                      <div class="col-6"><q-input v-model="formPrograma.horas_solo_min" type="number" step="0.1" label="Hrs Solo" outlined dense dark bg-color="grey-10" /></div>
-                    </div>
-                </q-card-section>
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancelar" color="grey" v-close-popup />
-                    <q-btn flat label="Guardar" color="teal-4" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
-    </q-dialog>
-
-    <!-- Modal Syllabus -->
-    <q-dialog v-model="dialogSyllabus">
-        <q-card class="bg-dark text-white" style="width: 500px; max-width: 80vw;">
-            <q-card-section class="bg-teal-9 text-white">
-                <div class="text-h6">Syllabus de Vuelo Operativo</div>
-                <div class="text-caption">{{ programaSeleccionado?.nombre }} ({{ programaSeleccionado?.codigo }})</div>
-            </q-card-section>
-            
-            <q-card-section class="q-pt-md">
-                <div class="text-subtitle2 text-teal-4 q-mb-md font-mono text-uppercase">Desglose de Materias y Contenido LMS</div>
-                
-                <div v-for="etapa in programaSeleccionado?.etapas" :key="etapa.id" class="q-mb-md">
-                    <div class="text-caption text-grey-5 q-mb-sm">Etapa {{ etapa.numero }}: {{ etapa.nombre }}</div>
-                    <q-list bordered separator class="rounded-borders bg-dark-light">
-                        <q-item v-for="materia in etapa.materias" :key="materia.id">
-                            <q-item-section>
-                                <q-item-label class="text-weight-bold">{{ materia.nombre }}</q-item-label>
-                                <q-item-label caption class="text-grey-6">{{ materia.codigo }} · {{ materia.horas }}h</q-item-label>
-                            </q-item-section>
-                            <q-item-section side>
-                                <div class="row q-gutter-xs">
-                                    <q-btn flat dense icon="school" color="primary" @click="abrirGestionLms(materia)">
-                                        <q-tooltip>Gestionar Temario y Recursos</q-tooltip>
-                                    </q-btn>
-                                    <q-btn flat dense icon="quiz" color="orange" @click="abrirBancoPreguntas(materia)">
-                                        <q-tooltip>Banco de Preguntas</q-tooltip>
-                                    </q-btn>
-                                </div>
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
+    <!-- ════ DIÁLOGO: SYLLABUS DEL PROGRAMA ════ -->
+    <q-dialog v-model="dialogSyllabus" persistent backdrop-filter="blur(25px)">
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20 overflow-hidden" style="width:min(1280px, 98vw); max-height: 95vh;">
+        <div class="rac-dialog-header welcome-hero overflow-hidden" style="padding: 30px !important;">
+          <div class="hero-glow"></div>
+          <div class="row items-center justify-between q-col-gutter-md">
+            <div class="row items-center q-col-gutter-md col-12 col-sm-8">
+              <div class="col-auto">
+                <div class="kpi-icon-premium shadow-24 bg-red-low flex flex-center" style="width: 60px; height: 60px; border-radius: 16px;">
+                  <q-icon name="auto_stories" color="red-9" size="32px" class="glow-primary" />
                 </div>
+              </div>
+              <div class="col">
+                <div class="font-mono text-grey-6 uppercase tracking-widest q-mb-xs" style="font-size:9px; letter-spacing: 2px;">Estructura Curricular Autorizada · PIA</div>
+                <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter line-height-1 q-mb-xs">{{ progTemp?.nombre }}</div>
+                <q-badge outline color="red-9" class="font-mono text-weight-bolder q-px-sm" style="font-size:10px">{{ progTemp?.codigo }}</q-badge>
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 row items-center q-gutter-sm justify-end">
+              <q-btn color="red-9" icon="add" label="Agregar Fase" @click="abrirNuevaEtapa" 
+                class="premium-btn q-px-lg q-py-sm shadow-24 text-weight-bolder" unelevated no-caps />
+              <q-btn flat round dense icon="close" @click="dialogSyllabus = false" color="grey-6" 
+                class="bg-black-20 hover-red" />
+            </div>
+          </div>
+        </div>
+        <div class="rac-dialog-body q-pa-none">
+          <q-scroll-area style="height: calc(95vh - 160px)">
+            <div class="q-pa-lg q-pa-md-xl q-gutter-y-xl">
+          <!-- KPIs de horas -->
+          <div class="row q-col-gutter-lg">
+            <div class="col-12 col-sm-4">
+              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-vuelo">
+                <q-icon name="flight_takeoff" color="red-9" size="20px" class="q-mb-xs opacity-50" />
+                <div class="text-h4 text-weight-bolder text-red-9 line-height-1">{{ Number(progTemp?.horas_vuelo_min || 0).toFixed(1) }}</div>
+                <q-separator dark class="q-my-sm opacity-10" />
+                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">VUELO (MIN)</div>
+              </q-card>
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-tierra">
+                <q-icon name="school" color="white" size="20px" class="q-mb-xs opacity-50" />
+                <div class="text-h4 text-weight-bolder text-white line-height-1">{{ Number(progTemp?.horas_tierra_min || 0).toFixed(1) }}</div>
+                <q-separator dark class="q-my-sm opacity-10" />
+                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">TIERRA (MIN)</div>
+              </q-card>
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-sim">
+                <q-icon name="videogame_asset" color="grey-4" size="20px" class="q-mb-xs opacity-50" />
+                <div class="text-h4 text-weight-bolder text-grey-4 line-height-1">{{ Number(progTemp?.horas_sim_max || 0).toFixed(1) }}</div>
+                <q-separator dark class="q-my-sm opacity-10" />
+                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">SIM (MAX)</div>
+              </q-card>
+            </div>
+          </div>
 
-                <q-separator dark class="q-my-lg" />
-                
-                <div class="text-subtitle2 text-teal-4 q-mb-sm font-mono text-uppercase">Requisitos Mínimos Generales (RAC 141)</div>
-                <q-list bordered separator class="rounded-borders bg-dark-light">
-                    <!-- Fase Tierra -->
-                    <q-item>
-                        <q-item-section avatar>
-                            <q-avatar color="teal-9" text-color="teal-3" icon="menu_book" />
-                        </q-item-section>
-                        <q-item-section>
-                            <q-item-label class="text-weight-bold">Fase de Tierra (Teórica)</q-item-label>
-                            <q-item-label caption class="text-grey-5">Horas presenciales requeridas</q-item-label>
-                        </q-item-section>
-                        <q-item-section side>
-                            <div class="text-h6 text-teal-3">{{ programaSeleccionado?.horas_tierra_min || 0 }}h</div>
-                        </q-item-section>
-                    </q-item>
-
-                    <!-- Fase Vuelo Total -->
-                    <q-item>
-                        <q-item-section avatar>
-                            <q-avatar color="blue-9" text-color="blue-3" icon="flight_takeoff" />
-                        </q-item-section>
-                        <q-item-section>
-                            <q-item-label class="text-weight-bold">Fase de Vuelo (Práctica)</q-item-label>
-                            <q-item-label caption class="text-grey-5">Total de horas de vuelo mínimas</q-item-label>
-                        </q-item-section>
-                        <q-item-section side>
-                            <div class="text-h6 text-blue-3">{{ programaSeleccionado?.horas_vuelo_min || 0 }}h</div>
-                        </q-item-section>
-                    </q-item>
-
-                </q-list>
-
-                <div class="bg-grey-10 q-pa-sm q-mt-md rounded-borders flex items-center text-grey-5 shadow-1" style="border-left: 3px solid #0d9488">
-                    <q-icon name="info" size="20px" class="q-mr-sm text-teal-5" />
-                    <span style="font-size: 11px;">Instructores: Use los íconos superiores en cada materia para configurar el aula virtual y el examen.</span>
-                </div>
-            </q-card-section>
-
-    <!-- Dialogo Gestion LMS Materia -->
-    <q-dialog v-model="dialogLmsMateria" persistent>
-        <q-card class="bg-dark text-white" style="width: 600px; max-width: 90vw;">
-            <q-card-section class="bg-primary">
-                <div class="text-h6">Configuración de Aula Virtual</div>
-                <div class="text-caption">{{ materiaSeleccionada?.nombre }}</div>
-            </q-card-section>
-            <q-form @submit.prevent="guardarLmsMateria">
-                <q-card-section class="q-gutter-md">
-                    <div class="row q-col-gutter-sm">
-                        <div class="col-4"><q-input v-model.number="materiaSeleccionada.max_intentos" type="number" label="Máx. Intentos" outlined dark dense bg-color="grey-10" /></div>
-                        <div class="col-4"><q-input v-model.number="materiaSeleccionada.costo_reintento" type="number" label="Costo Supl. ($)" outlined dark dense bg-color="grey-10" /></div>
-                        <div class="col-4"><q-input v-model.number="materiaSeleccionada.duracion_minutos" type="number" label="Tiempo (Min)" outlined dark dense bg-color="grey-10" /></div>
+          <!-- Módulos de instrucción -->
+          <div>
+            <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mb-lg border-bottom-border pb-md" style="font-size:10px">
+              Módulos de Instrucción Registrados
+            </div>
+            <q-list dark separator class="premium-glass-card border-red-low overflow-hidden shadow-inner rounded-20">
+              <template v-for="(et, n) in progTemp?.etapas" :key="et.id">
+                <q-item class="q-pa-md hover-row">
+                <q-item-section avatar>
+                  <q-avatar color="red-10" text-color="white" size="28px" class="font-mono text-weight-bolder shadow-24" style="font-size:10px">{{ n + 1 }}</q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bolder text-white font-head text-subtitle2">
+                    {{ et.nombre }}
+                  </q-item-label>
+                  <q-item-label caption class="text-grey-6 font-mono uppercase q-mt-xs" style="font-size:8px; line-height: 1.2;">
+                    {{ et.descripcion || 'Sin descripción técnica registrada' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <div class="row items-center q-gutter-md">
+                    <div class="text-right">
+                       <div class="text-red-9 font-mono text-weight-bolder text-subtitle1">{{ Number(et.horas_vuelo).toFixed(1) }}H <span class="text-caption text-grey-7" style="font-size:8px">V</span></div>
+                       <div class="text-white font-mono text-weight-bolder text-caption" style="font-size:10px">{{ Number(et.horas_tierra).toFixed(1) }}H <span class="text-caption text-grey-7" style="font-size:8px">T</span></div>
                     </div>
-                    <q-input v-model="materiaSeleccionada.link_meet" label="Enlace Google Meet" outlined dark dense bg-color="grey-10" placeholder="https://meet.google.com/..." />
-                    <q-input v-model="materiaSeleccionada.documento_url" label="URL de Documento / PDF" outlined dark dense bg-color="grey-10" placeholder="https://..." />
-                    <q-input v-model="materiaSeleccionada.temario" type="textarea" label="Temario de la Materia" outlined dark bg-color="grey-10" placeholder="Desglose de temas a ver..." />
-                </q-card-section>
-                <q-card-actions align="right">
-                    <q-btn flat label="Cerrar" color="grey" v-close-popup />
-                    <q-btn flat label="Guardar RAC 141" color="primary" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
-    </q-dialog>
+                    <div class="column q-gutter-y-xs">
+                       <q-btn flat round dense icon="edit" color="blue-8" size="xs" @click="editarEtapa(et)" />
+                       <q-btn flat round dense icon="delete" color="red-9" size="xs" @click="eliminarEtapa(et.id)" />
+                    </div>
+                  </div>
+                </q-item-section>
+              </q-item>
 
-    <!-- Dialogo Banco de Preguntas -->
-    <q-dialog v-model="dialogBancoPreguntas" maximized transition-show="slide-up" transition-hide="slide-down">
-        <q-card class="bg-dark text-white">
-            <q-toolbar class="bg-orange-9">
-                <q-btn flat round dense icon="arrow_back" v-close-popup />
-                <q-toolbar-title>Banco de Preguntas: {{ materiaSeleccionada?.nombre }}</q-toolbar-title>
-                <q-btn flat icon="add" label="Nueva Pregunta" @click="abrirNuevaPregunta" />
-            </q-toolbar>
-            
-            <q-card-section>
-                <q-table
-                    :rows="preguntas"
-                    :columns="[
-                        { name: 'pregunta', label: 'Pregunta', align: 'left', field: 'pregunta' },
-                        { name: 'resp', label: 'R. Correcta', align: 'left', field: 'respuesta_correcta' },
-                        { name: 'acciones', label: 'Acciones', align: 'right' }
-                    ]"
-                    flat dark class="bg-transparent"
-                    :loading="cargandoPreguntas"
-                >
-                    <template v-slot:body-cell-pregunta="props">
-                        <q-td :props="props">
-                            <div style="white-space: normal; max-width: 500px">
-                                {{ props.row.pregunta }}
+              <!-- SUB-LISTA DE MATERIAS DE LA ETAPA -->
+              <div v-if="et.materias?.length" class="q-px-xl q-pb-lg">
+                <div class="row q-col-gutter-sm">
+                   <div v-for="mat in et.materias" :key="mat.id" class="col-12 col-sm-6">
+                      <q-card class="bg-black-30 border-red-low q-pa-md hover-card" style="border-radius:12px">
+                         <div class="row justify-between items-center no-wrap">
+                            <div class="ellipsis">
+                               <div class="text-weight-bold text-white font-head">{{ mat.nombre }}</div>
+                               <div class="text-caption text-grey-6 font-mono" style="font-size:9px">{{ mat.codigo }} · {{ mat.horas }}H</div>
                             </div>
-                        </q-td>
-                    </template>
-                    <template v-slot:body-cell-acciones="props">
-                        <q-td :props="props">
-                            <q-btn flat icon="edit" color="blue" size="sm" @click="editarPregunta(props.row)" />
-                            <q-btn flat icon="delete" color="red" size="sm" @click="eliminarPregunta(props.row.id)" />
-                        </q-td>
-                    </template>
-                </q-table>
-            </q-card-section>
-        </q-card>
+                            <div class="row no-wrap">
+                               <q-btn flat round dense icon="video_settings" color="red-9" size="sm" @click="gestionarLms(mat)">
+                                  <q-tooltip class="bg-dark shadow-24">Gestionar Lecciones y Exámenes</q-tooltip>
+                               </q-btn>
+                               <q-btn flat round dense icon="edit" color="grey-7" size="sm" @click="editarMateria(mat, et.id)" />
+                               <q-btn flat round dense icon="delete" color="grey-8" size="sm" @click="eliminarMateria(mat.id)" />
+                            </div>
+                         </div>
+                      </q-card>
+                   </div>
+                </div>
+              </div>
+              <div class="q-px-xl q-pb-xl text-right">
+                 <q-btn flat dense color="grey-6" icon="add_circle_outline" label="Nueva Materia" size="sm" @click="abrirNuevaMateria(et.id)" no-caps class="font-mono text-weight-bolder" />
+              </div>
+
+              <q-separator dark class="opacity-5" v-if="n < progTemp.etapas.length - 1" />
+            </template>
+
+            <q-item v-if="!progTemp?.etapas?.length" class="q-pa-xl text-center text-grey-7 font-mono uppercase">
+                 Sin fases registradas en el syllabus.
+            </q-item>
+            </q-list>
+            </div>
+          </div>
+        </q-scroll-area>
+      </div>
+      </q-card>
     </q-dialog>
 
-    <!-- Dialogo Form Pregunta -->
-    <q-dialog v-model="dialogFormPregunta" persistent>
-        <q-card class="bg-dark text-white" style="width: 600px">
-            <q-card-section class="bg-orange-9 text-white">
-                <div class="text-h6">{{ formPregunta.id ? 'Editar Pregunta' : 'Nueva Pregunta' }}</div>
-            </q-card-section>
-            <q-form @submit.prevent="guardarPregunta">
-                <q-card-section class="q-gutter-sm">
-                    <q-input v-model="formPregunta.pregunta" label="Enunciado de la Pregunta" outlined dark type="textarea" bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    
-                    <div class="text-subtitle2 text-grey-5 q-mt-sm">Opciones de Respuesta (Mín. 2)</div>
-                    <div v-for="(opc, idx) in formPregunta.opciones" :key="idx" class="row q-gutter-xs items-center q-mb-xs">
-                        <q-input v-model="formPregunta.opciones[idx]" :label="'Opción ' + (idx + 1)" outlined dark dense class="col" bg-color="grey-10" :rules="[val => !!val || 'Campo no puede estar vacío']" />
-                        <q-btn flat round icon="delete" color="red" size="sm" @click="formPregunta.opciones.splice(idx, 1)" v-if="formPregunta.opciones.length > 2" />
-                    </div>
-                    <q-btn flat icon="add" label="Agregar Alternativa" color="teal" size="sm" class="q-mb-md" @click="formPregunta.opciones.push('')" />
-
-                    <q-select v-model="formPregunta.respuesta_correcta" :options="formPregunta.opciones" label="Selecciona la Respuesta Correcta" outlined dark dense bg-color="grey-10" class="q-mt-md" :rules="[val => !!val || 'Debes marcar cuál es la correcta']" />
-                </q-card-section>
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancelar" v-close-popup />
-                    <q-btn flat label="Guardar Pregunta" color="orange" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
+    <q-dialog v-model="dialogEtapa" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(650px, 95vw);">
+         <div class="row items-center justify-between q-mb-lg border-bottom-border pb-md">
+            <div class="text-h6 text-white font-head text-weight-bolder uppercase">{{ modoEtapa === 'crear' ? 'Nueva Fase' : 'Editar Fase' }}</div>
+            <q-btn flat round dense icon="close" @click="dialogEtapa = false" color="grey-6" class="bg-black-20 hover-red" />
+         </div>
+         <q-form @submit.prevent="guardarEtapa" class="q-gutter-y-md">
+            <q-input v-model="etapaForm.nombre" filled dark label="TÍTULO DE LA FASE/MÓDULO" class="premium-input-login" :rules="[v => !!v || 'Campo obligatorio']" />
+            <q-input v-model="etapaForm.descripcion" filled dark type="textarea" label="CONTENIDO TÉCNICO / DESCRIPCIÓN" class="premium-input-login" rows="2" />
+            <div class="row q-col-gutter-md">
+               <div class="col-6"><q-input v-model.number="etapaForm.horas_vuelo" type="number" step="0.1" filled dark label="H. VUELO" class="premium-input-login" /></div>
+               <div class="col-6"><q-input v-model.number="etapaForm.horas_tierra" type="number" step="0.1" filled dark label="H. TIERRA" class="premium-input-login" /></div>
+            </div>
+            <q-btn type="submit" color="red-10" label="Guardar Fase" class="full-width premium-btn q-py-md" :loading="guardandoEtapa" />
+         </q-form>
+      </q-card>
     </q-dialog>
 
-            <q-card-actions align="right" class="bg-dark">
-                <q-btn flat label="Cerrar" color="teal-4" v-close-popup />
-            </q-card-actions>
-        </q-card>
+    <q-dialog v-model="dialogMateria" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(650px, 95vw);">
+        <div class="q-pa-xl border-bottom-border pb-md">
+          <div class="row items-center justify-between">
+            <div class="row items-center">
+              <q-icon name="menu_book" color="red-9" size="32px" class="q-mr-md glow-primary" />
+              <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Detalle de Asignatura</div>
+            </div>
+            <q-btn flat round dense icon="close" v-close-popup color="grey-6" class="bg-black-20 hover-red" />
+          </div>
+        </div>
+        <div class="q-pa-xl">
+           <q-form @submit.prevent="guardarMateria" class="q-gutter-y-lg">
+            <q-input v-model="materiaForm.nombre" filled dark label="NOMBRE DE LA MATERIA" class="premium-input-login" :rules="[v => !!v || 'Obligatorio']" />
+            <div class="row q-col-gutter-md">
+               <div class="col-12 col-md-6">
+                 <q-select v-model="materiaForm.tipo" :options="['teorica', 'practica', 'simulador']" label="MODALIDAD" filled dark class="premium-input-login" />
+               </div>
+               <div class="col-12 col-md-6">
+                 <q-input v-model.number="materiaForm.nota_minima" type="number" label="NOTA MÍNIMA" filled dark class="premium-input-login" />
+               </div>
+               <div class="col-6"><q-input v-model="materiaForm.codigo" filled dark label="CÓDIGO (PPA-01)" class="premium-input-login" /></div>
+               <div class="col-6"><q-input v-model.number="materiaForm.horas" type="number" filled dark label="HORAS CARGA" class="premium-input-login" /></div>
+               <div class="col-12">
+                 <q-input v-model="materiaForm.rac_referencia" filled dark label="RAC REFERENCIA" class="premium-input-login" />
+               </div>
+            </div>
+            <q-btn type="submit" color="red-10" label="Sincronizar Materia al Syllabus" class="full-width premium-btn q-py-md shadow-24" :loading="guardandoMat" />
+         </q-form>
+        </div>
+      </q-card>
     </q-dialog>
 
-    <!-- Modal Cert Medico -->
-    <q-dialog v-model="dialogCertMedico" persistent>
-        <q-card class="bg-dark text-white" style="width: 500px; max-width: 80vw;">
-            <q-card-section class="bg-blue-9">
-                <div class="text-h6">Registrar Certificado Médico</div>
-                <div class="text-caption">{{ estudianteTemp?.persona?.nombres }} {{ estudianteTemp?.persona?.apellidos }}</div>
-            </q-card-section>
-            <q-form @submit.prevent="guardarCertMedico">
-                <q-card-section class="q-gutter-md">
-                    <q-select v-model="formCert.tipo" :options="['clase_1', 'clase_2', 'clase_3']" label="Clase de Certificado" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <q-input v-model="formCert.numero_certificado" label="Número Certificado" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <div class="row q-col-gutter-sm">
-                      <div class="col-6"><q-input v-model="formCert.fecha_emision" type="date" label="Emisión" stack-label outlined dense dark bg-color="grey-10" /></div>
-                      <div class="col-6"><q-input v-model="formCert.fecha_vencimiento" type="date" label="Vencimiento" stack-label outlined dense dark bg-color="grey-10" /></div>
-                    </div>
-                    <q-input v-model="formCert.centro_aeromedico" label="Centro Aeromédico" outlined dense dark bg-color="grey-10" />
-                </q-card-section>
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancelar" color="grey" v-close-popup />
-                    <q-btn flat label="Guardar RAC 67" color="blue-4" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
+    <!-- ════ DIÁLOGO: GESTIÓN LMS (AULA VIRTUAL ADMIN) ════ -->
+    <q-dialog v-model="dialogLms" persistent maximized transition-show="slide-up" transition-hide="slide-down">
+      <q-card class="bg-dark-page text-white overflow-hidden">
+         <!-- Navbar del LMS -->
+         <q-toolbar class="q-pa-lg border-bottom-border bg-black-20">
+            <q-btn flat round dense icon="arrow_back" @click="dialogLms = false" />
+            <q-toolbar-title class="font-head text-weight-bolder uppercase tracking-widest">
+               Gestión de Aula Virtual: <span class="text-red-9">{{ matActiva?.nombre }}</span>
+            </q-toolbar-title>
+            <q-tabs v-model="tabLms" dense active-color="red-9" indicator-color="red-9" class="q-mx-xl" no-caps>
+               <q-tab name="lecciones" label="Lecciones y Contenido" icon="smart_display" />
+               <q-tab name="preguntas" label="Banco de Preguntas" icon="quiz" />
+               <q-tab name="config" label="Configuración Examen" icon="settings" />
+            </q-tabs>
+            <q-btn color="red-9" icon="save" label="Sincronizar LMS" @click="dialogLms = false" class="premium-btn q-px-xl" />
+         </q-toolbar>
+
+         <q-scroll-area style="height: calc(100vh - 80px)">
+            <q-tab-panels v-model="tabLms" animated class="bg-transparent">
+               
+               <!-- PANEL: LECCIONES -->
+               <q-tab-panel name="lecciones" class="q-pa-xl">
+                  <div class="row justify-between items-center q-mb-xl">
+                     <div>
+                        <div class="text-h5 font-head text-weight-bolder">Contenidos de Video y Material</div>
+                        <div class="text-caption text-grey-6 font-mono uppercase">Estructura teórica del módulo de entrenamiento</div>
+                     </div>
+                     <q-btn color="red-9" icon="add" label="Añadir Nueva Lección" @click="abrirNuevaLeccion" class="premium-btn q-px-lg" />
+                  </div>
+
+
+                  <div v-if="!lecciones?.length" class="text-center q-pa-xl border-red-low rounded-20 bg-black-20">
+                     <q-icon name="video_library" size="64px" color="grey-8" class="q-mb-md" />
+                     <div class="text-h6 text-grey-6 font-mono uppercase">Sin lecciones cargadas</div>
+                  </div>
+
+                  <q-list separator dark class="premium-glass-card rounded-20 overflow-hidden shadow-24 border-red-low">
+                     <q-item v-for="lec in lecciones" :key="lec.id" class="q-pa-xl hover-row">
+                        <q-item-section avatar>
+                           <q-icon name="play_circle" color="red-9" size="32px" />
+                        </q-item-section>
+                        <q-item-section>
+                           <q-item-label class="text-h6 font-head text-weight-bolder">{{ lec.titulo }}</q-item-label>
+                           <q-item-label caption class="text-grey-6 font-mono">{{ lec.video_url || 'Sin video asignado' }}</q-item-label>
+                        </q-item-section>
+                        <q-item-section side>
+                           <div class="row q-gutter-sm">
+                              <q-btn flat round dense icon="delete" color="red-9" @click="eliminarLeccion(lec.id)" />
+                           </div>
+                        </q-item-section>
+                     </q-item>
+                  </q-list>
+               </q-tab-panel>
+
+               <!-- PANEL: PREGUNTAS -->
+               <q-tab-panel name="preguntas" class="q-pa-xl">
+                  <div class="row justify-between items-center q-mb-xl">
+                     <div>
+                        <div class="text-h5 font-head text-weight-bolder">Banco de Preguntas UAEAC</div>
+                        <div class="text-caption text-grey-6 font-mono uppercase">Reactivos para evaluaciones de competencia técnica</div>
+                     </div>
+                     <q-btn color="red-9" icon="add" label="Crear Nueva Pregunta" @click="abrirNuevaPregunta" class="premium-btn q-px-lg" />
+                  </div>
+
+
+                  <div class="row q-col-gutter-lg">
+                     <div v-for="preg in bancoPreguntas" :key="preg.id" class="col-12 col-md-6">
+                        <q-card class="premium-glass-card q-pa-lg border-red-low shadow-24 flex column h-full">
+                           <div class="row justify-between q-mb-sm">
+                              <q-badge color="grey-9" label="OPCIÓN MÚLTIPLE" class="font-mono text-weight-bold" />
+                              <div class="row q-gutter-xs">
+                                 <q-btn flat round dense icon="delete" size="sm" color="red-9" @click="eliminarPregunta(preg.id)" />
+                              </div>
+                           </div>
+                           <div class="text-weight-bolder text-white q-mb-md" style="font-size:16px">{{ preg.pregunta }}</div>
+                           <q-separator dark class="q-my-md opacity-10" />
+                           <div class="q-gutter-y-xs col">
+                              <div v-for="(opt, oidx) in (preg.opciones || [])" :key="oidx" class="text-caption flex items-center">
+                                 <q-icon :name="opt === preg.respuesta_correcta ? 'check_circle' : 'circle'" :color="opt === preg.respuesta_correcta ? 'emerald' : 'grey-8'" size="14px" class="q-mr-sm" />
+                                 <span :class="opt === preg.respuesta_correcta ? 'text-emerald text-weight-bold' : 'text-grey-6'">{{ opt }}</span>
+                              </div>
+                           </div>
+                        </q-card>
+                     </div>
+                  </div>
+               </q-tab-panel>
+
+               <!-- PANEL: CONFIG -->
+               <q-tab-panel name="config" class="q-pa-xl">
+                  <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low" style="max-width: 600px">
+                     <div class="text-h5 font-head text-weight-bolder q-mb-xl uppercase text-red-9">Parámetros de Evaluación</div>
+                     <q-form class="q-gutter-y-lg">
+                        <q-input v-model.number="matActiva.nota_minima" type="number" filled dark label="NOTA MÍNIMA PARA APROBAR (%)" class="premium-input-login" prefix="%" />
+                        <q-input v-model.number="matActiva.max_intentos" type="number" filled dark label="NÚMERO MÁXIMO DE INTENTOS" class="premium-input-login" />
+                        <q-input v-model="matActiva.link_meet" filled dark label="ENLACE GOOGLE MEET (CLASE VIVO)" class="premium-input-login" />
+                        <q-input v-model="matActiva.video_url" filled dark label="VIDEO INTRODUCTORIO (YOUTUBE/DRIVE)" class="premium-input-login" />
+                        <q-btn color="red-10" label="Guardar Configuración General" @click="guardarConfigGeneral" class="full-width premium-btn q-py-lg shadow-24" :loading="guardandoLms" />
+                     </q-form>
+                  </q-card>
+               </q-tab-panel>
+
+            </q-tab-panels>
+         </q-scroll-area>
+      </q-card>
     </q-dialog>
 
-    <!-- Modal Nota -->
-    <q-dialog v-model="dialogNota" persistent>
-        <q-card class="bg-dark text-white" style="width: 500px; max-width: 80vw;">
-            <q-card-section class="bg-orange-9">
-                <div class="text-h6">Ingresar Calificación Teórica</div>
-            </q-card-section>
-            <q-form @submit.prevent="guardarNota">
-                <q-card-section class="q-gutter-md">
-                    <q-select v-model="formNota.estudiante_id" :options="estudiantes" option-label="num_expediente" option-value="id" map-options emit-value label="Estudiante" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']">
-                         <template v-slot:option="scope">
-                            <q-item v-bind="scope.itemProps" dark>
-                                <q-item-section>
-                                    <q-item-label>{{ scope.opt.persona?.nombres }} {{ scope.opt.persona?.apellidos }}</q-item-label>
-                                    <q-item-label caption>{{ scope.opt.num_expediente }}</q-item-label>
-                                </q-item-section>
-                            </q-item>
-                        </template>
-                        <template v-slot:selected-item="scope">
-                            {{ scope.opt.persona?.nombres }} - {{ scope.opt.num_expediente }}
-                        </template>
-                    </q-select>
-                    <!-- Asumiendo materia_id temporal por no tener tabla unida a la vista de materias directamente -->
-                    <q-input v-model="formNota.materia_id" type="number" label="ID Materia (Temporal)" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <q-input v-model="formNota.nota" type="number" step="0.1" label="Calificación (0-100)" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                    <q-input v-model="formNota.fecha_evaluacion" type="date" stack-label label="Fecha" outlined dense dark bg-color="grey-10" :rules="[val => !!val || 'Requerido']" />
-                </q-card-section>
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancelar" color="grey" v-close-popup />
-                    <q-btn flat label="Registrar" color="orange-4" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
+    <!-- ════ DIÁLOGOS: CREACIÓN LECCIÓN Y PREGUNTA ════ -->
+    <q-dialog v-model="dialogNuevaLeccion" backdrop-filter="blur(15px)">
+       <q-card class="premium-glass-card q-pa-xl border-red-low shadow-24 rounded-20" style="width:500px">
+          <div class="text-h6 text-white font-head q-mb-lg uppercase text-red-9">Nueva Lección de Video</div>
+          <q-form @submit.prevent="guardarLeccion" class="q-gutter-y-md">
+             <q-input v-model="leccionForm.titulo" filled dark label="TÍTULO DE LA LECCIÓN" class="premium-input-login" :rules="[v=>!!v||'Requerido']" />
+             <q-input v-model="leccionForm.video_url" filled dark label="URL VIDEO (YOUTUBE/DRIVE)" class="premium-input-login" />
+             <q-input v-model="leccionForm.descripcion" type="textarea" filled dark label="DESCRIPCIÓN" class="premium-input-login" rows="2" />
+             <q-btn type="submit" color="red-10" label="Añadir Lección" class="full-width premium-btn q-py-md" />
+          </q-form>
+       </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogNuevaPregunta" backdrop-filter="blur(15px)">
+       <q-card class="premium-glass-card q-pa-xl border-red-low shadow-24 rounded-20" style="width:600px">
+          <div class="text-h6 text-white font-head q-mb-lg uppercase text-red-9">Añadir Reactivo al Banco</div>
+          <q-form @submit.prevent="guardarPregunta" class="q-gutter-y-md">
+             <q-input v-model="preguntaForm.pregunta" filled dark type="textarea" label="PREGUNTA / ENUNCIADO" class="premium-input-login" rows="2" />
+             <div class="text-caption text-grey-6 font-mono uppercase q-mb-sm">Opciones de Respuesta (Marca la correcta)</div>
+             <div v-for="i in [0,1,2,3]" :key="i" class="row items-center q-mb-xs">
+                <q-radio v-model="preguntaForm.respuesta_correcta" :val="preguntaForm.opciones[i]" color="red-9" class="q-mr-sm" />
+                <q-input v-model="preguntaForm.opciones[i]" filled dark dense :label="`Opción ${i+1}`" class="col premium-input-login" />
+             </div>
+             <q-btn type="submit" color="red-10" label="Guardar Pregunta" class="full-width premium-btn q-py-md q-mt-md" />
+          </q-form>
+       </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogVuelo" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(900px, 95vw);">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+          <div class="row items-center">
+            <q-icon name="flight_takeoff" color="red-9" size="32px" class="q-mr-md glow-primary" />
+            <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Certificar Misión de Entrenamiento</div>
+          </div>
+          <q-btn flat round dense icon="close" @click="dialogVuelo = false" color="grey-6" class="bg-black-20 hover-red" />
+        </div>
+
+        <q-form @submit.prevent="guardarVuelo" class="q-gutter-y-lg">
+          <q-select v-model="vueloForm.estudiante_id" :options="estudiantesOptions"
+            filled dark label="SELECCIONAR ALUMNO CERTIFICADO" class="premium-input-login"
+            map-options emit-value stack-label>
+            <template #prepend><q-icon name="person" color="red-9" /></template>
+          </q-select>
+
+          <div class="row q-col-gutter-lg">
+            <div class="col-12 col-md-6">
+              <q-input v-model="vueloForm.matricula" filled dark label="MATRÍCULA (HK)" class="premium-input-login" placeholder="Ej: HK-5000" stack-label>
+                <template #prepend><q-icon name="flight" color="red-9" /></template>
+              </q-input>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="vueloForm.tipo_vuelo" :options="['dual', 'solo', 'ftd', 'chequeo']"
+                filled dark label="TIPO DE MISIÓN" class="premium-input-login"
+                stack-label uppercase>
+                <template #prepend><q-icon name="category" color="red-9" /></template>
+              </q-select>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="vueloForm.instructor_id" :options="instructoresOptions"
+                filled dark label="CAPITÁN INSTRUCTOR" class="premium-input-login"
+                map-options emit-value stack-label>
+                <template #prepend><q-icon name="badge" color="red-9" /></template>
+              </q-select>
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="vueloForm.fecha" type="date" filled dark label="FECHA MISIÓN" class="premium-input-login" stack-label>
+                <template #prepend><q-icon name="event" color="red-9" /></template>
+              </q-input>
+            </div>
+            <div class="col-6 col-md-4">
+              <q-input v-model="vueloForm.horas" type="number" step="0.1" filled dark label="DURACIÓN (HRS)" class="premium-input-login" stack-label>
+                <template #prepend><q-icon name="schedule" color="red-9" /></template>
+              </q-input>
+            </div>
+            <div class="col-6 col-md-4">
+              <q-select v-model="vueloForm.calificacion" :options="['S', 'NI', 'D', 'NA']"
+                filled dark label="CALIFICACIÓN (RAC)" class="premium-input-login"
+                stack-label>
+                <template #prepend><q-icon name="star" color="red-9" /></template>
+                <q-tooltip class="bg-dark">S: Satisfactorio, NI: Necesita Instrucción, D: Deficiente, NA: No Aplica</q-tooltip>
+              </q-select>
+            </div>
+            <div class="col-6 col-md-4">
+              <q-input v-model="vueloForm.despegues" type="number" filled dark label="DESPEGUES" class="premium-input-login" stack-label />
+            </div>
+            <div class="col-6 col-md-4">
+              <q-input v-model="vueloForm.aterrizajes" type="number" filled dark label="ATERRIZAJES" class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12">
+              <q-input v-model="vueloForm.observaciones" type="textarea" label="OBSERVACIONES TÉCNICAS / MANIOBRAS" class="premium-input-login" rows="2" stack-label />
+            </div>
+          </div>
+
+          <q-btn type="submit" color="red-10" class="full-width premium-btn q-py-lg shadow-24"
+            label="Certificar y Registrar Misión de Vuelo" icon="verified"
+            :loading="guardandoVuelo" />
+        </q-form>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogNuevoEstudiante" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(900px, 95vw);">
+         <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+            <div class="text-h5 text-white font-head text-weight-bolder uppercase">Inscripción RAC 141 (Nuevo Cadete)</div>
+            <q-btn flat round dense icon="close" @click="dialogNuevoEstudiante = false" color="grey-6" class="bg-black-20 hover-red" />
+         </div>
+         
+         <q-form @submit.prevent="guardarNuevoEstudiante" class="q-gutter-y-lg">
+            <div class="row q-col-gutter-md">
+               <div class="col-12 col-md-6">
+                  <q-input v-model="estForm.nombres" label="NOMBRES" filled dark class="premium-input-login" :rules="[v => !!v || 'Requerido']" />
+               </div>
+               <div class="col-12 col-md-6">
+                  <q-input v-model="estForm.apellidos" label="APELLIDOS" filled dark class="premium-input-login" :rules="[v => !!v || 'Requerido']" />
+               </div>
+               <div class="col-12 col-md-4">
+                  <q-select v-model="estForm.tipo_documento" :options="['CC', 'CE', 'PPT', 'TI']" label="TIPO DOC" filled dark class="premium-input-login" />
+               </div>
+               <div class="col-12 col-md-8">
+                  <q-input v-model="estForm.num_documento" label="NÚMERO DE DOCUMENTO" filled dark class="premium-input-login" :rules="[v => !!v || 'Requerido']" />
+               </div>
+               <div class="col-12 col-md-6">
+                  <q-input v-model="estForm.fecha_nacimiento" type="date" label="F. NACIMIENTO" filled dark class="premium-input-login" stack-label />
+               </div>
+               <div class="col-12 col-md-6">
+                  <q-input v-model="estForm.fecha_ingreso" type="date" label="FECHA DE INGRESO" filled dark class="premium-input-login" stack-label />
+               </div>
+               <div class="col-12">
+                  <q-select v-model="estForm.programa_id" :options="programasOptions" label="PROGRAMA ACADÉMICO ASIGNADO (PIA)" filled dark class="premium-input-login" map-options emit-value stack-label />
+               </div>
+               <div class="col-12">
+                  <q-input v-model="estForm.observaciones" type="textarea" label="OBSERVACIONES DE MATRÍCULA" filled dark class="premium-input-login" rows="2" />
+               </div>
+            </div>
+            <q-btn type="submit" color="red-10" class="full-width premium-btn q-py-lg shadow-24" label="Registrar y Generar Expediente UAEAC" :loading="guardandoNuevoEst" />
+         </q-form>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogNota" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(550px, 95vw);">
+         <div class="row items-center justify-between q-mb-lg border-bottom-border pb-md">
+            <div class="text-h6 text-white font-head text-weight-bolder uppercase">Registrar Calificación Teórica</div>
+            <q-btn flat round dense icon="close" @click="dialogNota = false" color="grey-6" class="bg-black-20 hover-red" />
+         </div>
+         <div class="text-subtitle2 text-red-9 font-mono q-mb-xl">{{ estActivo?.persona?.nombres }} {{ estActivo?.persona?.apellidos }}</div>
+         
+         <q-form @submit.prevent="guardarNota" class="q-gutter-y-md">
+            <q-select v-model="notaForm.materia_id" :options="materiasOptions"
+              filled dark label="ASIGNATURA/MATERIA" class="premium-input-login"
+              map-options emit-value stack-label>
+              <template #prepend><q-icon name="menu_book" color="red-9" /></template>
+            </q-select>
+            <div class="row q-col-gutter-md">
+               <div class="col-6">
+                  <q-input v-model="notaForm.nota" type="number" step="0.1" filled dark label="CALIFICACIÓN (0-100)" class="premium-input-login" />
+               </div>
+               <div class="col-6">
+                  <q-input v-model="notaForm.fecha_evaluacion" type="date" filled dark label="FECHA EXAMEN" class="premium-input-login" stack-label />
+               </div>
+            </div>
+            <q-input v-model="notaForm.observaciones" type="textarea" filled dark label="OBSERVACIONES" class="premium-input-login" rows="2" />
+            <q-btn type="submit" color="red-10" class="full-width premium-btn q-py-lg" label="Guardar Nota en Expediente" :loading="guardandoNota" />
+         </q-form>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogCertMedico" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(550px, 95vw);">
+         <div class="row items-center justify-between q-mb-lg border-bottom-border pb-md">
+            <div class="text-h6 text-white font-head text-weight-bolder uppercase">Certificado Médico RAC 67</div>
+            <q-btn flat round dense icon="close" @click="dialogCertMedico = false" color="grey-6" class="bg-black-20 hover-red" />
+         </div>
+         <div class="text-subtitle2 text-blue-9 font-mono q-mb-xl">{{ estActivo?.persona?.nombres }} {{ estActivo?.persona?.apellidos }}</div>
+
+         <q-form @submit.prevent="guardarCertMedico" class="q-gutter-y-md">
+            <q-select v-model="certForm.tipo" :options="[{label:'Clase 1', value:'clase_1'},{label:'Clase 2', value:'clase_2'},{label:'Clase 3', value:'clase_3'}]"
+              filled dark label="CLASE DE CERTIFICADO" class="premium-input-login"
+              map-options emit-value stack-label />
+            <q-input v-model="certForm.numero_certificado" filled dark label="NÚMERO DE CERTIFICADO" class="premium-input-login" />
+            <div class="row q-col-gutter-md">
+               <div class="col-6">
+                  <q-input v-model="certForm.fecha_emision" type="date" filled dark label="FECHA EMISIÓN" class="premium-input-login" stack-label />
+               </div>
+               <div class="col-6">
+                  <q-input v-model="certForm.fecha_vencimiento" type="date" filled dark label="VENCIMIENTO" class="premium-input-login" stack-label />
+               </div>
+            </div>
+            <q-input v-model="certForm.centro_aeromedico" filled dark label="CENTRO AEROMÉDICO / MÉDICO DELEGADO" class="premium-input-login" />
+            <q-input v-model="certForm.restricciones" type="textarea" filled dark label="RESTRICCIONES (SI APLICA)" class="premium-input-login" rows="2" />
+            <q-btn type="submit" color="blue-10" class="full-width premium-btn q-py-lg" label="Sincronizar Salud UAEAC" :loading="guardandoCert" />
+         </q-form>
+      </q-card>
     </q-dialog>
 
   </q-page>
@@ -463,289 +744,510 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import dayjs from 'dayjs'
 
+const route = useRoute()
 const $q = useQuasar()
-const tab = ref('programas')
-
-const programas = ref([])
-const estudiantes = ref([])
-const loadingEstudiantes = ref(false)
+const tab = ref(route.query.tab || 'programas')
 const filtroBusqueda = ref('')
+
+const programas          = ref([])
+const estudiantes        = ref([])
+const misionesVuelo      = ref([])
+const loadingProgramas   = ref(false)
+const loadingEstudiantes = ref(false)
+const loadingVuelo       = ref(false)
+const guardandoVuelo     = ref(false)
+const guardandoPrograma  = ref(false)
+
 const dialogPrograma = ref(false)
-const dialogExpediente = ref(false)
 const dialogSyllabus = ref(false)
+const dialogVuelo    = ref(false)
+const modoPrograma   = ref('crear')
+const dialogEtapa    = ref(false)
+const dialogMateria  = ref(false)
+const dialogLms      = ref(false)
+const modoEtapa      = ref('crear')
+const modoMateria    = ref('crear')
+const guardandoEtapa = ref(false)
+const guardandoMat   = ref(false)
+
+const progTemp    = ref(null)
+const matActiva   = ref(null)
+const progForm    = ref({
+  id: null,
+  nombre: '',
+  codigo: '',
+  tipo: 'PPL',
+  horas_tierra_min: 80,
+  horas_vuelo_min: 40,
+  horas_dual_min: 20,
+  horas_solo_min: 10,
+  horas_ifr_min: 0,
+  horas_noche_min: 0,
+  horas_sim_max: 5,
+  rac_referencia: '61.109',
+  activo: true
+})
+const etapaForm   = ref({ nombre: '', descripcion: '', horas_vuelo: 0, horas_tierra: 0, simulador: 0, numero: 1 })
+const materiaForm = ref({ nombre: '', codigo: '', horas: 0, etapa_id: null, tipo: 'teorica', nota_minima: 75, rac_referencia: '' })
+
+const bancoPreguntas = ref([])
+const lecciones      = ref([])
+const tabLms         = ref('lecciones')
+const loadingLms     = ref(false)
+const guardandoLms   = ref(false)
+const tabEtapa       = ref(null)
+
+const dialogNuevaLeccion  = ref(false)
+const dialogNuevaPregunta = ref(false)
+const leccionForm = ref({ titulo: '', video_url: '', descripcion: '', orden: 1 })
+const preguntaForm = ref({ pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1 })
+
+
+const dialogNuevoEstudiante = ref(false)
+const guardandoNuevoEst     = ref(false)
+const programasOptions      = ref([])
+const estForm = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' })
+
+const dialogNota       = ref(false)
 const dialogCertMedico = ref(false)
-const dialogNota = ref(false)
+const guardandoNota    = ref(false)
+const guardandoCert    = ref(false)
+const estActivo        = ref(null)
+const materiasOptions  = ref([])
 
-const programaSeleccionado = ref(null)
+const notaForm = ref({ estudiante_id: null, materia_id: null, nota: 80, fecha_evaluacion: dayjs().format('YYYY-MM-DD'), observaciones: '' })
+const certForm = ref({ tipo: 'clase_1', numero_certificado: '', fecha_emision: '', fecha_vencimiento: '', centro_aeromedico: '', restricciones: '' })
 
-// --- Gestión LMS / Banco Preguntas ---
-const dialogLmsMateria = ref(false)
-const dialogBancoPreguntas = ref(false)
-const materiaSeleccionada = ref(null)
-const preguntas = ref([])
-const cargandoPreguntas = ref(false)
-const formPregunta = ref({ id: null, pregunta: '', opciones: ['', ''], respuesta_correcta: '', nivel_dificultad: 1 })
-const dialogFormPregunta = ref(false)
-
-const abrirGestionLms = (materia) => {
-    materiaSeleccionada.value = { 
-        max_intentos: 1,
-        costo_reintento: 0,
-        duracion_minutos: 15,
-        ...materia 
-    }
-    dialogLmsMateria.value = true
-}
-
-const guardarLmsMateria = async () => {
-    try {
-        await api.put(`/gestion-materias/${materiaSeleccionada.value.id}/lms`, materiaSeleccionada.value)
-        $q.notify({ color: 'positive', message: 'Contenido LMS actualizado' })
-        dialogLmsMateria.value = false
-        cargarProgramas()
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error al actualizar contenido' })
-    }
-}
-
-const abrirBancoPreguntas = async (materia) => {
-    materiaSeleccionada.value = materia
-    dialogBancoPreguntas.value = true
-    cargarPreguntas()
-}
-
-const cargarPreguntas = async () => {
-    cargandoPreguntas.value = true
-    try {
-        const { data } = await api.get(`/gestion-materias/${materiaSeleccionada.value.id}/preguntas`)
-        preguntas.value = data.data
-    } finally {
-        cargandoPreguntas.value = false
-    }
-}
-
-const abrirNuevaPregunta = () => {
-    formPregunta.value = { id: null, pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1 }
-    dialogFormPregunta.value = true
-}
-
-const editarPregunta = (preg) => {
-    formPregunta.value = { ...preg }
-    dialogFormPregunta.value = true
-}
-
-const guardarPregunta = async () => {
-    try {
-        if (formPregunta.value.id) {
-            await api.put(`/gestion-materias/${materiaSeleccionada.value.id}/preguntas/${formPregunta.value.id}`, formPregunta.value)
-        } else {
-            await api.post(`/gestion-materias/${materiaSeleccionada.value.id}/preguntas`, formPregunta.value)
-        }
-        $q.notify({ color: 'positive', message: 'Pregunta guardada' })
-        dialogFormPregunta.value = false
-        cargarPreguntas()
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error al guardar pregunta' })
-    }
-}
-
-const eliminarPregunta = async (id) => {
-    $q.dialog({
-        title: 'Confirmar',
-        message: '¿Deseas eliminar esta pregunta?',
-        cancel: true,
-        persistent: true
-    }).onOk(async () => {
-        await api.delete(`/gestion-materias/${materiaSeleccionada.value.id}/preguntas/${id}`)
-        cargarPreguntas()
-    })
-}
-
-const formPrograma = ref({
-    id: null, codigo: '', nombre: '', tipo: 'Avión',
-    horas_tierra_min: 0, horas_vuelo_min: 0,
-    horas_dual_min: 0, horas_solo_min: 0
+const vueloForm = ref({
+  estudiante_id: null,
+  instructor_id: null,
+  fecha: dayjs().format('YYYY-MM-DD'),
+  matricula: '',
+  tipo_vuelo: 'dual',
+  horas: 1.0,
+  despegues: 1,
+  aterrizajes: 1,
+  calificacion: 'S',
+  observaciones: ''
 })
 
-const estudianteTemp = ref(null)
-
-const formCert = ref({
-    tipo: 'clase_1', numero_certificado: '', fecha_emision: '', fecha_vencimiento: '', centro_aeromedico: ''
-})
-
-const formNota = ref({
-    estudiante_id: null, materia_id: null, nota: null, fecha_evaluacion: ''
-})
-
-const pagination = ref({
-    sortBy: 'id',
-    descending: true,
-    page: 1,
-    rowsPerPage: 10,
-    rowsNumber: 0
-})
+const estudiantesOptions  = ref([])
+const aeronavesOptions    = ref([])
+const instructoresOptions = ref([])
 
 const columnsEstudiantes = [
-  { name: 'nombre', label: 'Estudiante / Expediente', align: 'left' },
-  { name: 'programa', label: 'Programa Inscrito', align: 'left', field: row => row.programa?.nombre },
-  { name: 'estado', label: 'Estado RAC', align: 'center', field: 'estado' },
-  { name: 'progreso', label: 'Progreso PIA', align: 'center' },
-  { name: 'acciones', label: 'Acciones', align: 'right' }
+  { name: 'nombre',   label: 'NOMBRE DEL CADETE', align: 'left' },
+  { name: 'estado',   label: 'STATUS UAEAC',       align: 'center' },
+  { name: 'acciones', label: 'EXPEDIENTE',          align: 'right' }
 ]
 
-const cargarProgramas = async () => {
+const columnsVuelos = [
+  { name: 'fecha',         label: 'FECHA OPERACIÓN',  field: row => row.fecha ? dayjs(row.fecha).format('DD/MM/YYYY') : 'N/A', align: 'left' },
+  { name: 'matricula',     label: 'HK ASIGNADA',       field: 'matricula',     align: 'center' },
+  { name: 'tipo',          label: 'MISIÓN ACADÉMICA',  field: row => row.tipo_vuelo || 'Instrucción', align: 'left' },
+  { name: 'duracion',      label: 'DURACIÓN',          field: 'horas', align: 'right' },
+  { name: 'calificacion',  label: 'CALIFICACIÓN',      field: 'calificacion',  align: 'center' },
+]
+
+const getEstadoColor = (e) => ({ 'activo': 'emerald', 'volando': 'blue-9', 'graduado': 'purple-9', 'suspendido': 'red-9' }[e] || 'grey-8')
+
+// ── Carga de datos ──
+async function cargarDatos() {
+  loadingProgramas.value = true; loadingEstudiantes.value = true; loadingVuelo.value = true
+  try {
+    const [ps, es, vs, as, ins] = await Promise.all([
+      api.get('/programas'),
+      api.get('/estudiantes', { params: { q: filtroBusqueda.value } }),
+      api.get('/vuelos'),
+      api.get('/aeronaves'),
+      api.get('/instructores')
+    ])
+
+    programas.value     = ps.data.data || ps.data || []
+    programasOptions.value = programas.value.map(p => ({ label: p.nombre, value: p.id }))
+    
+    // El controlador de estudiantes usa paginación (data.data.data) o directo (data.data)
+    estudiantes.value   = es.data.data?.data || es.data.data || es.data || []
+    
+    misionesVuelo.value = vs.data.data || vs.data || []
+
+    estudiantesOptions.value  = estudiantes.value.map(e => ({ label: `${e.persona?.nombres} ${e.persona?.apellidos}`, value: e.id }))
+    
+    const rawAeronaves    = as.data.data || as.data || []
+    aeronavesOptions.value = rawAeronaves.map(a => ({ label: `${a.matricula} · ${a.modelo}`, value: a.id }))
+    
+    const rawInstructores = ins.data.data || ins.data || []
+    instructoresOptions.value = rawInstructores.map(i => ({ label: `Cpt. ${i.persona?.nombres} ${i.persona?.apellidos}`, value: i.id }))
+
+  } catch (e) {
+    console.error("Error al cargar datos:", e)
+    $q.notify({ color: 'negative', message: 'Fallo al sincronizar con el centro de datos.' })
+  } finally {
+    loadingProgramas.value = false; loadingEstudiantes.value = false; loadingVuelo.value = false
+  }
+}
+
+async function eliminarPrograma(prog) {
+  $q.dialog({
+    title: `<span class="text-red-9 font-head uppercase">Eliminar PIA: ${prog.nombre}</span>`,
+    message: 'Esta acción eliminará permanentemente el programa académico y todas sus fases. Los cadetes inscritos quedarán sin programa asociado.',
+    html: true,
+    dark: true,
+    ok: { color: 'red-10', label: 'ELIMINAR PERMANENTEMENTE', unelevated: true },
+    cancel: { label: 'Cancelar', flat: true, color: 'grey-6' }
+  }).onOk(async () => {
     try {
-        const { data } = await api.get('/programas')
-        programas.value = data.data || []
-    } catch (e) {
-        console.error('Error cargando programas', e)
+      await api.delete(`/programas/${prog.id}`)
+      $q.notify({ color: 'emerald', message: 'Programa eliminado del sistema.' })
+      cargarDatos()
+    } catch {
+      $q.notify({ color: 'negative', message: 'No se pudo eliminar el programa (posiblemente tiene dependencias activas).' })
     }
+  })
 }
 
-const cargarEstudiantes = async (props) => {
-    const { page, rowsPerPage, sortBy, descending } = props?.pagination || pagination.value
-    loadingEstudiantes.value = true
+// ── Acciones de Programas ──
+function abrirNuevoPrograma() {
+  modoPrograma.value = 'crear'
+  progForm.value = { nombre: '', codigo: '', horas_tierra_min: 0, horas_vuelo_min: 0, descripcion: '' }
+  dialogPrograma.value = true
+}
+
+function editarPrograma(prog) {
+  modoPrograma.value = 'editar'
+  progForm.value = { ...prog }
+  dialogPrograma.value = true
+}
+
+function verSyllabus(prog) {
+  progTemp.value = prog
+  dialogSyllabus.value = true
+}
+
+function abrirRegistroVuelo() {
+  vueloForm.value = { estudiante_id: null, matricula: '', instructor_id: null, fecha: dayjs().format('YYYY-MM-DD'), horas: 1.0, calificacion: 'S', tipo_vuelo: 'dual', despegues: 1, aterrizajes: 1 }
+  dialogVuelo.value = true
+}
+
+// ── Guardar Programa ──
+async function guardarPrograma() {
+  guardandoPrograma.value = true
+  try {
+    if (modoPrograma.value === 'crear') await api.post('/programas', progForm.value)
+    else await api.put(`/programas/${progForm.value.id}`, progForm.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Configuración PIA actualizada correctamente.' })
+    dialogPrograma.value = false
+    await cargarDatos()
+    if (progTemp.value) {
+      progTemp.value = programas.value.find(p => p.id === progTemp.value.id)
+    }
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al actualizar el programa PIA.' })
+  } finally { guardandoPrograma.value = false }
+}
+
+function abrirNuevaEtapa() {
+  modoEtapa.value = 'crear'
+  etapaForm.value = { nombre: '', descripcion: '', horas_vuelo: 0, horas_tierra: 0, simulador: 0, numero: (progTemp.value?.etapas?.length || 0) + 1 }
+  dialogEtapa.value = true
+}
+
+function editarEtapa(et) {
+  modoEtapa.value = 'editar'
+  etapaForm.value = { ...et }
+  dialogEtapa.value = true
+}
+
+async function guardarEtapa() {
+  guardandoEtapa.value = true
+  try {
+    if (modoEtapa.value === 'crear') await api.post(`/programas/${progTemp.value.id}/etapas`, etapaForm.value)
+    else await api.put(`/programas/etapas/${etapaForm.value.id}`, etapaForm.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Estructura curricular actualizada.' })
+    dialogEtapa.value = false
+    const { data } = await api.get('/programas')
+    programas.value = data.data; progTemp.value = programas.value.find(p => p.id === progTemp.value.id)
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al actualizar la etapa.' })
+  } finally { guardandoEtapa.value = false }
+}
+
+async function eliminarEtapa(id) {
+  $q.dialog({ title: 'Confirmar', message: '¿Eliminar esta fase?', dark: true, ok: { color: 'red-9', label: 'Eliminar' }, cancel: true }).onOk(async () => {
     try {
-        const { data } = await api.get('/estudiantes', {
-            params: {
-                page,
-                per_page: rowsPerPage,
-                buscar: filtroBusqueda.value
-            }
-        })
-        estudiantes.value = data.data?.data || data.data || []
-        pagination.value.rowsNumber = data.data?.total || estudiantes.value.length
-        pagination.value.page = page
-        pagination.value.rowsPerPage = rowsPerPage
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error cargando listado de estudiantes' })
-    } finally {
-        loadingEstudiantes.value = false
-    }
+      await api.delete(`/programas/etapas/${id}`)
+      const { data } = await api.get('/programas')
+      programas.value = data.data; progTemp.value = programas.value.find(p => p.id === progTemp.value.id)
+      $q.notify({ color: 'emerald', message: 'Fase eliminada.' })
+    } catch { $q.notify({ color: 'negative', message: 'Fallo al eliminar.' }) }
+  })
 }
 
-const getEstadoColor = (estado) => {
-    switch(estado) {
-        case 'activo': return 'green-8'
-        case 'suspendido': return 'orange-9'
-        case 'graduado': return 'blue-8'
-        case 'retirado': return 'red-9'
-        default: return 'grey-7'
-    }
+// ── Gestión de Materias ──
+function abrirNuevaMateria(etapaId) {
+  modoMateria.value = 'crear'
+  materiaForm.value = { nombre: '', codigo: '', horas: 0, etapa_id: etapaId }
+  dialogMateria.value = true
 }
 
-const verDetalleEstudiante = async (row) => {
-    estudianteTemp.value = row
-    dialogExpediente.value = true
+function editarMateria(mat, etapaId) {
+  modoMateria.value = 'editar'
+  materiaForm.value = { ...mat, etapa_id: etapaId }
+  dialogMateria.value = true
+}
+
+async function guardarMateria() {
+  guardandoMat.value = true
+  try {
+    if (modoMateria.value === 'crear') await api.post('/gestion-materias', materiaForm.value)
+    else await api.put(`/gestion-materias/${materiaForm.value.id}`, materiaForm.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Materia actualizada.' })
+    dialogMateria.value = false
+    const { data } = await api.get('/programas')
+    programas.value = data.data; progTemp.value = programas.value.find(p => p.id === progTemp.value.id)
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al actualizar materia.' })
+  } finally { guardandoMat.value = false }
+}
+
+function eliminarMateria(id) {
+  $q.dialog({ title: 'Confirmar', message: '¿Eliminar esta materia y todo su contenido?', dark: true, ok: { color: 'red-9', label: 'Eliminar' }, cancel: true }).onOk(async () => {
     try {
-        const { data } = await api.get(`/estudiantes/${row.id}/expediente`)
-        estudianteTemp.value = data.data.estudiante
-    } catch (e) {
-        console.error('Cant load full dossier', e)
-    }
+      await api.delete(`/gestion-materias/${id}`)
+      const { data } = await api.get('/programas')
+      programas.value = data.data; progTemp.value = programas.value.find(p => p.id === progTemp.value.id)
+      $q.notify({ color: 'emerald', message: 'Materia eliminada.' })
+    } catch { $q.notify({ color: 'negative', message: 'Fallo al eliminar.' }) }
+  })
 }
 
-const verCertMedicos = (row) => {
-    estudianteTemp.value = row
-    formCert.value = { tipo: 'clase_1', numero_certificado: '', fecha_emision: '', fecha_vencimiento: '', centro_aeromedico: '' }
-    dialogCertMedico.value = true
+
+
+// ── Gestión LMS (Lecciones y Preguntas) ──
+async function gestionarLms(mat) {
+  matActiva.value = mat
+  tabLms.value = 'lecciones'
+  loadingLms.value = true
+  try {
+    await cargarContenidoLms()
+    dialogLms.value = true
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al cargar contenido pedagógico.' })
+  } finally {
+    loadingLms.value = false
+  }
 }
 
-const guardarCertMedico = async () => {
-    try {
-        await api.post(`/estudiantes/${estudianteTemp.value.id}/cert-medicos`, formCert.value)
-        $q.notify({ color: 'positive', message: 'Certificado guardado con éxito' })
-        dialogCertMedico.value = false
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error al registrar certificato médico' })
-    }
+async function cargarContenidoLms() {
+  const [lecs, pregs] = await Promise.all([
+    api.get(`/gestion-materias/${matActiva.value.id}/lecciones`),
+    api.get(`/gestion-materias/${matActiva.value.id}/preguntas`)
+  ])
+  lecciones.value = lecs.data.data
+  bancoPreguntas.value = pregs.data.data
 }
 
-const abrirNuevoPrograma = () => {
-    formPrograma.value = { id: null, codigo: '', nombre: '', tipo: 'Avión', horas_tierra_min: 0, horas_vuelo_min: 0, horas_dual_min: 0, horas_solo_min: 0 }
-    dialogPrograma.value = true
+async function guardarConfigGeneral() {
+  guardandoLms.value = true
+  try {
+    await api.put(`/gestion-materias/${matActiva.value.id}/lms`, matActiva.value)
+    $q.notify({ color: 'emerald', message: 'Configuración general guardada.' })
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al guardar configuración.' })
+  } finally { guardandoLms.value = false }
 }
 
-const editarPrograma = (prog) => {
-    formPrograma.value = { ...prog }
-    dialogPrograma.value = true
+// ── CRUD Lecciones ──
+async function eliminarLeccion(id) {
+  try {
+    await api.delete(`/gestion-materias/${matActiva.value.id}/lecciones/${id}`)
+    $q.notify({ color: 'emerald', message: 'Lección eliminada.' })
+    cargarContenidoLms()
+  } catch { $q.notify({ color: 'negative', message: 'Error al eliminar.' }) }
 }
 
-const guardarPrograma = async () => {
-    try {
-        if (formPrograma.value.id) {
-            await api.put(`/programas/${formPrograma.value.id}`, formPrograma.value)
-        } else {
-            await api.post('/programas', formPrograma.value)
-        }
-        $q.notify({ color: 'positive', message: 'Programa guardado' })
-        dialogPrograma.value = false
-        cargarProgramas()
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error al guardar el programa' })
-    }
+// ── CRUD Preguntas ──
+async function eliminarPregunta(id) {
+  try {
+    await api.delete(`/gestion-materias/${matActiva.value.id}/preguntas/${id}`)
+    $q.notify({ color: 'emerald', message: 'Pregunta eliminada.' })
+    cargarContenidoLms()
+  } catch { $q.notify({ color: 'negative', message: 'Error al eliminar.' }) }
 }
 
-const verSyllabus = (prog) => {
-    programaSeleccionado.value = prog
-    dialogSyllabus.value = true
+function abrirNuevaLeccion() {
+  leccionForm.value = { titulo: '', video_url: '', descripcion: '', orden: lecciones.value.length + 1 }
+  dialogNuevaLeccion.value = true
 }
 
-const guardarNota = async () => {
-    try {
-        await api.post(`/estudiantes/${formNota.value.estudiante_id}/notas`, formNota.value)
-        $q.notify({ color: 'positive', message: 'Calificación registrada' })
-        dialogNota.value = false
-    } catch (e) {
-        $q.notify({ color: 'negative', message: 'Error al registrar calificación' })
-    }
+async function guardarLeccion() {
+  try {
+    await api.post(`/gestion-materias/${matActiva.value.id}/lecciones`, leccionForm.value)
+    $q.notify({ color: 'emerald', message: 'Lección guardada.' })
+    dialogNuevaLeccion.value = false
+    cargarContenidoLms()
+  } catch { $q.notify({ color: 'negative', message: 'Error al guardar.' }) }
 }
 
-onMounted(() => {
-    cargarProgramas()
-    cargarEstudiantes()
-})
+function abrirNuevaPregunta() {
+  preguntaForm.value = { pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1 }
+  dialogNuevaPregunta.value = true
+}
+
+async function guardarPregunta() {
+  if (!preguntaForm.value.respuesta_correcta) return $q.notify({ color: 'warning', message: 'Selecciona la respuesta correcta.' })
+  try {
+    await api.post(`/gestion-materias/${matActiva.value.id}/preguntas`, preguntaForm.value)
+    $q.notify({ color: 'emerald', message: 'Pregunta añadida al banco.' })
+    dialogNuevaPregunta.value = false
+    cargarContenidoLms()
+  } catch { $q.notify({ color: 'negative', message: 'Error al guardar.' }) }
+}
 
 
-</script>
 
-<script>
-// Estilos adicionales
+
+
+// ── Guardar Vuelo ──
+async function guardarVuelo() {
+  guardandoVuelo.value = true
+  try {
+    await api.post('/vuelos', vueloForm.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Misión de vuelo certificada exitosamente.' })
+    dialogVuelo.value = false
+    cargarDatos()
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al certificar la misión de vuelo.' })
+  } finally { guardandoVuelo.value = false }
+}
+
+onMounted(cargarDatos)
+// ── Acciones Estudiante ──
+function abrirNuevoEstudiante() {
+  estForm.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' }
+  dialogNuevoEstudiante.value = true
+}
+
+async function guardarNuevoEstudiante() {
+  guardandoNuevoEst.value = true
+  try {
+    const { data } = await api.post('/estudiantes', estForm.value)
+    $q.notify({ color: 'emerald', message: data.mensaje || 'Estudiante matriculado con éxito.' })
+    dialogNuevoEstudiante.value = false
+    cargarDatos()
+  } catch (e) {
+    const msg = e.response?.data?.mensaje || 'Error al matricular estudiante.'
+    $q.notify({ color: 'negative', message: msg })
+  } finally { guardandoNuevoEst.value = false }
+}
+
+function abrirNuevaNota(est) {
+  estActivo.value = est
+  notaForm.value = { estudiante_id: est.id, materia_id: null, nota: null, fecha_evaluacion: dayjs().format('YYYY-MM-DD'), observaciones: '' }
+  // Cargar materias del programa del estudiante
+  materiasOptions.value = []
+  if (est.programa?.etapas) {
+    est.programa.etapas.forEach(et => {
+      et.materias?.forEach(m => {
+        materiasOptions.value.push({ label: `${m.codigo} - ${m.nombre}`, value: m.id })
+      })
+    })
+  }
+  dialogNota.value = true
+}
+
+async function guardarNota() {
+  guardandoNota.value = true
+  try {
+    await api.post(`/estudiantes/${notaForm.value.estudiante_id}/notas`, notaForm.value)
+    $q.notify({ color: 'emerald', message: 'Calificación registrada en el expediente.' })
+    dialogNota.value = false
+    cargarDatos()
+  } catch { $q.notify({ color: 'negative', message: 'Error al registrar nota.' }) }
+  finally { guardandoNota.value = false }
+}
+
+function abrirNuevoCertificado(est) {
+  estActivo.value = est
+  certForm.value = { tipo: 'clase_1', numero_certificado: '', fecha_emision: '', fecha_vencimiento: '', centro_aeromedico: '', restricciones: '' }
+  dialogCertMedico.value = true
+}
+
+async function guardarCertMedico() {
+  guardandoCert.value = true
+  try {
+    await api.post(`/estudiantes/${estActivo.value.id}/cert-medicos`, certForm.value)
+    $q.notify({ color: 'emerald', message: 'Certificado médico actualizado y sincronizado.' })
+    dialogCertMedico.value = false
+    cargarDatos()
+  } catch { $q.notify({ color: 'negative', message: 'Error al registrar certificado.' }) }
+  finally { guardandoCert.value = false }
+}
 </script>
 
 <style lang="scss" scoped>
-.rac-page { background: #0a0c10; min-height: 100vh; }
-.font-head { font-family: 'Syne', sans-serif; }
-.font-mono { font-family: 'JetBrains Mono', monospace; }
-.icon-teal-glow { filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.7)); }
+.animate-fade { animation: fadeIn 0.8s ease-out; }
+.animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.premium-glass-card {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+.border-red-top    { border-top: 5px solid #A10B13 !important; }
+.border-red-low    { border: 1px solid rgba(161, 11, 19, 0.25) !important; }
+.border-red-left   { border-left: 5px solid #A10B13 !important; }
+.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.shadow-inner      { box-shadow: inset 0 2px 15px rgba(0,0,0,0.4); }
+.rounded-12        { border-radius: 12px; }
+.rounded-20        { border-radius: 20px; }
+.line-height-1     { line-height: 1.1; }
+.bg-black-20       { background: rgba(0,0,0,0.2); }
+.opacity-10        { opacity: 0.1; }
+
+.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+.pulsate { animation: pulsate 2.5s infinite; }
+@keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+
+.bonus-grid { background-image: radial-gradient(rgba(161, 11, 19, 0.04) 1px, transparent 1px); background-size: 30px 30px; }
+
+.welcome-hero { position: relative; }
+.hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 80% 0%, rgba(161, 11, 19, 0.15) 0%, transparent 55%); pointer-events: none; }
+
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover { transform: translateY(-8px); border-color: rgba(161, 11, 19, 0.4) !important; box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 20px rgba(161,11,19,0.15) !important; }
 }
 
-.bg-dark-light { background: rgba(255, 255, 255, 0.04); }
-.border-teal-left { border-left: 3px solid #2dd4bf; }
+.hover-row { transition: all 0.2s; cursor: pointer; &:hover { background: rgba(255,255,255,0.03); } }
 
-.premium-hover-card {
-    transition: all 0.3s ease;
-    &:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.07);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    }
+.syllabus-icon-panel {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: rgba(161, 11, 19, 0.1); border: 1px solid rgba(161, 11, 19, 0.25);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
-.glass-btn {
-  background: rgba(255,255,255, 0.03);
-  backdrop-filter: blur(4px);
-  &:hover {
-    background: rgba(255,255,255, 0.08);
+.premium-input-login {
+  :deep(.q-field__control) {
+    border-radius: 12px !important; background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important; transition: all 0.3s ease;
+    &::before, &::after { display: none; }
+    &:hover { border-color: rgba(161,11,19,0.5) !important; }
   }
+  &.q-field--focused :deep(.q-field__control) { border-color: #A10B13 !important; background: rgba(161,11,19,0.04) !important; }
 }
+
+.h-full { height: 100%; }
+.pb-md { padding-bottom: 16px; }
+.hover-red { transition: color 0.2s; &:hover { color: #A10B13 !important; } }
+.text-emerald { color: #10b981; }
+
+.bg-kpi-vuelo  { background: radial-gradient(circle at top left, rgba(161, 11, 19, 0.08), transparent 70%) !important; }
+.bg-kpi-tierra { background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent 70%) !important; }
+.bg-kpi-sim    { background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.05), transparent 70%) !important; }
+
+.opacity-50 { opacity: 0.5; }
 </style>

@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename)
 export default configure(function () {
   return {
     // Boot files — orden importa: axios primero
-    boot: ['axios', 'i18n'],
+    boot: ['axios', 'i18n', 'dayjs'],
 
     css: ['app.scss'],
 

@@ -47,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Schema::defaultStringLength(191);
+        
         // Registrar policies
         foreach ($this->policies as $model => $policy) {
             Gate::policy($model, $policy);

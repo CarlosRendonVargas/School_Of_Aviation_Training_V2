@@ -54,11 +54,13 @@ class NotaAcademica extends Model
 
     protected static function booted(): void
     {
-        // Calcular automáticamente si aprobó al guardar
+        // El cálculo de aprobado se maneja manualmente en el controlador para mayor precisión
+        /*
         static::saving(function (NotaAcademica $n) {
             if ($n->materia) {
                 $n->aprobado = $n->nota >= $n->materia->nota_minima;
             }
         });
+        */
     }
 }

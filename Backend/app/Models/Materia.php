@@ -13,7 +13,7 @@ class Materia extends Model
     protected $fillable = [
         'etapa_id', 'codigo', 'nombre', 'horas',
         'tipo', 'nota_minima', 'rac_referencia',
-        'link_meet', 'documento_url', 'temario',
+        'link_meet', 'documento_url', 'video_url', 'temario',
         'max_intentos', 'costo_reintento', 'duracion_minutos',
     ];
 
@@ -40,5 +40,10 @@ class Materia extends Model
     public function planesClase(): HasMany
     {
         return $this->hasMany(PlanClase::class, 'materia_id');
+    }
+
+    public function lecciones(): HasMany
+    {
+        return $this->hasMany(LeccionMateria::class, 'materia_id')->orderBy('orden');
     }
 }

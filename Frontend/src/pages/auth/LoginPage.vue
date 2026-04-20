@@ -1,136 +1,115 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
-      <q-page class="window-height row items-center justify-center"
-        style="background: radial-gradient(ellipse at top, #0d1520 0%, #0a0c10 70%)">
-
-    <!-- Fondo decorativo -->
-    <div class="absolute-full overflow-hidden" style="pointer-events:none">
-      <div style="position:absolute; top:-100px; right:-100px; width:500px; height:500px;
-        background:radial-gradient(circle, rgba(59,130,246,.06) 0%, transparent 70%); border-radius:50%"></div>
-      <div style="position:absolute; bottom:-80px; left:-80px; width:400px; height:400px;
-        background:radial-gradient(circle, rgba(20,184,166,.04) 0%, transparent 70%); border-radius:50%"></div>
-    </div>
-
-    <div class="col-xs-11 col-sm-8 col-md-4 col-lg-3" style="max-width:420px; z-index:1">
-
-      <!-- Logo y título -->
-      <div class="text-center q-mb-xl">
-        <div class="row justify-center items-center q-mb-md">
-          <img src="https://i.ibb.co/8DW6rNGm/LOGO.jpg"
-            style="height:100px; width:auto; object-fit:contain; border-radius:8px;">
+      <q-page class="window-height row items-center justify-center login-page-bg overflow-hidden">
+        
+        <!-- ════ ELEMENTOS ATMOSFÉRICOS ════ -->
+        <div class="absolute-full overflow-hidden no-pointer-events">
+          <div class="glow-orb orb-1"></div>
+          <div class="glow-orb orb-2"></div>
         </div>
-        <div class="font-head text-white" style="font-size:26px; font-weight:800; letter-spacing:.5px; line-height: 1.1;">
-          SCHOOL <span style="color: #A10B13;">OF</span> TRAINING<br>
-          <span style="font-size: 14px; letter-spacing: 4px; font-family: 'JetBrains Mono', monospace; font-weight: normal; color: #94a3b8;">AVIATION</span>
-        </div>
-        <div class="font-mono q-mt-md" style="font-size:10px; color:#475569; letter-spacing:2px; text-transform:uppercase">
-          Acceso Corporativo
-        </div>
-      </div>
 
-      <!-- Card de login -->
-      <q-card flat style="background:#0f1218; border:1px solid rgba(255,255,255,.09); border-radius:14px">
-        <q-card-section class="q-pa-xl">
+        <div class="col-xs-11 col-sm-6 col-md-4 col-lg-3 animate-fade" style="max-width: 420px; z-index: 10;">
+          
+          <!-- BRANDING INICIAL -->
+          <div class="text-center q-mb-xl">
+             <div class="logo-container q-mb-lg">
+                <img src="https://i.ibb.co/8DW6rNGm/LOGO.jpg" class="premium-logo shadow-24" />
+             </div>
+             <div class="font-head text-white text-h4 text-weight-bolder tracking-tighter line-height-1">
+               SCHOOL <span class="text-red-9">OF</span> TRAINING
+             </div>
+             <div class="font-mono text-grey-5 q-mt-xs tracking-widest uppercase" style="font-size: 11px">
+               Aviation Academy . <span class="text-white">v2.0</span>
+             </div>
+          </div>
 
-          <q-form @submit.prevent="iniciarSesion" class="q-gutter-md">
-
-            <!-- Email -->
-            <div>
-              <div class="font-mono q-mb-xs" style="font-size:10px; color:#64748b; letter-spacing:1px; text-transform:uppercase">
-                Correo electrónico
+          <!-- MÓDULO DE ACCESO (GLASS) -->
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top">
+            <q-card-section class="q-pa-none">
+              
+              <div class="font-mono text-grey-6 q-mb-xl text-center uppercase tracking-widest" style="font-size: 10px">
+                Identificación de Tripulante
               </div>
-              <q-input
-                v-model="form.email"
-                type="email"
-                outlined
-                dense
-                dark
-                :disable="cargando"
-                placeholder="usuario@escuela.com"
-                :rules="[v => !!v || 'Requerido', v => /.+@.+\..+/.test(v) || 'Email inválido']"
-                lazy-rules
-                bg-color="grey-10"
-                style="border-radius:8px"
-              >
-                <template #prepend>
-                  <q-icon name="email" color="grey-6" size="18px" />
-                </template>
-              </q-input>
-            </div>
 
-            <!-- Contraseña -->
-            <div>
-              <div class="font-mono q-mb-xs" style="font-size:10px; color:#64748b; letter-spacing:1px; text-transform:uppercase">
-                Contraseña
-              </div>
-              <q-input
-                v-model="form.password"
-                :type="mostrarPassword ? 'text' : 'password'"
-                outlined
-                dense
-                dark
-                :disable="cargando"
-                placeholder="••••••••"
-                :rules="[v => !!v || 'Requerido', v => v.length >= 6 || 'Mínimo 6 caracteres']"
-                lazy-rules
-                bg-color="grey-10"
-              >
-                <template #prepend>
-                  <q-icon name="lock" color="grey-6" size="18px" />
-                </template>
-                <template #append>
-                  <q-icon
-                    :name="mostrarPassword ? 'visibility_off' : 'visibility'"
-                    color="grey-6" size="18px" class="cursor-pointer"
-                    @click="mostrarPassword = !mostrarPassword"
-                  />
-                </template>
-              </q-input>
-            </div>
+              <q-form @submit.prevent="iniciarSesion" class="q-gutter-y-lg">
+                
+                <!-- Identificador / Email -->
+                <div>
+                   <div class="text-caption text-grey-6 font-mono q-mb-xs uppercase" style="font-size: 9px">Correo Corporativo</div>
+                   <q-input 
+                      v-model="form.email" 
+                      type="email" 
+                      filled dark dense 
+                      class="premium-input-login"
+                      placeholder="piloto@school.com"
+                      :rules="[v => !!v || 'Requerido', v => /.+@.+\..+/.test(v) || 'Email inválido']"
+                      hide-bottom-space
+                   >
+                     <template #prepend><q-icon name="alternate_email" color="red-9" size="20px" /></template>
+                   </q-input>
+                </div>
 
-            <!-- Error de login -->
-            <q-banner v-if="error" dense rounded
-              style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#fca5a5; border-radius:8px; font-size:13px">
-              <template #avatar><q-icon name="error_outline" color="negative" /></template>
-              {{ error }}
-            </q-banner>
+                <!-- Credencial / Password -->
+                <div>
+                   <div class="text-caption text-grey-6 font-mono q-mb-xs uppercase" style="font-size: 9px">Clave de Acceso</div>
+                   <q-input 
+                      v-model="form.password" 
+                      :type="mostrarPassword ? 'text' : 'password'" 
+                      filled dark dense 
+                      class="premium-input-login"
+                      placeholder="••••••••"
+                      :rules="[v => !!v || 'Requerido']"
+                      hide-bottom-space
+                   >
+                     <template #prepend><q-icon name="vpn_key" color="red-9" size="20px" /></template>
+                     <template #append>
+                        <q-icon 
+                           :name="mostrarPassword ? 'visibility_off' : 'visibility'" 
+                           color="grey-7" size="18px" class="cursor-pointer" 
+                           @click="mostrarPassword = !mostrarPassword" 
+                        />
+                     </template>
+                   </q-input>
+                </div>
 
-            <!-- Botón login -->
-            <q-btn
-              type="submit"
-              unelevated
-              color="primary"
-              class="full-width q-mt-sm"
-              style="background: #A10B13; color: white; height:44px; border-radius:8px; font-weight:600; font-size:14px"
-              :loading="cargando"
-              :disable="cargando"
-              label="Iniciar Sesión"
-            >
-              <template #loading>
-                <q-spinner-tail color="white" size="1.2em" />
-              </template>
-            </q-btn>
+                <!-- Alerta de Error -->
+                <transition name="q-transition--jump-left">
+                   <div v-if="error" class="error-banner q-pa-md row items-center no-wrap">
+                      <q-icon name="report_problem" color="red-9" size="20px" class="q-mr-sm" />
+                      <div class="text-caption text-red-9 text-weight-bold font-mono">{{ error }}</div>
+                   </div>
+                </transition>
 
-            <!-- Recuperar contraseña -->
-            <div class="text-center q-mt-sm">
-              <router-link to="/recuperar-password"
-                style="font-size:12px; color:#60a5fa; text-decoration:none">
-                ¿Olvidó su contraseña?
-              </router-link>
-            </div>
+                <!-- Botón de Ignición -->
+                <q-btn 
+                   type="submit" 
+                   unelevated color="red-9" 
+                   class="full-width premium-btn q-py-md shadow-24" 
+                   :loading="cargando"
+                   label="Iniciar Operación"
+                >
+                   <template #loading>
+                      <q-spinner-tail color="white" />
+                   </template>
+                </q-btn>
 
-          </q-form>
-        </q-card-section>
-      </q-card>
+                <!-- Recovery -->
+                <div class="text-center q-mt-md">
+                   <q-btn flat no-caps dense color="grey-6" label="¿Olvidó su contraseña?" to="/recuperar-password" size="sm" class="font-mono" />
+                </div>
 
-      <!-- Footer -->
-      <div class="text-center q-mt-lg font-mono" style="font-size:10px; color:#334155; letter-spacing:1px">
-        UAEAC · RAC 141 · Colombia · v1.0
-      </div>
-    </div>
+              </q-form>
+            </q-card-section>
+          </q-card>
 
-  </q-page>
+          <!-- Footer Regulador -->
+          <div class="text-center q-mt-xl opacity-30 font-mono text-grey-5" style="font-size: 9px">
+             CENTRO DE INSTRUCCIÓN AERONÁUTICA · UAEAC · RAC 141
+          </div>
+        </div>
+
+      </q-page>
     </q-page-container>
   </q-layout>
 </template>
@@ -152,11 +131,8 @@ const mostrarPassword = ref(false)
 async function iniciarSesion() {
   error.value   = ''
   cargando.value = true
-
   const resultado = await authStore.login(form.value.email, form.value.password)
-
   cargando.value = false
-
   if (resultado.ok) {
     const redirect = route.query.redirect || '/dashboard'
     router.push(redirect)
@@ -165,3 +141,64 @@ async function iniciarSesion() {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.login-page-bg {
+  background: #05070a;
+  position: relative;
+}
+
+.glow-orb {
+  position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.15; pointer-events: none;
+  &.orb-1 { width: 600px; height: 600px; top: -100px; right: -100px; background: radial-gradient(circle, #A10B13 0%, transparent 70%); }
+  &.orb-2 { width: 500px; height: 500px; bottom: -100px; left: -100px; background: radial-gradient(circle, #05070a 0%, #A10B13 70%); }
+}
+
+.premium-logo {
+  height: 90px; width: auto; border-radius: 12px; 
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 40px rgba(161, 11, 19, 0.2);
+}
+
+.premium-glass-card {
+  background: rgba(10, 12, 17, 0.7);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.border-red-top { border-top: 4px solid #A10B13 !important; }
+
+.premium-input-login {
+  :deep(.q-field__control) {
+    border-radius: 12px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    transition: all 0.3s ease;
+    &::before { display: none; }
+    &::after { display: none; }
+    &:hover { background: rgba(255,255,255,0.05) !important; border-color: rgba(161,11,19,0.3) !important; }
+  }
+  &.q-field--focused :deep(.q-field__control) {
+    background: rgba(161, 11, 19, 0.05) !important;
+    border-color: #A10B13 !important;
+    box-shadow: 0 0 15px rgba(161, 11, 19, 0.2);
+  }
+}
+
+.error-banner {
+  background: rgba(161, 11, 19, 0.05);
+  border: 1px solid rgba(161, 11, 19, 0.2);
+  border-radius: 12px;
+}
+
+.animate-fade {
+  animation: loginAppear 1s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes loginAppear {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.line-height-1 { line-height: 1.1; }
+</style>

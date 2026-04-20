@@ -272,7 +272,8 @@ onMounted(async () => {
 }
 .form-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-  @media (max-width: 768px) { grid-template-columns: 1fr; }
+  @media (max-width: 768px) { grid-template-columns: 1fr; gap: 14px; }
+  @media (max-width: 599px) { gap: 10px; }
 }
 .form-col { background: #0f1218; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 20px; }
 .form-section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; }
@@ -308,5 +309,12 @@ onMounted(async () => {
   background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2);
   border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: flex-start;
 }
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.07); }
+.form-actions {
+  display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.07); flex-wrap: wrap;
+  @media (max-width: 599px) {
+    flex-direction: column-reverse;
+    > * { width: 100% !important; }
+  }
+}
 </style>

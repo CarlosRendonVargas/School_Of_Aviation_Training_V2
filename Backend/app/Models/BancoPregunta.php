@@ -10,7 +10,7 @@ class BancoPregunta extends Model
     protected $table = 'banco_preguntas';
 
     protected $fillable = [
-        'materia_id', 'pregunta', 'tipo', 'opciones',
+        'materia_id', 'leccion_id', 'pregunta', 'tipo', 'opciones',
         'respuesta_correcta', 'nivel_dificultad', 'rac_referencia', 'activo',
     ];
 
@@ -24,6 +24,11 @@ class BancoPregunta extends Model
     public function materia(): BelongsTo
     {
         return $this->belongsTo(Materia::class, 'materia_id');
+    }
+
+    public function leccion(): BelongsTo
+    {
+        return $this->belongsTo(LeccionMateria::class, 'leccion_id');
     }
 
     public function scopeActivas($query)

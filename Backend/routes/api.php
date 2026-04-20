@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\CumplimientoController;
 use App\Http\Controllers\Api\VencimientoController;
 use App\Http\Controllers\Api\AulaVirtualController;
 use App\Http\Controllers\Api\MateriaController;
+use App\Http\Controllers\Api\MisionVueloController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,22 +47,32 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('aeronaves')->group(function () {
         Route::get('/',                     [AeronaveController::class, 'index']);
+        Route::post('/',                    [AeronaveController::class, 'store']);
         Route::get('{id}',                  [AeronaveController::class, 'show']);
-        Route::get('{id}/mantenimientos',   [AeronaveController::class, 'mantenimientos']); // RAC 43
+        Route::put('{id}',                  [AeronaveController::class, 'update']);
+        Route::get('{id}/mantenimientos',   [AeronaveController::class, 'mantenimientos']);
+        Route::post('{id}/mantenimientos',  [AeronaveController::class, 'storeMantenimiento']);
         Route::get('{id}/mel',              [AeronaveController::class, 'mel']);
+        Route::post('{id}/mel',             [AeronaveController::class, 'storeMel']);
         Route::get('{id}/ads',              [AeronaveController::class, 'ads']);
+        Route::post('{id}/ads',             [AeronaveController::class, 'storeAd']);
         Route::get('{id}/bitacora-tecnica', [AeronaveController::class, 'bitacoraTecnica']); 
     });
 
     Route::prefix('instructores')->group(function () {
         Route::get('/',            [InstructorController::class, 'index']);
+        Route::post('/',           [InstructorController::class, 'store']);
         Route::get('{id}',         [InstructorController::class, 'show']);
+        Route::put('{id}',         [InstructorController::class, 'update']);
     });
 
     Route::prefix('programas')->group(function () {
         Route::get('/',          [ProgramaController::class, 'index']);
         Route::post('/',         [ProgramaController::class, 'store']);
         Route::put('{id}',       [ProgramaController::class, 'update']);
+        Route::post('{id}/etapas', [ProgramaController::class, 'storeEtapa']);
+        Route::put('etapas/{id}', [ProgramaController::class, 'updateEtapa']);
+        Route::delete('etapas/{id}', [ProgramaController::class, 'destroyEtapa']);
     });
 
     Route::prefix('usuarios')->group(function () {
@@ -145,6 +156,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('materia/{id}',        [AulaVirtualController::class, 'detalleMateria']);
         Route::get('materia/{id}/examen', [AulaVirtualController::class, 'generarExamen']);
         Route::post('materia/{id}/examen',[AulaVirtualController::class, 'calificarExamen']);
+
+        // Quices de Lecciones
+        Route::get('leccion/{id}/quiz',   [AulaVirtualController::class, 'generarQuizLeccion']);
+        Route::post('leccion/{id}/quiz',  [AulaVirtualController::class, 'calificarQuizLeccion']);
+        
+        // Reporte de Notas Automáticas
+        Route::get('reporte-notas',       [AulaVirtualController::class, 'todasLasNotas']);
     });
 
     // --- Gestión Académica Avanzada (Instructores/Admin) ---
@@ -154,5 +172,21 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('{id}/preguntas',       [MateriaController::class, 'storePregunta']);
         Route::put('{id}/preguntas/{preg}', [MateriaController::class, 'updatePregunta']);
         Route::delete('{id}/preguntas/{preg}', [MateriaController::class, 'destroyPregunta']);
+
+        // Lecciones
+        Route::get('{id}/lecciones',        [MateriaController::class, 'lecciones']);
+        Route::post('{id}/lecciones',       [MateriaController::class, 'storeLeccion']);
+        Route::put('{id}/lecciones/{lec}',   [MateriaController::class, 'updateLeccion']);
+        Route::delete('{id}/lecciones/{lec}', [MateriaController::class, 'destroyLeccion']);
+        
+        // CRUD Básico de Materias
+        Route::post('/',         [MateriaController::class, 'store']);
+        Route::put('{id}',       [MateriaController::class, 'update']);
+        Route::delete('{id}',    [MateriaController::class, 'destroy']);
     });
+
+    // Control de Vuelo (Misiones RAC 141)
+    Route::get('vuelos',         [MisionVueloController::class, 'index']);
+    Route::post('vuelos',        [MisionVueloController::class, 'store']);
+    Route::delete('vuelos/{id}', [MisionVueloController::class, 'destroy']);
 });

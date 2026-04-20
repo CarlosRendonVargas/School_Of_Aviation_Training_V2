@@ -27,6 +27,14 @@ class VencimientoCritico extends Model
         return $this->nivel_critico ?? 'info';
     }
 
+    public function toArray()
+    {
+        $array = parent::toArray();
+        $array['nivel_calculado'] = $this->nivel_calculado;
+        $array['dias_restantes'] = $this->dias_restantes;
+        return $array;
+    }
+
     public function getDiasRestantesAttribute(): int
     {
         return $this->diasRestantes();

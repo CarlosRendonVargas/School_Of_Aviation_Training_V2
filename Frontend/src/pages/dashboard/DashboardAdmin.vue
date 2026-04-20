@@ -167,17 +167,17 @@ onMounted(() => {
 })
 
 const kpis = computed(() => [
-  { label: 'Egresados / Graduados', valor: '24', icono: 'military_tech', color: '#10b981', to: '/academico' },
-  { label: 'Auditoría Pendiente', valor: '3', icono: 'gavel', color: '#ef4444', to: '/seguridad' },
+  { label: 'Estudiantes Activos', valor: props.data?.estudiantes_activos || 0, icono: 'groups', color: '#10b981', to: '/academico?tab=estudiantes' },
+  { label: 'Auditoría RAC', valor: 'UAEAC', icono: 'gavel', color: '#ef4444', to: '/vencimientos' },
   { label: 'Ingresos Mensuales', valor: formatCOP(props.data?.ingresos_mes || 0, true), icono: 'account_balance_wallet', color: '#f59e0b', to: '/financiero' },
-  { label: 'Matrículas del Mes', valor: props.data?.nuevas_matriculas_mes || 0, icono: 'history_edu', color: '#8b5cf6', to: '/financiero' }
+  { label: 'Matrículas del Mes', valor: props.data?.nuevas_matriculas_mes || 0, icono: 'history_edu', color: '#8b5cf6', to: '/facturacion' }
 ])
 
 const acciones = [
-  { label: 'Nueva Matrícula', icono: 'add_circle', color: 'purple-7', to: '/financiero' },
-  { label: 'Procesar Factura', icono: 'receipt_long', color: 'positive', to: '/financiero' },
-  { label: 'Seguimiento Notas', icono: 'analytics', color: 'blue-8', to: '/academico' },
-  { label: 'Logs Sistema', icono: 'terminal', color: 'grey-9', to: '/seguridad' }
+  { label: 'Nueva Matrícula', icono: 'add_circle', color: 'purple-7', to: '/matriculas' },
+  { label: 'Generar Factura', icono: 'receipt_long', color: 'positive', to: '/facturacion' },
+  { label: 'Gestión de Notas', icono: 'analytics', color: 'blue-8', to: '/academico?tab=vuelo' },
+  { label: 'Expedientes Alumnos', icono: 'person_search', color: 'grey-9', to: '/academico?tab=estudiantes' }
 ]
 
 function formatCOP(v, abr=false) {

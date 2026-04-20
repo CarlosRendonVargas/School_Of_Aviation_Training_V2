@@ -90,7 +90,7 @@
             <div v-if="listoParaExamen" class="q-mt-md text-center">
               <q-chip color="positive" text-color="white" icon="verified"
                 label="✔ Cumple todos los requisitos RAC 61 para el examen UAEAC"
-                style="font-size:12px; padding:8px 14px; border-radius:8px; white-space:normal; height:auto" />
+                style="font-size:12px; padding:8px 14px; border-radius:8px; white-space:normal; height:auto; word-break:break-word; max-width:100%" />
             </div>
           </q-card-section>
         </q-card>
@@ -101,17 +101,17 @@
     <!-- Historial de horas por mes -->
     <q-card flat class="card-rac q-mb-md" style="background:#0f1218">
       <q-card-section>
-        <div class="row items-center justify-between q-mb-md">
+        <div class="row items-center justify-between q-mb-md flex-wrap q-gutter-sm">
           <div class="font-head text-white" style="font-size:15px; font-weight:700">
-            Horas voladas por mes (últimos 12 meses)
+            Horas voladas por mes (últimos 12)
           </div>
-          <div class="row q-gutter-xs">
+          <div class="row q-gutter-xs flex-wrap">
             <q-btn v-for="campo in camposMes" :key="campo.value"
               :unelevated="campoSeleccionado === campo.value"
               :outline="campoSeleccionado !== campo.value"
               dense no-caps size="sm" :color="campo.color"
               :label="campo.label"
-              style="border-radius:5px; min-width:52px"
+              style="border-radius:5px; min-width:48px"
               @click="campoSeleccionado = campo.value"
             />
           </div>

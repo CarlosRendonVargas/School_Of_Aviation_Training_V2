@@ -1,153 +1,143 @@
 <template>
-  <q-page padding style="padding-bottom:80px">
+  <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
 
-    <div class="row items-center q-gutter-md q-mb-lg">
-      <q-btn flat round dense icon="arrow_back" color="grey-5" @click="$router.push('/sms')" />
-      <div>
-        <div class="font-mono q-mb-xs" style="font-size:10px;color:#475569;letter-spacing:2px;text-transform:uppercase">
-          OACI Anexo 19 · SMS
+    <!-- ══ Encabezado de Reporte ══ -->
+    <div class="row items-center justify-between q-mb-xl rac-page-header">
+      <div class="row items-center">
+        <q-btn flat round dense icon="arrow_back" color="red-9" @click="$router.push('/sms')" class="q-mr-md shadow-24" />
+        <div>
+          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">SISTEMA GESTIÓN SEGURIDAD OPERACIONAL · OACI ANEXO 19</div>
+          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Nuevo Reporte de Seguridad</h1>
         </div>
-        <div class="font-head text-white" style="font-size:20px;font-weight:700">Nuevo Reporte de Seguridad</div>
       </div>
     </div>
 
-    <!-- Aviso de anonimato -->
-    <q-banner dense rounded class="q-mb-md"
-      style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:10px">
-      <template #avatar><q-icon name="info" color="info" /></template>
-      <span style="font-size:13px;color:#93c5fd">
-        Puede reportar de forma anónima. La cultura de reporte sin represalias es fundamental para la seguridad operacional (OACI Anexo 19).
-      </span>
-    </q-banner>
+    <!-- ══ Banner de Cultura de Reporte (Just Culture) ══ -->
+    <q-card class="premium-glass-card q-mb-xl border-red-low shadow-24 overflow-hidden welcome-hero">
+      <div class="hero-glow"></div>
+      <q-card-section class="row items-center q-pa-lg relative-position">
+        <q-icon name="privacy_tip" color="red-9" size="32px" class="q-mr-md glow-primary pulsate" />
+        <div class="col">
+           <div class="text-subtitle2 text-white font-head text-weight-bold">Política de No Represalias</div>
+           <div class="text-caption text-grey-5 font-mono uppercase tracking-widest" style="font-size:10px">UAEAC RAC 141.205 · La identidad del informante se protege para fomentar la seguridad operacional.</div>
+        </div>
+      </q-card-section>
+    </q-card>
 
     <q-form @submit.prevent="enviar">
-      <div class="row q-col-gutter-md">
+      <div class="row q-col-gutter-xl">
 
-        <!-- Formulario principal -->
-        <div class="col-12 col-md-7">
-          <q-card flat class="card-rac q-mb-md" style="background:#0f1218">
-            <q-card-section>
-              <div class="font-mono q-mb-md" style="font-size:10px;color:#475569;letter-spacing:2px">DETALLES DEL EVENTO</div>
-              <div class="q-gutter-md">
+        <!-- ─── Columna 1: Datos Técnicos del Hallazgo ─────────────────────────── -->
+        <div class="col-12 col-lg-7">
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low h-full flex column">
+            <div class="text-h6 text-white font-head text-weight-bolder q-mb-xl flex items-center border-bottom-border pb-md uppercase tracking-tighter">
+               <q-icon name="assignment_late" color="red-9" size="24px" class="q-mr-md" />
+               Detalles del Evento Observado
+            </div>
 
-                <!-- Anonimato -->
-                <div class="row items-center justify-between"
-                  style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 16px">
+            <div class="q-gutter-y-lg col">
+                <!-- Toggle Anónimo de Lujo -->
+                <div class="flex items-center justify-between q-pa-md border-red-low shadow-inner rounded-12 bg-black-20">
                   <div>
-                    <div style="font-size:13px;color:#e2e8f0;font-weight:500">Reporte anónimo</div>
-                    <div style="font-size:11px;color:#64748b">Su identidad no quedará registrada</div>
+                    <div class="text-white font-mono text-weight-bolder uppercase" style="font-size:12px">Reporte Anónimo</div>
+                    <div class="text-grey-6 font-mono uppercase" style="font-size:9px">Certificar sin registro de identidad</div>
                   </div>
-                  <q-toggle v-model="form.anonimo" color="primary" dark />
+                  <q-toggle v-model="form.anonimo" color="red-9" dark />
                 </div>
 
-                <q-select v-model="form.tipo" outlined dark bg-color="grey-10"
+                <q-select v-model="form.tipo" filled dark class="premium-input-login"
                   :options="opcionesTipo" emit-value map-options
-                  label="Tipo de evento" stack-label :rules="[v=>!!v||'Requerido']">
-                  <template #prepend>
-                    <q-icon :name="iconTipo" :color="colorTipo" size="18px" />
-                  </template>
+                  label="CATEGORÍA DEL HALLAZGO" stack-label :rules="[v=>!!v||'Requerido']">
+                  <template #prepend><q-icon :name="iconTipo" :color="colorTipo" /></template>
                 </q-select>
 
-                <div class="row q-col-gutter-sm">
-                  <div class="col-7">
-                    <q-input v-model="form.fecha_evento" type="datetime-local" outlined dark bg-color="grey-10"
-                      label="Fecha y hora del evento" stack-label :rules="[v=>!!v||'Requerido']" />
+                <div class="row q-col-gutter-lg">
+                  <div class="col-12 col-md-7">
+                    <q-input v-model="form.fecha_evento" type="datetime-local" filled dark class="premium-input-login"
+                      label="FECHA Y HORA DEL SUCESO" stack-label :rules="[v=>!!v||'Requerido']">
+                      <template #prepend><q-icon name="event" color="red-9" /></template>
+                    </q-input>
                   </div>
-                  <div class="col-5">
-                    <q-select v-model="form.aeronave_id" outlined dark bg-color="grey-10"
+                  <div class="col-12 col-md-5">
+                    <q-select v-model="form.aeronave_id" filled dark class="premium-input-login"
                       :options="opcionesAeronaves" option-value="id" option-label="label"
-                      emit-value map-options label="Aeronave" stack-label clearable />
+                      emit-value map-options label="HK ASOCIADA (OPCIONAL)" stack-label clearable>
+                      <template #prepend><q-icon name="airplane_ticket" color="red-9" /></template>
+                    </q-select>
                   </div>
                 </div>
 
-                <q-input v-model="form.lugar" outlined dark bg-color="grey-10"
-                  label="Lugar del evento" stack-label placeholder="Pista 23, Torre de control, Sala de clases…"
-                  :rules="[v=>!!v||'Requerido']" />
+                <q-input v-model="form.lugar" filled dark class="premium-input-login"
+                  label="UBICACIÓN EXACTA" stack-label placeholder="Ej: Pista 23, Briefing Room, Rampa..."
+                  :rules="[v=>!!v||'Requerido']">
+                  <template #prepend><q-icon name="place" color="red-9" /></template>
+                </q-input>
 
-                <q-input v-model="form.descripcion" type="textarea" outlined dark bg-color="grey-10"
-                  label="Descripción detallada" stack-label rows="5"
-                  placeholder="Describa qué ocurrió, las condiciones, factores contribuyentes y consecuencias…"
+                <q-input v-model="form.descripcion" type="textarea" filled dark class="premium-input-login"
+                  label="DESCRIPCIÓN TÉCNICA DETALLADA" stack-label rows="6"
+                  placeholder="Relate hechos, factores contribuyentes y posibles consecuencias..."
                   :rules="[v=>v&&v.length>=20||'Mínimo 20 caracteres']" counter maxlength="2000" />
-
-              </div>
-            </q-card-section>
+            </div>
           </q-card>
         </div>
 
-        <!-- Matriz de riesgo -->
-        <div class="col-12 col-md-5">
-          <q-card flat class="card-rac" style="background:#0f1218;position:sticky;top:16px">
-            <q-card-section>
-              <div class="font-mono q-mb-md" style="font-size:10px;color:#475569;letter-spacing:2px">
-                EVALUACIÓN DE RIESGO OACI
-              </div>
+        <!-- ─── Columna 2: Evaluación de Riesgo UAEAC ────────────────────────── -->
+        <div class="col-12 col-lg-5">
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low sticky-card">
+            <div class="text-h6 text-white font-head text-weight-bolder q-mb-xl flex items-center border-bottom-border pb-md uppercase tracking-tighter">
+               <q-icon name="query_stats" color="red-9" size="24px" class="q-mr-md" />
+               Clasificación de Riesgo OACI
+            </div>
 
-              <!-- Severidad -->
-              <div class="q-mb-lg">
-                <div style="font-size:13px;color:#e2e8f0;font-weight:500;margin-bottom:8px">
-                  Severidad del daño potencial
+            <!-- Severidad Selector de Cristal -->
+            <div class="q-mb-xl">
+              <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-md" style="font-size:10px">Severidad del Daño (S)</div>
+              <div class="row q-col-gutter-sm">
+                <div v-for="s in 5" :key="s" class="col">
+                  <q-btn flat class="full-width font-mono text-weight-bolder"
+                    :class="form.severidad===s ? 'btn-active-red' : 'btn-inactive'"
+                    @click="form.severidad=s" :label="s" />
                 </div>
-                <div class="row q-col-gutter-xs">
-                  <div v-for="s in 5" :key="s" class="col">
-                    <q-btn flat dense class="full-width"
-                      :style="`border-radius:6px;border:1px solid ${form.severidad===s?'rgba(59,130,246,.6)':'rgba(255,255,255,.07)'};
-                        background:${form.severidad===s?'rgba(59,130,246,.15)':'transparent'};
-                        color:${form.severidad===s?'#60a5fa':'#64748b'};
-                        padding:8px 4px;font-family:monospace;font-size:13px;font-weight:700`"
-                      @click="form.severidad=s" :label="s.toString()" />
+              </div>
+            </div>
+
+            <!-- Probabilidad Selector de Cristal -->
+            <div class="q-mb-xl">
+              <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-md" style="font-size:10px">Probabilidad de Ocurrencia (P)</div>
+              <div class="row q-col-gutter-sm">
+                <div v-for="p in 5" :key="p" class="col">
+                  <q-btn flat class="full-width font-mono text-weight-bolder"
+                    :class="form.probabilidad===p ? 'btn-active-red' : 'btn-inactive'"
+                    @click="form.probabilidad=p" :label="p" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Dashboard de Riesgo Dinámico -->
+            <div v-if="nivelRiesgo > 0" class="risk-result-vault q-pa-xl shadow-24 welcome-hero overflow-hidden" :style="`border-color: ${borderResultado}`">
+               <div class="hero-glow"></div>
+               <div class="text-center relative-position">
+                  <div class="text-caption font-mono uppercase tracking-widest q-mb-sm" :style="`color: ${colorResultado}`">Nivel de Riesgo Calculado</div>
+                  <div class="text-h1 font-mono text-weight-bolder line-height-1" :style="`color: ${colorResultado}; text-shadow: 0 0 20px ${borderResultado}`">{{ nivelRiesgo }}</div>
+                  <div class="text-h6 font-head text-weight-bolder uppercase tracking-tighter q-mt-md" :style="`color: ${colorResultado}`">{{ clasificacionRiesgo }}</div>
+                  
+                  <div v-if="nivelRiesgo >= 15" class="q-mt-lg q-pa-md border-red-low shadow-inner rounded-8 bg-red-10 animate-pulse">
+                    <div class="text-white font-mono text-weight-bolder" style="font-size:11px">⚠️ REPORTE OBLIGATORIO UAEAC</div>
                   </div>
-                </div>
-                <div class="row justify-between q-mt-xs font-mono" style="font-size:9px;color:#475569">
-                  <span>Insignificante</span><span>Catastrófico</span>
-                </div>
-              </div>
+               </div>
+            </div>
 
-              <!-- Probabilidad -->
-              <div class="q-mb-lg">
-                <div style="font-size:13px;color:#e2e8f0;font-weight:500;margin-bottom:8px">
-                  Probabilidad de ocurrencia
-                </div>
-                <div class="row q-col-gutter-xs">
-                  <div v-for="p in 5" :key="p" class="col">
-                    <q-btn flat dense class="full-width"
-                      :style="`border-radius:6px;border:1px solid ${form.probabilidad===p?'rgba(20,184,166,.6)':'rgba(255,255,255,.07)'};
-                        background:${form.probabilidad===p?'rgba(20,184,166,.12)':'transparent'};
-                        color:${form.probabilidad===p?'#2dd4bf':'#64748b'};
-                        padding:8px 4px;font-family:monospace;font-size:13px;font-weight:700`"
-                      @click="form.probabilidad=p" :label="p.toString()" />
-                  </div>
-                </div>
-                <div class="row justify-between q-mt-xs font-mono" style="font-size:9px;color:#475569">
-                  <span>Improbable</span><span>Frecuente</span>
-                </div>
-              </div>
+            <div v-else class="q-pa-xl text-center border-red-low shadow-inner rounded-12 bg-black-20">
+               <q-icon name="ads_click" color="grey-7" size="48px" class="q-mb-md opacity-20" />
+               <div class="text-grey-7 font-mono uppercase tracking-widest" style="font-size:10px">Defina Parámetros S y P para Evaluar</div>
+            </div>
 
-              <!-- Resultado de riesgo -->
-              <div v-if="nivelRiesgo > 0"
-                style="border-radius:10px;padding:16px;text-align:center;border:1px solid"
-                :style="`background:${bgResultado};border-color:${borderResultado}`">
-                <div class="font-mono" style="font-size:11px;letter-spacing:1px;margin-bottom:4px"
-                  :style="`color:${colorResultado}`">NIVEL DE RIESGO</div>
-                <div class="font-head" style="font-size:36px;font-weight:800"
-                  :style="`color:${colorResultado}`">{{ nivelRiesgo }}</div>
-                <div class="font-mono" style="font-size:12px;font-weight:600;letter-spacing:1px"
-                  :style="`color:${colorResultado}`">{{ clasificacionRiesgo.toUpperCase() }}</div>
-                <div v-if="nivelRiesgo >= 15" style="font-size:11px;color:#fca5a5;margin-top:6px">
-                  ⚠️ Requiere notificación a UAEAC
-                </div>
-              </div>
-
-              <div v-else style="border-radius:10px;padding:16px;text-align:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)">
-                <div style="font-size:12px;color:#475569">Seleccione severidad y probabilidad</div>
-              </div>
-
-            </q-card-section>
-
-            <q-card-section style="border-top:1px solid rgba(255,255,255,.07)">
-              <q-btn unelevated color="positive" no-caps label="Enviar reporte" icon="send"
-                type="submit" :loading="enviando" class="full-width"
-                :disable="!formValido" style="border-radius:8px;height:44px" />
-            </q-card-section>
+            <div class="q-mt-xl">
+               <q-btn unelevated color="red-10" label="Certificar Reporte SMS" icon="verified"
+                  type="submit" :loading="enviando" class="full-width premium-btn q-py-lg shadow-24"
+                  :disable="!formValido" />
+               <div class="text-center q-mt-md text-grey-7 font-mono uppercase" style="font-size:9px">La información será analizada por el Depto. de Seguridad</div>
+            </div>
           </q-card>
         </div>
 
@@ -168,84 +158,82 @@ const $q      = useQuasar()
 const enviando = ref(false)
 const aeronaves = ref([])
 
-const form = ref({
-  anonimo: false, tipo: null, fecha_evento: '', lugar: '',
-  aeronave_id: null, descripcion: '', severidad: 0, probabilidad: 0,
-})
+const form = ref({ anonimo: false, tipo: null, fecha_evento: '', lugar: '', aeronave_id: null, descripcion: '', severidad: 0, probabilidad: 0 })
 
 const opcionesTipo = [
-  { label: '⚠️ Peligro identificado', value: 'peligro' },
-  { label: '📋 Incidente',           value: 'incidente' },
-  { label: '🚨 Accidente',           value: 'accidente' },
-  { label: '😰 Near Miss',           value: 'near_miss' },
+  { label: '⚠️ PELIGRO IDENTIFICADO', value: 'peligro' },
+  { label: '📋 INCIDENTE OPERACIONAL', value: 'incidente' },
+  { label: '🚨 ACCIDENTE AERONÁUTICO', value: 'accidente' },
+  { label: '😰 NEAR MISS / PROXIMIDAD', value: 'near_miss' },
 ]
 
-const opcionesAeronaves = computed(() =>
-  aeronaves.value.map(a => ({ id: a.id, label: `${a.matricula} · ${a.modelo}` }))
-)
-
-const nivelRiesgo = computed(() =>
-  form.value.severidad * form.value.probabilidad
-)
+const opcionesAeronaves = computed(() => aeronaves.value.map(a => ({ id: a.id, label: `${a.matricula} · ${a.modelo}` })))
+const nivelRiesgo = computed(() => form.value.severidad * form.value.probabilidad)
 
 const clasificacionRiesgo = computed(() => {
-  const n = nivelRiesgo.value
-  if (n >= 10) return 'Inaceptable'
-  if (n >= 5)  return 'Tolerable'
-  if (n >= 1)  return 'Aceptable'
-  return ''
+  const n = nivelRiesgo.value; if (n >= 10) return 'RIESGO INACEPTABLE'; if (n >= 5) return 'RIESGO TOLERABLE'; if (n >= 1) return 'RIESGO ACEPTABLE'; return ''
 })
 
 const colorResultado = computed(() => {
-  const n = nivelRiesgo.value
-  if (n >= 10) return '#ef4444'
-  if (n >= 5)  return '#f59e0b'
-  return '#22c55e'
-})
-
-const bgResultado = computed(() => {
-  const n = nivelRiesgo.value
-  if (n >= 10) return 'rgba(239,68,68,.08)'
-  if (n >= 5)  return 'rgba(245,158,11,.07)'
-  return 'rgba(34,197,94,.07)'
+  const n = nivelRiesgo.value; if (n >= 10) return '#ff4444'; if (n >= 5) return '#f59e0b'; return '#10b981'
 })
 
 const borderResultado = computed(() => {
-  const n = nivelRiesgo.value
-  if (n >= 10) return 'rgba(239,68,68,.3)'
-  if (n >= 5)  return 'rgba(245,158,11,.25)'
-  return 'rgba(34,197,94,.2)'
+  const n = nivelRiesgo.value; if (n >= 10) return 'rgba(255, 68, 68, 0.4)'; if (n >= 5) return 'rgba(245, 158, 11, 0.4)'; return 'rgba(16, 185, 129, 0.3)'
 })
 
-const iconTipo  = computed(() => ({ peligro:'warning', incidente:'report', accidente:'emergency', near_miss:'visibility' }[form.value.tipo] || 'flag'))
-const colorTipo = computed(() => ({ peligro:'warning', incidente:'orange', accidente:'negative', near_miss:'purple' }[form.value.tipo] || 'grey-5'))
+const iconTipo  = computed(() => ({ peligro:'warning', incidente:'report_problem', accidente:'emergency_share', near_miss:'visibility' }[form.value.tipo] || 'flag'))
+const colorTipo = computed(() => ({ peligro:'orange-10', incidente:'red-9', accidente:'red-10', near_miss:'purple-10' }[form.value.tipo] || 'grey-6'))
 
-const formValido = computed(() =>
-  form.value.tipo &&
-  form.value.fecha_evento &&
-  form.value.lugar &&
-  form.value.descripcion?.length >= 20 &&
-  form.value.severidad > 0 &&
-  form.value.probabilidad > 0
-)
+const formValido = computed(() => form.value.tipo && form.value.fecha_evento && form.value.lugar && form.value.descripcion?.length >= 20 && form.value.severidad > 0 && form.value.probabilidad > 0)
 
 async function enviar() {
   enviando.value = true
   try {
     const { data } = await api.post('/sms/reportes', form.value)
-    $q.notify({
-      type: 'positive',
-      message: `Reporte enviado. Nivel de riesgo: ${data.nivel?.clasificacion || ''}`,
-      timeout: 5000,
-    })
+    $q.notify({ color: 'emerald', icon: 'verified', message: `Reporte certificado. Categoría: ${data.nivel?.clasificacion || 'Registrada'}`, timeout: 5000 })
     router.push('/sms')
-  } catch (e) {
-    $q.notify({ type: 'negative', message: 'Error al enviar el reporte.' })
-  } finally { enviando.value = false }
+  } catch (e) { $q.notify({ color: 'negative', icon: 'error', message: 'Error al certificar el reporte SMS.' }) }
+  finally { enviando.value = false }
 }
 
 onMounted(async () => {
-  const { data } = await api.get('/aeronaves')
-  aeronaves.value = data.data || []
+  try { const { data } = await api.get('/aeronaves'); aeronaves.value = data.data || [] } catch (e) {}
 })
 </script>
+
+<style lang="scss" scoped>
+.animate-fade { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
+.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
+.bg-black-20 { background: rgba(0,0,0,0.2); }
+.line-height-1 { line-height: 1.1; }
+
+.premium-input-login {
+  :deep(.q-field__control) {
+    border-radius: 12px !important; background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    &::before, &::after { display: none; }
+    &:hover { border-color: rgba(161,11,19,0.5) !important; }
+  }
+}
+
+.btn-active-red { background: rgba(161, 11, 19, 0.2) !important; border: 1px solid #A10B13 !important; color: #A10B13 !important; }
+.btn-inactive { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.05) !important; color: #64748b !important; }
+
+.risk-result-vault { border-radius: 20px; border: 2px solid; background: rgba(0,0,0,0.3); }
+
+.sticky-card { position: sticky; top: 20px; }
+.welcome-hero { position: relative; }
+.hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); }
+.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+.pulsate { animation: pulsate 2s infinite; }
+@keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+.animate-pulse { animation: pulseAlert 1.5s infinite; }
+@keyframes pulseAlert { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
+</style>

@@ -1,309 +1,283 @@
 <template>
-  <q-page padding style="padding-bottom:80px">
+  <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
 
-    <!-- Header -->
-    <div class="row items-center justify-between q-mb-lg">
-      <div>
-        <div class="font-mono q-mb-xs" style="font-size:10px; color:#475569; letter-spacing:2px; text-transform:uppercase">
-          OACI Anexo 19 · RAC 141
-        </div>
-        <div class="font-head text-white" style="font-size:20px; font-weight:700">
-          Sistema de Gestión de Seguridad
+    <!-- ══ Encabezado SMS Premium ══ -->
+    <div class="row items-center justify-between q-mb-xl rac-page-header">
+      <div class="row items-center">
+        <q-icon name="security" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
+        <div>
+          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">SISTEMA GESTIÓN SEGURIDAD OPERACIONAL · OACI ANEXO 19 · RAC 141</div>
+          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Seguridad Operacional (SMS)</h1>
         </div>
       </div>
-      <q-btn unelevated color="positive" icon="add_alert" label="Reportar" no-caps
-        @click="$router.push('/sms/nuevo-reporte')" style="border-radius:8px" />
+      <q-btn 
+        color="red-9" icon="add_alert" label="Registrar Hallazgo SMS" 
+        class="premium-btn shadow-24 pulse-red q-px-xl q-py-md" 
+        @click="$router.push('/sms/nuevo-reporte')" 
+      />
     </div>
 
-    <!-- Tabs -->
-    <q-tabs v-model="tabActivo" dense align="left" class="q-mb-md"
-      active-color="primary" indicator-color="primary" style="border-bottom:1px solid rgba(255,255,255,.08)">
-      <q-tab name="dashboard" icon="bar_chart"   label="Dashboard" no-caps />
-      <q-tab name="reportes"  icon="report"      label="Reportes"  no-caps />
-      <q-tab name="acciones"  icon="task_alt"    label="Acciones"  no-caps />
-      <q-tab name="matriz"    icon="grid_on"     label="Matriz OACI" no-caps />
-    </q-tabs>
+    <!-- ══ Pestañas de Gestión de Cristal ══ -->
+    <q-card class="premium-glass-card overflow-hidden shadow-24 bonus-grid q-mb-xl">
+      <q-tabs v-model="tabActivo" dense align="left" no-caps
+        active-color="red-9" indicator-color="red-9" class="text-grey-5 border-bottom"
+        style="padding-left: 10px"
+      >
+        <q-tab name="dashboard" icon="analytics" label="Tendencias" />
+        <q-tab name="reportes"  icon="inventory_2" label="Registro de Reportes" />
+        <q-tab name="acciones"  icon="fact_check" label="Acciones Mitigadoras" />
+        <q-tab name="matriz"    icon="grid_view" label="Matriz de Riesgo UAEAC" />
+      </q-tabs>
 
-    <q-tab-panels v-model="tabActivo" animated dark style="background:transparent">
+      <q-tab-panels v-model="tabActivo" animated dark class="bg-transparent min-h-600">
 
-      <!-- ─── Dashboard SMS ─────────────────────────────────────────── -->
-      <q-tab-panel name="dashboard" class="q-pa-none">
-        <div class="row q-col-gutter-md q-mb-md">
-          <div class="col-6 col-md-3" v-for="kpi in kpisSms" :key="kpi.label">
-            <div class="stat-card">
-              <div class="stat-num" :style="`color:${kpi.color}`">{{ kpi.valor }}</div>
-              <div class="stat-label">{{ kpi.label }}</div>
+        <!-- ─── DASHBOARD DE PREVENCIÓN ─────────────────────────────────────────── -->
+        <q-tab-panel name="dashboard" class="q-pa-xl">
+          <div class="row q-col-gutter-xl q-mb-xl">
+            <div class="col-6 col-md-3" v-for="kpi in kpisSms" :key="kpi.label">
+              <q-card class="premium-glass-card q-pa-lg border-red-low shadow-inner flex items-center no-wrap welcome-hero overflow-hidden">
+                <div class="hero-glow"></div>
+                <div class="kpi-icon-premium q-mr-lg flex flex-center shadow-24" :style="`background: ${kpi.bg}`">
+                  <q-icon :name="kpi.icon" :color="kpi.color" size="28px" />
+                </div>
+                <div class="relative-position">
+                  <div class="text-h4 text-weight-bolder font-mono text-white line-height-1">
+                    {{ kpi.valor }}
+                  </div>
+                  <div class="text-caption text-grey-6 uppercase font-mono tracking-widest q-mt-xs" style="font-size:9px">
+                    {{ kpi.label }}
+                  </div>
+                </div>
+              </q-card>
             </div>
           </div>
-        </div>
 
-        <!-- Reportes recientes -->
-        <q-card flat class="card-rac" style="background:#0f1218">
-          <q-card-section>
-            <div class="font-head text-white q-mb-md" style="font-size:15px; font-weight:700">
-              Reportes recientes por nivel de riesgo
-            </div>
-            <q-skeleton v-if="cargandoKpis" v-for="n in 3" :key="n" type="rect" dark class="q-mb-sm border-radius-8" height="60px" />
-            <q-list v-else dark separator>
-              <q-item v-for="r in reportesRecientes" :key="r.id" class="q-px-none"
-                clickable @click="verReporte(r)">
-                <q-item-section avatar>
-                  <div class="row items-center justify-center"
-                    style="width:36px; height:36px; border-radius:8px"
-                    :style="`background:${bgRiesgo(r.nivel_riesgo)}`">
-                    <span class="font-mono text-white" style="font-size:13px; font-weight:700">
+          <q-card class="premium-glass-card border-red-low shadow-24">
+            <q-card-section class="q-pa-xl">
+              <div class="row items-center justify-between q-mb-xl">
+                 <div class="row items-center">
+                    <q-icon name="history" color="red-9" size="24px" class="q-mr-md shadow-inner" />
+                    <div class="text-h5 font-head text-white text-weight-bolder uppercase tracking-tighter">Eventos de Seguridad Recientes</div>
+                 </div>
+                 <q-btn flat color="grey-6" label="Ver Historial Completo" size="sm" icon-right="chevron_right" />
+              </div>
+              
+              <q-list dark separator class="shadow-inner rounded-12 overflow-hidden border-red-low">
+                <q-item v-for="r in reportesRecientes" :key="r.id" class="q-pa-xl hover-row border-bottom">
+                  <q-item-section avatar>
+                    <div class="riesgo-hex-indicator shadow-24" :style="`background:${bgRiesgo(r.nivel_riesgo)}`">
                       {{ r.nivel_riesgo }}
-                    </span>
+                    </div>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold text-white font-head text-h6 line-height-1 q-mb-xs">{{ r.descripcion?.slice(0,80) }}...</q-item-label>
+                    <q-item-label caption class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:9px">
+                       {{ r.tipo || 'HALLAZGO' }} · REPORTE ID: #{{ r.id }} · {{ r.fecha_evento }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                     <q-badge outline :color="colorEstado(r.estado)" :label="r.estado?.toUpperCase()" class="font-mono text-weight-bolder q-px-md shadow-24" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+          </q-card>
+        </q-tab-panel>
+
+        <!-- ─── REGISTRO TÉCNICO DE REPORTES ──────────────────────────────────────── -->
+        <q-tab-panel name="reportes" class="q-pa-xl">
+          <div class="row items-center justify-between q-mb-xl">
+             <div class="text-h5 font-head text-white text-weight-bolder">Archivo Maestro de Seguridad</div>
+             <q-btn outline color="red-9" icon="file_download" label="Exportar Auditoría" class="font-mono shadow-24" />
+          </div>
+          <q-table :rows="reportes" :columns="columnasReportes" row-key="id" class="rac-table shadow-24 border-red-low" flat dark>
+            <template #body-cell-nivel_riesgo="{ row }">
+              <q-td class="text-center">
+                <q-badge :style="`background:${bgRiesgo(row.nivel_riesgo)}`" class="font-mono text-weight-bolder q-px-md shadow-24">
+                  {{ row.nivel_riesgo }}
+                </q-badge>
+              </q-td>
+            </template>
+            <template #body-cell-tipo="{ value }">
+              <q-td><q-chip dense :color="colorTipo(value)" text-color="white" :label="value?.toUpperCase()" size="xs" class="font-mono text-weight-bold q-px-sm" /></q-td>
+            </template>
+            <template #body-cell-fecha_evento="{ value }">
+               <q-td class="font-mono text-grey-5">{{ value }}</q-td>
+            </template>
+          </q-table>
+        </q-tab-panel>
+
+        <!-- ─── SEGUIMIENTO DE ACCIONES ───────────────────────────────────── -->
+        <q-tab-panel name="acciones" class="q-pa-xl">
+          <div class="text-h5 font-head text-white text-weight-bolder q-mb-xl">Gestión de Mitigaciones Pendientes</div>
+          <q-table :rows="acciones" :columns="columnasAcciones" row-key="id" class="rac-table shadow-24 border-red-low" flat dark>
+              <template #body-cell-fecha_limite="{ value }">
+                 <q-td class="font-mono text-red-9 text-weight-bolder text-center">{{ value }}</q-td>
+              </template>
+              <template #body-cell-estado="{ value }">
+                 <q-td class="text-center"><q-badge color="orange-10" :label="value?.toUpperCase()" class="font-mono q-px-md" /></q-td>
+              </template>
+          </q-table>
+        </q-tab-panel>
+
+        <!-- ─── MATRIZ DE RIESGO OACI 5X5 ────────────────────────────────────────────── -->
+        <q-tab-panel name="matriz" class="q-pa-xl flex flex-center shadow-inner">
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low welcome-hero" style="max-width: 900px; width: 100%">
+            <div class="hero-glow"></div>
+            <div class="text-center q-mb-xl relative-position">
+              <div class="text-h4 font-head text-white text-weight-bolder uppercase tracking-tighter">Matriz de Evaluación de Riesgos</div>
+              <div class="text-grey-6 font-mono uppercase tracking-widest q-mt-sm" style="font-size:10px">Análisis Cuantitativo UAEAC · Severidad vs Probabilidad</div>
+            </div>
+
+            <div class="matriz-ops-container relative-position q-mb-xl">
+              <div class="y-axis-label-premium font-mono">SEVERIDAD (S)</div>
+              <div class="x-axis-label-premium font-mono">PROBABILIDAD (P)</div>
+              
+              <div class="matriz-grid-premium">
+                <div v-for="s in [5,4,3,2,1]" :key="s" class="matriz-row-premium">
+                  <div class="row-num-premium font-mono shadow-inner">S{{s}}</div>
+                  <div v-for="p in 5" :key="p" class="matriz-cell-premium shadow-24" :class="cellClass(s*p)" :style="`opacity: ${0.4 + (s*p/25)}`">
+                    <span class="font-mono text-weight-bolder" style="font-size:18px">{{ s * p }}</span>
+                    <q-tooltip class="bg-dark text-white font-mono uppercase">RIESGO NIVEL {{ s*p }}: {{ riskConcept(s*p) }}</q-tooltip>
                   </div>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label style="font-size:13px; color:#e2e8f0">{{ r.descripcion?.slice(0,80) }}…</q-item-label>
-                  <q-item-label caption style="font-size:11px">
-                    <q-chip dense :color="colorTipo(r.tipo)" text-color="white" :label="r.tipo.toUpperCase()"
-                      style="font-size:9px; padding:2px 6px" />
-                    · {{ r.fecha_evento?.slice(0,10) }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-chip dense :color="colorEstado(r.estado)" text-color="white"
-                    :label="r.estado" style="font-size:10px" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card-section>
-        </q-card>
-      </q-tab-panel>
-
-      <!-- ─── Lista de reportes ──────────────────────────────────────── -->
-      <q-tab-panel name="reportes" class="q-pa-none">
-        <q-table
-          :rows="reportes"
-          :columns="columnasReportes"
-          :loading="cargandoReportes"
-          flat dark class="tabla-rac"
-          style="background:#0f1218; border:1px solid rgba(255,255,255,.07); border-radius:12px"
-          row-key="id"
-        >
-          <template #top>
-            <div class="row full-width q-col-gutter-sm items-center">
-              <div class="col-auto">
-                <q-select v-model="filtroTipo" outlined dense dark bg-color="grey-10"
-                  :options="opcionesTipo" emit-value map-options clearable label="Tipo" style="min-width:130px">
-                </q-select>
-              </div>
-              <div class="col-auto">
-                <q-select v-model="filtroEstado" outlined dense dark bg-color="grey-10"
-                  :options="opcionesEstado" emit-value map-options clearable label="Estado" style="min-width:130px">
-                </q-select>
-              </div>
-              <q-space />
-              <div class="col-auto font-mono" style="font-size:11px; color:#475569">
-                {{ reportes.length }} reportes
-              </div>
-            </div>
-          </template>
-
-          <template #body-cell-nivel_riesgo="{ row }">
-            <q-td>
-              <div class="row items-center justify-center"
-                style="width:32px; height:32px; border-radius:6px; margin:auto"
-                :style="`background:${bgRiesgo(row.nivel_riesgo)}`">
-                <span class="font-mono text-white" style="font-size:12px; font-weight:700">{{ row.nivel_riesgo }}</span>
-              </div>
-            </q-td>
-          </template>
-
-          <template #body-cell-tipo="{ value }">
-            <q-td>
-              <q-chip dense :color="colorTipo(value)" text-color="white" :label="value.toUpperCase()" style="font-size:10px" />
-            </q-td>
-          </template>
-
-          <template #body-cell-estado="{ value }">
-            <q-td>
-              <q-chip dense :color="colorEstado(value)" text-color="white" :label="value" style="font-size:10px" />
-            </q-td>
-          </template>
-
-          <template #body-cell-acciones="{ row }">
-            <q-td>
-              <q-btn flat round dense icon="visibility" color="grey-5" size="sm" @click="verReporte(row)" />
-            </q-td>
-          </template>
-        </q-table>
-      </q-tab-panel>
-
-      <!-- ─── Acciones correctivas ───────────────────────────────────── -->
-      <q-tab-panel name="acciones" class="q-pa-none">
-        <q-list dark separator style="background:#0f1218; border:1px solid rgba(255,255,255,.07); border-radius:12px">
-          <q-item v-for="ac in acciones" :key="ac.id" style="padding:12px 16px">
-            <q-item-section>
-              <q-item-label style="font-size:13px; color:#e2e8f0">{{ ac.descripcion }}</q-item-label>
-              <q-item-label caption style="font-size:11px; margin-top:4px">
-                <span style="color:#64748b">Límite:</span>
-                <span class="font-mono q-ml-xs" :style="`color:${esVencida(ac.fecha_limite) ? '#ef4444' : '#f59e0b'}`">
-                  {{ ac.fecha_limite }}
-                </span>
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-chip dense :color="colorAccion(ac.estado)" text-color="white" :label="ac.estado" style="font-size:10px" />
-            </q-item-section>
-          </q-item>
-          <q-item v-if="!acciones.length" style="padding:32px">
-            <q-item-section class="text-center" style="color:#475569; font-size:13px">
-              Sin acciones correctivas pendientes
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-tab-panel>
-
-      <!-- ─── Matriz de riesgo OACI ──────────────────────────────────── -->
-      <q-tab-panel name="matriz" class="q-pa-none">
-        <q-card flat class="card-rac" style="background:#0f1218">
-          <q-card-section>
-            <div class="font-head text-white q-mb-xs" style="font-size:15px; font-weight:700">
-              Matriz de Riesgo OACI 5×5
-            </div>
-            <div class="font-mono q-mb-md" style="font-size:11px; color:#475569">
-              Severidad × Probabilidad → Nivel de riesgo (1–25)
-            </div>
-
-            <!-- Eje Y: Severidad -->
-            <div class="row items-center q-mb-xs">
-              <div style="width:70px"></div>
-              <div class="row q-col-gutter-xs" style="flex:1">
-                <div v-for="p in 5" :key="p" class="col text-center font-mono"
-                  style="font-size:10px; color:#64748b">P{{ p }}</div>
-              </div>
-            </div>
-
-            <div v-for="s in [5,4,3,2,1]" :key="s" class="row items-center q-mb-xs">
-              <div class="font-mono text-right q-pr-sm" style="width:70px; font-size:10px; color:#64748b">
-                S{{ s }}
-              </div>
-              <div class="row q-col-gutter-xs" style="flex:1">
-                <div v-for="p in 5" :key="p" class="col">
-                  <div class="text-center font-mono text-white"
-                    style="border-radius:6px; padding:8px 4px; font-size:13px; font-weight:700; cursor:default"
-                    :style="`background:${bgRiesgo(s*p)}; min-height:36px; line-height:1.5`">
-                    {{ s * p }}
-                  </div>
+                </div>
+                <div class="matriz-row-premium header-row-premium q-mt-md">
+                  <div class="row-num-premium empty"></div>
+                  <div v-for="p in 5" :key="p" class="matriz-cell-num-premium font-mono shadow-inner">P{{p}}</div>
                 </div>
               </div>
             </div>
 
-            <!-- Leyenda -->
-            <div class="row q-col-gutter-md q-mt-md">
-              <div class="col-auto row items-center q-gutter-xs">
-                <div style="width:14px; height:14px; border-radius:3px; background:#22c55e"></div>
-                <span class="font-mono" style="font-size:10px; color:#94a3b8">1–4 Aceptable</span>
-              </div>
-              <div class="col-auto row items-center q-gutter-xs">
-                <div style="width:14px; height:14px; border-radius:3px; background:#f59e0b"></div>
-                <span class="font-mono" style="font-size:10px; color:#94a3b8">5–9 Tolerable</span>
-              </div>
-              <div class="col-auto row items-center q-gutter-xs">
-                <div style="width:14px; height:14px; border-radius:3px; background:#ef4444"></div>
-                <span class="font-mono" style="font-size:10px; color:#94a3b8">10–25 Inaceptable</span>
-              </div>
+            <div class="row justify-center q-gutter-xl q-mt-xl relative-position">
+                <div class="flex items-center"><div class="legend-box-premium risk-safe"></div><span class="font-mono text-grey-5 q-ml-sm uppercase" style="font-size:10px">ACEPTABLE</span></div>
+                <div class="flex items-center"><div class="legend-box-premium risk-caution"></div><span class="font-mono text-grey-5 q-ml-sm uppercase" style="font-size:10px">TOLERABLE</span></div>
+                <div class="flex items-center"><div class="legend-box-premium risk-danger"></div><span class="font-mono text-grey-5 q-ml-sm uppercase" style="font-size:10px">INACEPTABLE</span></div>
             </div>
-          </q-card-section>
-        </q-card>
-      </q-tab-panel>
+          </q-card>
+        </q-tab-panel>
 
-    </q-tab-panels>
+      </q-tab-panels>
+    </q-card>
 
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from 'boot/axios'
-import dayjs from 'dayjs'
 
-const tabActivo       = ref('dashboard')
-const cargandoKpis    = ref(false)
-const cargandoReportes = ref(false)
-const kpis            = ref(null)
-const reportes        = ref([])
-const acciones        = ref([])
-const filtroTipo      = ref(null)
-const filtroEstado    = ref(null)
+const tabActivo = ref('dashboard')
+const kpis = ref(null)
+const reportes = ref([])
+const acciones = ref([])
 
-const opcionesTipo   = [
-  { label: 'Peligro',   value: 'peligro'   },
-  { label: 'Incidente', value: 'incidente' },
-  { label: 'Accidente', value: 'accidente' },
-  { label: 'Near miss', value: 'near_miss' },
-]
-const opcionesEstado = [
-  { label: 'Nuevo',       value: 'nuevo'       },
-  { label: 'En análisis', value: 'en_analisis' },
-  { label: 'Cerrado',     value: 'cerrado'     },
-]
+const kpisSms = computed(() => [
+  { label: 'Eventos Capturados', valor: kpis.value?.total_reportes || 0, icon: 'radar', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+  { label: 'Amenazas Críticas', valor: kpis.value?.inaceptables || 0, icon: 'warning_amber', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+  { label: 'Mitigaciones OK', valor: kpis.value?.acciones_pendientes || 0, icon: 'verified_user', color: 'emerald', bg: 'rgba(16,185,129,0.05)' },
+  { label: 'Vencimientos SMS', valor: kpis.value?.acciones_vencidas || 0, icon: 'timer_off', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
+])
 
 const columnasReportes = [
-  { name: 'nivel_riesgo', label: 'Riesgo', field: 'nivel_riesgo', align: 'center', sortable: true },
-  { name: 'tipo',         label: 'Tipo',   field: 'tipo',         align: 'left' },
-  { name: 'descripcion',  label: 'Descripción', field: row => row.descripcion?.slice(0,60)+'…', align: 'left' },
-  { name: 'fecha_evento', label: 'Fecha',  field: row => row.fecha_evento?.slice(0,10), align: 'left' },
-  { name: 'estado',       label: 'Estado', field: 'estado',       align: 'center' },
-  { name: 'acciones',     label: '',       field: 'id',           align: 'right' },
+  { name: 'nivel_riesgo', label: 'RIESGO', field: 'nivel_riesgo', align: 'center' },
+  { name: 'tipo', label: 'TIPO EVENTO', field: 'tipo', align: 'left' },
+  { name: 'descripcion', label: 'HALLAZGO / OBSERVACIÓN TÉCNICA', field: 'descripcion', align: 'left' },
+  { name: 'fecha_evento', label: 'FECHA REG.', field: 'fecha_evento', align: 'center' },
+  { name: 'estado', label: 'ESTATUS', field: 'estado', align: 'center' }
 ]
 
-const kpisSms = computed(() => {
-  if (!kpis.value) return []
-  return [
-    { label: 'Total reportes',      valor: kpis.value.total_reportes       || 0, color: '#60a5fa' },
-    { label: 'Riesgo inaceptable',  valor: kpis.value.inaceptables         || 0, color: '#ef4444' },
-    { label: 'Acciones pendientes', valor: kpis.value.acciones_pendientes  || 0, color: '#f59e0b' },
-    { label: 'Acciones vencidas',   valor: kpis.value.acciones_vencidas    || 0, color: '#ef4444' },
-  ]
-})
+const columnasAcciones = [
+  { name: 'descripcion', label: 'ACCIÓN CORRECTIVA / PREVENTIVA REGISTRADA', field: 'descripcion', align: 'left' },
+  { name: 'fecha_limite', label: 'FECHA LÍMITE', field: 'fecha_limite', align: 'center' },
+  { name: 'estado', label: 'ESTADO ACTUAL', field: 'estado', align: 'center' }
+]
 
 const reportesRecientes = computed(() => reportes.value.slice(0, 8))
 
-const bgRiesgo = (nivel) => {
-  if (nivel <= 4)  return 'rgba(34,197,94,.25)'
-  if (nivel <= 9)  return 'rgba(245,158,11,.3)'
-  return 'rgba(239,68,68,.35)'
-}
-const colorTipo   = (t) => ({ peligro:'warning', incidente:'orange', accidente:'negative', near_miss:'deep-purple' }[t] || 'grey')
-const colorEstado = (e) => ({ nuevo:'info', en_analisis:'warning', cerrado:'positive' }[e] || 'grey')
-const colorAccion = (e) => ({ pendiente:'warning', en_proceso:'info', cerrada:'positive', verificada:'teal' }[e] || 'grey')
-const esVencida   = (fecha) => dayjs(fecha).isBefore(dayjs())
-
-function verReporte(r) {
-  // TODO: abrir dialog de detalle
-  console.log('Ver reporte:', r.id)
+const bgRiesgo = (n) => {
+  if (n <= 4) return '#10b981'
+  if (n <= 9) return '#f59e0b'
+  return '#A10B13'
 }
 
-async function cargarKpis() {
-  cargandoKpis.value = true
+const cellClass = (n) => {
+  if (n <= 4) return 'cell-safe'
+  if (n <= 9) return 'cell-caution'
+  return 'cell-danger'
+}
+
+const riskConcept = (n) => {
+  if (n <= 4) return 'RIESGO CONTROLADO / ACEPTABLE'
+  if (n <= 9) return 'RIESGO BAJO MONITOREO / TOLERABLE'
+  return 'RIESGO CRÍTICO / INACEPTABLE'
+}
+
+const colorTipo   = (t) => ({ peligro: 'orange-10', incidente: 'red-9', accidente: 'red-10' }[t] || 'grey-8')
+const colorEstado = (e) => ({ nuevo: 'red-9', en_analisis: 'orange-10', cerrado: 'emerald' }[e] || 'grey-8')
+
+const cargarDatos = async () => {
   try {
-    const { data } = await api.get('/sms/dashboard')
-    kpis.value = data.data
-  } finally { cargandoKpis.value = false }
+    const [d, r, a] = await Promise.all([
+      api.get('/sms/dashboard'), api.get('/sms/reportes'), api.get('/sms/acciones?estado=pendiente')
+    ])
+    kpis.value = d.data.data; reportes.value = r.data.data?.data || r.data.data || []; acciones.value = a.data.data?.data || a.data.data || []
+  } catch {}
 }
 
-async function cargarReportes() {
-  cargandoReportes.value = true
-  try {
-    const params = {}
-    if (filtroTipo.value)   params.tipo   = filtroTipo.value
-    if (filtroEstado.value) params.estado = filtroEstado.value
-    const { data } = await api.get('/sms/reportes', { params })
-    reportes.value = data.data.data || []
-  } finally { cargandoReportes.value = false }
-}
-
-async function cargarAcciones() {
-  const { data } = await api.get('/sms/acciones?estado=pendiente')
-  acciones.value = data.data.data || []
-}
-
-watch([filtroTipo, filtroEstado], cargarReportes)
-watch(tabActivo, (t) => { if (t === 'acciones') cargarAcciones() })
-onMounted(() => { cargarKpis(); cargarReportes() })
+onMounted(cargarDatos)
 </script>
+
+<style lang="scss" scoped>
+.animate-fade { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
+.shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
+.border-bottom { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.min-h-600 { min-height: 600px; }
+.line-height-1 { line-height: 1.1; }
+
+.kpi-icon-premium { width: 50px; height: 50px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
+.riesgo-hex-indicator {
+  width: 42px; height: 42px; border-radius: 10px; font-family: 'JetBrains Mono';
+  font-weight: 900; color: white; display: flex; align-items: center; justify-content: center;
+}
+
+.hover-row { transition: all 0.2s; &:hover { background: rgba(255,255,255,0.03); transform: translateX(5px); } }
+
+.matriz-ops-container { padding: 50px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+.matriz-grid-premium { display: flex; flex-direction: column; gap: 10px; }
+.matriz-row-premium { display: flex; gap: 10px; align-items: center; }
+.matriz-cell-premium {
+  flex: 1; height: 60px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; color: white; transition: transform 0.2s;
+  &:hover { transform: scale(1.05); z-index: 10; border: 1px solid white; cursor: help; }
+}
+.cell-safe { background: #10b981; }
+.cell-caution { background: #f59e0b; }
+.cell-danger { background: #A10B13; }
+
+.row-num-premium { width: 50px; height: 60px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; border-radius: 10px; }
+.matriz-cell-num-premium { flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; border-radius: 10px; }
+.y-axis-label-premium { position: absolute; left: -20px; top: 50%; transform: rotate(-90deg) translateY(-50%); font-size: 10px; color: #475569; letter-spacing: 2px; }
+.x-axis-label-premium { text-align: center; margin-top: 30px; font-size: 10px; color: #475569; letter-spacing: 2px; }
+
+.legend-box-premium { width: 18px; height: 18px; border-radius: 5px; }
+.risk-safe { background: #10b981; }
+.risk-caution { background: #f59e0b; }
+.risk-danger { background: #A10B13; }
+
+.pulse-red { animation: pulseRed 2s infinite; }
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(161, 11, 19, 0.6); }
+  70% { box-shadow: 0 0 0 15px rgba(161, 11, 19, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(161, 11, 19, 0); }
+}
+
+.welcome-hero { position: relative; }
+.hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); }
+.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+.pulsate { animation: pulsate 2s infinite; }
+@keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+</style>

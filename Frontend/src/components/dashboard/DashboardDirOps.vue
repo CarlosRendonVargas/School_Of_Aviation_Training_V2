@@ -6,32 +6,17 @@
 
     <template v-else-if="data">
       <!-- ── KPIs principales ───────────────────────────────────────── -->
-      <div class="kpis-row q-mb-lg">
-        <div class="stat-card accent-red">
-          <div class="stat-value text-red-5">{{ data.resumen_escuela?.estudiantes_activos }}</div>
-          <div class="stat-label">Estudiantes activos</div>
-        </div>
-        <div class="stat-card accent-teal">
-          <div class="stat-value" style="color:#2dd4bf">{{ data.resumen_escuela?.instructores_activos }}</div>
-          <div class="stat-label">Instructores activos</div>
-        </div>
-        <div class="stat-card accent-green">
-          <div class="stat-value text-positive">{{ data.resumen_escuela?.aeronaves_disponibles }}</div>
-          <div class="stat-label">Aeronaves disponibles</div>
-        </div>
-        <div class="stat-card accent-amber">
-          <div class="stat-value text-amber">{{ data.resumen_escuela?.vuelos_hoy }}</div>
-          <div class="stat-label">Vuelos programados hoy</div>
-        </div>
-        <div class="stat-card" :class="data.reportes_sms_nuevos > 0 ? 'accent-red' : 'accent-green'">
-          <div class="stat-value" :class="data.reportes_sms_nuevos > 0 ? 'text-negative' : 'text-positive'">
-            {{ data.reportes_sms_nuevos }}
-          </div>
-          <div class="stat-label">Reportes SMS nuevos</div>
-        </div>
-        <div class="stat-card accent-purple">
-          <div class="stat-value" style="color:#a78bfa">{{ data.vencimientos_criticos?.length ?? 0 }}</div>
-          <div class="stat-label">Vencimientos próximos</div>
+      <!-- ── KPIs principales ───────────────────────────────────────── -->
+      <div class="row q-col-gutter-md q-mb-xl">
+        <div class="col-6 col-sm-4 col-md-2" v-for="kpi in kpisDirOps" :key="kpi.label">
+          <q-card class="premium-glass-card q-pa-md text-center border-red-low shadow-24 hover-card" style="height: 100%">
+            <div class="stat-value font-mono text-weight-bolder" :class="kpi.class" :style="kpi.style">
+              {{ kpi.valor }}
+            </div>
+            <div class="stat-label font-mono text-grey-6 uppercase tracking-widest q-mt-xs" style="font-size:9px">
+              {{ kpi.label }}
+            </div>
+          </q-card>
         </div>
       </div>
 
@@ -63,7 +48,7 @@
               <div style="font-size:12px;font-weight:600">{{ v.descripcion }}</div>
               <div style="font-size:10px;opacity:.7;font-family:'JetBrains Mono',monospace">
                 {{ v.dias_restantes <= 0 ? 'VENCIDO' : `${v.dias_restantes} días` }}
-                · {{ v.fecha_vencimiento }}
+                · {{ dayjs(v.fecha_vencimiento).format('DD/MM/YYYY') }}
               </div>
             </div>
           </div>
@@ -142,34 +127,34 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { api } from 'boot/axios'
+import { computed } from 'vue'
+import dayjs from 'dayjs'
 
-const cargando = ref(true)
-const data     = ref(null)
+const props = defineProps({
+  data:     { type: Object,  default: null },
+  cargando: { type: Boolean, default: false },
+})
 
 const vencCriticos = computed(() => {
-  return (data.value?.vencimientos_criticos || []).filter(v => v.dias_restantes <= 30)
+  return (props.data?.vencimientos_criticos || []).filter(v => v.dias_restantes <= 30)
 })
 
-onMounted(async () => {
-  try {
-    const { data: res } = await api.get('/dashboard')
-    data.value = res.data
-  } finally {
-    cargando.value = false
-  }
-})
+const kpisDirOps = computed(() => [
+  { label: 'Estudiantes', valor: props.data.resumen_escuela?.estudiantes_activos, class: 'text-red-5' },
+  { label: 'Instructores', valor: props.data.resumen_escuela?.instructores_activos, style: 'color:#2dd4bf' },
+  { label: 'Aeronaves', valor: props.data.resumen_escuela?.aeronaves_disponibles, class: 'text-positive' },
+  { label: 'Vuelos Hoy', valor: props.data.resumen_escuela?.vuelos_hoy, class: 'text-amber' },
+  { label: 'SMS Nuevos', valor: props.data.reportes_sms_nuevos, class: props.data.reportes_sms_nuevos > 0 ? 'text-negative' : 'text-positive' },
+  { label: 'Alertas RAC', valor: props.data.vencimientos_criticos?.length ?? 0, style: 'color:#a78bfa' }
+])
 </script>
 
 <style lang="scss" scoped>
-.kpis-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; }
-  .stat-label { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 3px; }
-}
+.stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 3px; }
+.rac-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; }
+.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
+
 .center-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
   @media (max-width: 768px) { grid-template-columns: 1fr; }

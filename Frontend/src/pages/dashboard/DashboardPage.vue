@@ -1,70 +1,80 @@
 <template>
-  <q-page class="rac-page">
+  <q-page class="q-pa-md animate-fade">
 
-    <!-- Header de página -->
-    <div class="page-header">
+    <!-- ══ Briefing de Bienvenida ══ -->
+    <div class="dashboard-header q-mb-xl rac-page-header">
       <div>
-        <div class="page-header-label">{{ saludoHora }},</div>
-        <h1 class="page-header-title">{{ auth.nombre }}</h1>
-        <div class="page-header-sub">
-          <span class="badge-base badge-info-level">{{ rolLabel }}</span>
-          <span class="q-ml-sm" style="font-size:12px;color:rgba(255,255,255,.4)">{{ fechaHoy }}</span>
+        <div class="font-mono text-grey-6 uppercase tracking-widest q-mb-xs" style="font-size:10px">
+           {{ saludoHora }} · STATUS: <span class="text-emerald">OPERATIVO</span>
+        </div>
+        <h1 class="welcome-title text-weight-bolder text-white font-head q-my-none tracking-tighter">
+          {{ auth.nombre.split(' ')[0] }} <span class="text-red-9">.</span>
+        </h1>
+        <div class="row items-center q-mt-sm flex-wrap q-gutter-sm">
+           <q-badge color="red-9" class="font-mono text-weight-bold q-px-sm q-py-xs shadow-10" style="font-size:10px">
+             {{ rolLabel.toUpperCase() }}
+           </q-badge>
+           <div class="text-grey-5 font-mono" style="font-size:11px">
+             <q-icon name="event" size="14px" class="q-mr-xs" />{{ fechaHoy }}
+           </div>
         </div>
       </div>
-      <q-btn
+      
+      <q-btn 
         v-if="auth.esDirOps || auth.esAdmin"
-        label="Sincronizar alertas"
-        icon="sync"
-        flat
-        dense
-        color="blue-4"
-        size="sm"
+        flat dense rounded
+        color="white" icon="sync" 
+        label="Sincronizar" 
+        class="premium-glass-card q-px-lg font-mono text-weight-bold sync-btn"
+        style="font-size:10px"
         @click="sincronizar"
         :loading="sincronizando"
       />
     </div>
 
-    <!-- ── DASHBOARD ESTUDIANTE ─────────────────────────────────── -->
-    <template v-if="auth.esEstudiante">
-      <DashboardEstudiante />
-    </template>
+    <!-- ── RENDERIZADO DINÁMICO DE DASHBOARDS POR ROL ──────────────── -->
+    <div class="animate-slide-up">
+      <template v-if="auth.esEstudiante">
+        <DashboardEstudiante :data="dashboardData" :cargando="loadingData" />
+      </template>
 
-    <!-- ── DASHBOARD INSTRUCTOR ────────────────────────────────── -->
-    <template v-else-if="auth.esInstructor">
-      <DashboardInstructor />
-    </template>
+      <template v-else-if="auth.esInstructor">
+        <DashboardInstructor :data="dashboardData" :cargando="loadingData" />
+      </template>
 
-    <!-- ── DASHBOARD DIR. OPS ──────────────────────────────────── -->
-    <template v-else-if="auth.esDirOps">
-      <DashboardDirOps />
-    </template>
+      <template v-else-if="auth.esDirOps">
+        <DashboardDirOps :data="dashboardData" :cargando="loadingData" />
+      </template>
 
-    <!-- ── DASHBOARD MANTENIMIENTO ─────────────────────────────── -->
-    <template v-else-if="auth.esMantenimiento">
-      <DashboardMantenimiento />
-    </template>
+      <template v-else-if="auth.esMantenimiento">
+        <DashboardMantenimiento :data="dashboardData" :cargando="loadingData" />
+      </template>
 
-    <!-- ── DASHBOARD ADMIN ─────────────────────────────────────── -->
-    <template v-else-if="auth.esAdmin">
-      <DashboardAdmin />
-    </template>
+      <template v-else-if="auth.esAdmin">
+        <DashboardAdmin :data="dashboardData" :cargando="loadingData" />
+      </template>
 
-    <!-- ── DASHBOARD AUDITOR UAEAC ─────────────────────────────── -->
-    <template v-else-if="auth.esAuditor">
-      <DashboardAuditor />
-    </template>
+      <template v-else-if="auth.esAuditor">
+        <DashboardAuditor :data="dashboardData" :cargando="loadingData" />
+      </template>
+    </div>
 
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { useVencimientosStore } from 'store/vencimientos'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 dayjs.locale('es')
 
 import DashboardEstudiante   from 'components/dashboard/DashboardEstudiante.vue'
@@ -79,23 +89,41 @@ const auth   = useAuthStore()
 const vStore = useVencimientosStore()
 
 const sincronizando = ref(false)
+const loadingData   = ref(false)
+const dashboardData = ref(null)
 
-const fechaHoy = computed(() => dayjs().format('dddd, D [de] MMMM YYYY'))
+async function cargarDashboard() {
+  loadingData.value = true
+  try {
+    const { data } = await api.get('/dashboard')
+    dashboardData.value = data.data
+  } catch (err) {
+    console.error("Error cargando dashboard:", err)
+  } finally {
+    loadingData.value = false
+  }
+}
+
+onMounted(() => {
+  cargarDashboard()
+})
+
+const fechaHoy = computed(() => dayjs().tz('America/Bogota').format('DD/MM/YYYY [·] dddd, D [de] MMMM'))
 
 const saludoHora = computed(() => {
   const h = new Date().getHours()
-  if (h < 12) return 'Buenos días'
-  if (h < 18) return 'Buenas tardes'
-  return 'Buenas noches'
+  if (h < 12) return 'Control de Vuelo: Buenos días'
+  if (h < 18) return 'Control de Vuelo: Buenas tardes'
+  return 'Control de Vuelo: Buenas noches'
 })
 
 const rolLabel = computed(() => ({
-  estudiante:    'Estudiante',
-  instructor:    'Instructor de Vuelo',
-  admin:         'Administrativo',
-  dir_ops:       'Director de Operaciones',
-  mantenimiento: 'Mantenimiento',
-  auditor_uaeac: 'Auditor UAEAC',
+  estudiante:    'Estudiante en fase PIA',
+  instructor:    'Instructor de Vuelo Autorizado',
+  admin:         'Administrador de Centro de Instrucción',
+  dir_ops:       'Director de Operaciones Aéreas',
+  mantenimiento: 'Ingeniero de Mantenimiento',
+  auditor_uaeac: 'Auditor Gubernamental UAEAC',
 }[auth.rol] || auth.rol))
 
 async function sincronizar() {
@@ -103,9 +131,16 @@ async function sincronizar() {
   try {
     await api.post('/vencimientos/sincronizar')
     await vStore.cargar()
-    $q.notify({ type: 'positive', message: 'Alertas sincronizadas correctamente.' })
+    $q.notify({ 
+      color: 'red-9', 
+      message: 'Inteligencia de alertas sincronizada correctamente.',
+      icon: 'verified' 
+    })
   } catch {
-    $q.notify({ type: 'negative', message: 'Error al sincronizar.' })
+    $q.notify({ 
+      color: 'negative', 
+      message: 'Fallo en la sincronización de datos.' 
+    })
   } finally {
     sincronizando.value = false
   }
@@ -113,38 +148,26 @@ async function sincronizar() {
 </script>
 
 <style lang="scss" scoped>
-.rac-page {
-  padding: 24px;
-  background: #0a0c10;
-  min-height: 100vh;
+.animate-fade      { animation: fadeIn 0.8s ease-out; }
+.animate-slide-up  { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-  @media (max-width: 600px) { padding: 16px; }
+.text-emerald { color: #10b981; }
+
+// Responsive dashboard header
+.dashboard-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28px;
-  flex-wrap: wrap;
-  gap: 12px;
+// Responsive welcome title
+.welcome-title {
+  font-size: 3rem;
+  @media (max-width: 599px) { font-size: 2rem !important; }
+}
 
-  .page-header-label {
-    font-size: 13px;
-    color: rgba(255,255,255,.4);
-    margin-bottom: 2px;
-  }
-  .page-header-title {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(20px, 4vw, 28px);
-    font-weight: 700;
-    color: #fff;
-    margin: 0 0 6px 0;
-  }
-  .page-header-sub {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+// Sync button on mobile
+.sync-btn {
+  @media (max-width: 599px) { width: 100%; justify-content: center; font-size: 10px; }
 }
 </style>

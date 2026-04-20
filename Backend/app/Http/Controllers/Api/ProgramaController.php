@@ -60,4 +60,44 @@ class ProgramaController extends Controller
 
         return response()->json(['ok' => true, 'data' => $programa]);
     }
+
+    /* ─── Gestión de Etapas ─── */
+
+    public function storeEtapa(Request $request, $programaId): JsonResponse
+    {
+        $data = $request->validate([
+            'numero' => 'required|integer',
+            'nombre' => 'required|string',
+            'horas_tierra' => 'nullable|numeric',
+            'horas_vuelo' => 'nullable|numeric',
+            'descripcion' => 'nullable|string'
+        ]);
+
+        $data['programa_id'] = $programaId;
+        $etapa = \App\Models\Etapa::create($data);
+
+        return response()->json(['ok' => true, 'data' => $etapa]);
+    }
+
+    public function updateEtapa(Request $request, $id): JsonResponse
+    {
+        $etapa = \App\Models\Etapa::findOrFail($id);
+        $data = $request->validate([
+            'numero' => 'sometimes|integer',
+            'nombre' => 'sometimes|string',
+            'horas_tierra' => 'nullable|numeric',
+            'horas_vuelo' => 'nullable|numeric',
+            'descripcion' => 'nullable|string'
+        ]);
+
+        $etapa->update($data);
+        return response()->json(['ok' => true, 'data' => $etapa]);
+    }
+
+    public function destroyEtapa($id): JsonResponse
+    {
+        $etapa = \App\Models\Etapa::findOrFail($id);
+        $etapa->delete();
+        return response()->json(['ok' => true, 'mensaje' => 'Etapa eliminada']);
+    }
 }

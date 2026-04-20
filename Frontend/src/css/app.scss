@@ -1,19 +1,28 @@
-// src/css/app.scss — Global Design System: SCHOOL OF AVIATION PREMIUM (RAC 141)
+// src/css/app.scss — Global Design System: SCHOOL OF AVIATION PREMIUM (RAC 141) — RESPONSIVE v3.0
 
 // Premium Typography
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
 
+// ══ Breakpoints ══
+$xs: 599px;   // mobile portrait
+$sm: 1023px;  // mobile landscape / tablet
+
 :root {
-  --rac-bg: #05070a;
-  --rac-card-bg: rgba(15, 23, 42, 0.65);
-  --rac-primary: #A10B13; // COLOR CORPORATIVO ROJO
+  --rac-bg: #030407;
+  --rac-card-bg: rgba(18, 22, 30, 0.75);
+  --rac-primary: #A10B13;
+  --rac-primary-low: rgba(161, 11, 19, 0.15);
+  --rac-primary-glow: rgba(161, 11, 19, 0.35);
   --rac-secondary: #0f172a;
-  --rac-accent: #f8fafc;
+  --rac-accent: #ffffff;
   --rac-emerald: #10b981;
   --rac-amber: #f59e0b;
-  --rac-border: rgba(255, 255, 255, 0.08);
-  --rac-glass-blur: blur(12px);
-  --rac-shadow-glow: 0 8px 32px rgba(161, 11, 19, 0.15);
+  --rac-border: rgba(255, 255, 255, 0.05);
+  --rac-glass-blur: blur(20px);
+  --rac-shadow-glow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  // Responsive padding
+  --page-pad: 24px;
+  @media (max-width: $xs) { --page-pad: 12px; }
 }
 
 body { 
@@ -25,74 +34,75 @@ body {
   background-attachment: fixed;
   color: #f8fafc;
   -webkit-font-smoothing: antialiased;
+  // Prevent horizontal scroll
+  overflow-x: hidden;
 }
 
 .font-mono { font-family: 'JetBrains Mono', monospace !important; }
 .font-head { font-family: 'Syne', sans-serif !important; }
 
-// Premium Card System
-.card-rac {
-  background: var(--rac-card-bg) !important;
-  backdrop-filter: var(--rac-glass-blur);
-  border: 1px solid var(--rac-border);
-  border-radius: 16px;
-  box-shadow: var(--rac-shadow-glow);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+// ══════════════════════════════════════════
+// GLOBAL CARD SYSTEM — RESPONSIVE
+// ══════════════════════════════════════════
+.card-rac, .premium-glass-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(25px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   overflow: hidden;
   position: relative;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(161, 11, 19, 0.3), transparent);
-    opacity: 0;
-    transition: opacity 0.4s;
+  // Only apply hover lift on devices that support it (not touch)
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { 
+      transform: translateY(-4px) !important;
+      border-color: var(--rac-primary-glow) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8) !important;
+    }
   }
 
-  &:hover { 
-    transform: translateY(-4px);
-    border-color: rgba(161, 11, 19, 0.3);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-    &::before { opacity: 1; }
+  // Reduce border-radius on mobile
+  @media (max-width: $xs) {
+    border-radius: 16px !important;
   }
 }
 
-// Global Glassmorphism Class
-.premium-glass-card {
-  background: rgba(255, 255, 255, 0.02) !important;
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+// ══════════════════════════════════════════
+// CORPORATE FORMS — RESPONSIVE
+// ══════════════════════════════════════════
+.q-field--outlined {
+  .q-field__control {
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    transition: all 0.3s ease;
+    &::before { border: 1px solid rgba(255, 255, 255, 0.08) !important; }
+    &:hover::before { border-color: var(--rac-primary-glow) !important; }
+  }
+  &.q-field--focused {
+    .q-field__control {
+      background: rgba(161, 11, 19, 0.05) !important;
+      &::after { border-color: var(--rac-primary) !important; border-width: 2px !important; }
+    }
+    .q-field__label { color: var(--rac-primary) !important; font-weight: 700; }
+    .q-field__native, .q-field__input { color: white !important; }
+  }
 }
 
-// Improved Badges
-.rac-badge {
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.q-field__native, .q-field__input { color: #cbd5e1 !important; }
+.q-field__label { font-family: 'Outfit', sans-serif; letter-spacing: 0.5px; }
 
-  &.activo    { background: rgba(16, 185, 129, 0.1);  color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-  &.vencido   { background: rgba(161, 11, 19, 0.1);   color: #fb7185; border: 1px solid rgba(161, 11, 19, 0.2); }
-  &.proximo   { background: rgba(245, 158, 11, 0.1);  color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
-  &.info      { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }
-}
-
-// High-End Tables
+// ══════════════════════════════════════════
+// HIGH-END TABLES — RESPONSIVE
+// ══════════════════════════════════════════
 .rac-table {
   background: transparent !important;
   .q-table__top, .q-table__bottom { 
     background: transparent;
     color: #94a3b8;
   }
-  
   thead tr th {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
@@ -102,86 +112,191 @@ body {
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 2px solid rgba(161, 11, 19, 0.2);
     font-weight: 700;
+    white-space: nowrap;
   }
-  
   tbody tr {
     transition: background 0.2s;
     &:hover { background: rgba(161, 11, 19, 0.03) !important; }
     td { border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
   }
+  // Mobile: allow table horizontal scroll
+  @media (max-width: $xs) {
+    font-size: 13px;
+    .q-table__container { overflow-x: auto; }
+  }
 }
 
-// Global Buttons Enhancement
-.q-btn.premium-btn {
-  border-radius: 10px;
-  text-transform: none;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  &:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(161, 11, 19, 0.2); }
-  &:active { transform: scale(0.95); }
+// ══════════════════════════════════════════
+// GLOBAL BUTTONS — RESPONSIVE
+// ══════════════════════════════════════════
+.q-btn.premium-btn, .premium-btn {
+  border-radius: 12px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { 
+      transform: translateY(-3px) !important; 
+      box-shadow: 0 8px 25px rgba(161, 11, 19, 0.3) !important; 
+      filter: brightness(1.2);
+    }
+  }
+  &:active { transform: scale(0.95) !important; }
+  // Smaller on mobile
+  @media (max-width: $xs) {
+    padding: 8px 16px !important;
+    font-size: 11px !important;
+    letter-spacing: 0.5px !important;
+  }
 }
 
-// Glass Button (Floating Effect)
-.glass-btn {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  &:hover { background: rgba(255, 255, 255, 0.08); }
+// ══════════════════════════════════════════
+// PAGE HEADER — RESPONSIVE
+// The page-level header row (icon + title + action btn)
+// ══════════════════════════════════════════
+.rac-page-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  // Stack vertically on mobile
+  @media (max-width: $xs) {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    // Full-width button on mobile
+    .q-btn.premium-btn { width: 100% !important; justify-content: center; }
+    // Smaller icon
+    .q-icon[size="48px"] { font-size: 32px !important; }
+    // Smaller title
+    h1.text-h4 { font-size: 1.4rem !important; }
+  }
+  @media (min-width: 600px) and (max-width: $sm) {
+    gap: 12px;
+    h1.text-h4 { font-size: 1.6rem !important; }
+  }
 }
 
-// Sidebar Customization
+// ══════════════════════════════════════════
+// RESPONSIVE PAGE PADDING
+// ══════════════════════════════════════════
+.q-page.q-pa-md {
+  @media (max-width: $xs) {
+    padding: 12px !important;
+  }
+}
+
+// ══════════════════════════════════════════
+// GLOBAL UTILITIES
+// ══════════════════════════════════════════
+.bg-dark-page { background: var(--rac-bg) !important; }
+.border-red-left { border-left: 4px solid var(--rac-primary) !important; }
+.border-bottom-border { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
+// Standardized Dialog Header Section
+.rac-dialog-header {
+  padding: 40px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  @media (max-width: 599px) { padding: 24px !important; }
+}
+
+// Standardized Dialog Body Section
+.rac-dialog-body {
+  padding: 40px !important;
+  @media (max-width: 599px) { padding: 20px !important; }
+}
+
+.pb-md { padding-bottom: 16px; }
+.rounded-20 { border-radius: 20px !important; }
+
+.rac-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// ══════════════════════════════════════════
+// SIDEBAR — RESPONSIVE
+// ══════════════════════════════════════════
 .menu-item {
   border-radius: 12px;
   margin: 4px 12px;
   padding: 8px 12px;
   transition: all 0.3s;
   color: #94a3b8;
-  
-  .q-item__section--avatar { min-width: 40px; }
-  
-  &:hover { 
-    background: rgba(255, 255, 255, 0.05); 
-    color: white;
-  }
-  
+  &:hover { background: rgba(255, 255, 255, 0.05); color: white; }
   &.q-router-link--active {
     background: linear-gradient(90deg, rgba(161, 11, 19, 0.2), transparent) !important;
     color: #f8fafc !important;
     border-left: 3px solid var(--rac-primary);
-    .q-icon { color: var(--rac-primary) !important; filter: drop-shadow(0 0 5px rgba(161, 11, 19, 0.5)); }
+    .q-icon { color: var(--rac-primary) !important; filter: drop-shadow(0 0 5px rgba(161, 11, 19, 0.3)); }
   }
 }
 
-// Gradients and Glows
-.bg-primary-gradient { background: linear-gradient(135deg, #A10B13 0%, #6b070c 100%); }
-
-// Animated Glows
-@keyframes glow-pulse {
-  0% { box-shadow: 0 0 5px rgba(161, 11, 19, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(161, 11, 19, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(161, 11, 19, 0.2); }
-}
-
-.glow-primary { animation: glow-pulse 3s infinite; }
-
-// Scrollbar Styling
-::-webkit-scrollbar { width: 6px; }
+// ══════════════════════════════════════════
+// SCROLLBAR
+// ══════════════════════════════════════════
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(161, 11, 19, 0.3); }
 
-// Layout Utilities
-.rac-page-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 24px;
-  margin-bottom: 32px;
+// ══════════════════════════════════════════
+// GLOW EFFECT
+// ══════════════════════════════════════════
+.glow-primary { filter: drop-shadow(0 0 10px rgba(161, 11, 19, 0.5)); }
+
+// ══════════════════════════════════════════
+// RESPONSIVE GRID HELPERS
+// ══════════════════════════════════════════
+// Stats grid: on xs collapse columns
+.stats-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  @media (max-width: $sm)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: $xs)  { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
-.text-gradient-white {
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+// Input full-width fix for mobile
+.premium-input-login {
+  @media (max-width: $xs) { width: 100% !important; }
 }
 
+// Quasar col responsive overrides for q-pa-xl inside panels
+.q-tab-panel {
+  @media (max-width: $xs) {
+    padding: 12px !important;
+  }
+  @media (min-width: 600px) and (max-width: $sm) {
+    padding: 20px !important;
+  }
+}
+
+// Card inner q-pa-xl on mobile
+.q-card.premium-glass-card > .q-card__section {
+  @media (max-width: $xs) {
+    padding: 16px !important;
+  }
+}
+
+// Dialog responsive
+.q-dialog__inner {
+  @media (max-width: $xs) {
+    padding: 8px !important;
+    > .q-card {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 16px 16px 0 0 !important;
+      margin: 0 !important;
+    }
+  }
+}

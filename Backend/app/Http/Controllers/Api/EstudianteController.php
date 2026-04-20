@@ -20,7 +20,7 @@ class EstudianteController extends Controller
     {
         $this->authorize('viewAny', Estudiante::class);
 
-        $query = Estudiante::with(['persona', 'programa:id,codigo,nombre,tipo'])
+        $query = Estudiante::with(['persona', 'programa.etapas.materias'])
             ->when($request->estado,      fn($q, $v) => $q->where('estado', $v))
             ->when($request->programa_id, fn($q, $v) => $q->where('programa_id', $v))
             ->when($request->buscar, function ($q, $v) {
@@ -31,9 +31,30 @@ class EstudianteController extends Controller
                 );
             });
 
+        $estudiantes = $query->orderBy('id', 'desc')->paginate($request->per_page ?? 20);
+
+        // Transformar el paginador para incluir el cálculo de progreso en el JSON
+        $estudiantes->through(function ($est) {
+            $totalMaterias = 0;
+            if ($est->programa) {
+                foreach ($est->programa->etapas as $etapa) {
+                    $totalMaterias += $etapa->materias->count();
+                }
+            }
+            
+            $divisor = $totalMaterias ?: 1;
+            $aprobadas = NotaAcademica::where('estudiante_id', $est->id)
+                ->where('aprobado', true)
+                ->distinct('materia_id')
+                ->count();
+            
+            $est->progreso_pia_real = round(($aprobadas / $divisor) * 100, 1);
+            return $est;
+        });
+
         return response()->json([
             'ok'   => true,
-            'data' => $query->orderBy('id', 'desc')->paginate($request->per_page ?? 20),
+            'data' => $estudiantes,
         ]);
     }
 
@@ -74,7 +95,16 @@ class EstudianteController extends Controller
             if (!empty($data['persona_id'])) {
                 $persona = \App\Models\Persona::findOrFail($data['persona_id']);
             } else {
+                // Crear usuario básico para el estudiante
+                $usuario = \App\Models\Usuario::create([
+                    'email'    => strtolower($data['nombres'].'.'.$data['apellidos'].'@aviation.com'), // Email temporal
+                    'password' => \Illuminate\Support\Facades\Hash::make($data['num_documento']),
+                    'rol_id'   => \App\Models\Rol::where('nombre', 'estudiante')->first()?->id ?? 3,
+                    'activo'   => true
+                ]);
+
                 $persona = \App\Models\Persona::create([
+                    'usuario_id'       => $usuario->id,
                     'nombres'          => $data['nombres'],
                     'apellidos'        => $data['apellidos'],
                     'tipo_documento'   => $data['tipo_documento'],
@@ -137,6 +167,19 @@ class EstudianteController extends Controller
             'notas.materia',
             'bitacoras' => fn($q) => $q->orderByDesc('fecha')->limit(50),
         ]);
+
+        $totalMaterias = 0;
+        if ($estudiante->programa) {
+            foreach ($estudiante->programa->etapas as $etapa) {
+                $totalMaterias += $etapa->materias->count();
+            }
+        }
+        $divisor = $totalMaterias ?: 1;
+        $aprobadas = NotaAcademica::where('estudiante_id', $estudiante->id)
+            ->where('aprobado', true)
+            ->distinct('materia_id')
+            ->count();
+        $estudiante->progreso_pia_real = round(($aprobadas / $divisor) * 100, 1);
 
         return response()->json([
             'ok'   => true,
@@ -208,15 +251,24 @@ class EstudianteController extends Controller
         $data = $request->validate([
             'estudiante_id'   => 'required|exists:estudiantes,id',
             'materia_id'      => 'required|exists:materias,id',
+            'instructor_id'   => 'nullable|exists:instructores,id',
             'nota'            => 'required|numeric|min:0|max:100',
             'fecha_evaluacion'=> 'required|date',
             'observaciones'   => 'nullable|string',
         ]);
 
         $materia  = \App\Models\Materia::findOrFail($data['materia_id']);
-        $instructor = $request->user()->persona?->instructor;
+        
+        // Si no se envía instructor_id, intentar tomar el del usuario logueado
+        if (!$request->instructor_id) {
+            $instructor = $request->user()->persona?->instructor;
+            $data['instructor_id'] = $instructor?->id;
+        }
 
-        $data['instructor_id'] = $instructor?->id;
+        if (!$data['instructor_id']) {
+            return response()->json(['ok' => false, 'mensaje' => 'Se requiere un instructor para calificar.'], 422);
+        }
+
         $data['aprobado']      = $data['nota'] >= $materia->nota_minima;
         $data['intento_num']   = NotaAcademica::where('estudiante_id', $data['estudiante_id'])
                                     ->where('materia_id', $data['materia_id'])
@@ -262,9 +314,17 @@ class EstudianteController extends Controller
         $data['estudiante_id'] = $id;
         $cert = CertMedico::create($data);
 
+        // Sincronizar alertas de inmediato para este estudiante
+        try {
+            $vencService = app(\App\Services\VencimientoService::class);
+            $vencService->sincronizar();
+        } catch (\Exception $e) {
+            \Log::error("Error sincronizando alertas tras certificado médico: " . $e->getMessage());
+        }
+
         return response()->json([
             'ok'      => true,
-            'mensaje' => 'Certificado médico registrado (RAC 67).',
+            'mensaje' => 'Certificado médico registrado (RAC 67) y alertas actualizadas.',
             'data'    => $cert,
         ], 201);
     }
