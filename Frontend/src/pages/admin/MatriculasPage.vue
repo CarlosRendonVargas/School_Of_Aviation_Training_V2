@@ -209,16 +209,8 @@ onMounted(() => { cargar(); cargarProgramas() })
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-top { border-top: 5px solid #A10B13 !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
-.rounded-20 { border-radius: 20px; }
-.line-height-1 { line-height: 1.1; }
 
 .premium-input-login {
   :deep(.q-field__control) {
@@ -231,7 +223,7 @@ onMounted(() => { cargar(); cargarProgramas() })
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.15) 0%, transparent 50%); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); opacity: 0.8; } }
 </style>

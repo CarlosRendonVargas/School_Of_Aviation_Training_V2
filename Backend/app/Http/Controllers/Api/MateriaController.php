@@ -156,7 +156,8 @@ class MateriaController extends Controller
             'nombre' => 'required|string',
             'horas' => 'required|numeric',
             'tipo' => 'nullable|string',
-            'nota_minima' => 'nullable|numeric'
+            'nota_minima' => 'nullable|numeric',
+            'duracion_minutos' => 'nullable|integer'
         ]);
 
         $materia = Materia::create($data);
@@ -172,7 +173,8 @@ class MateriaController extends Controller
             'nombre' => 'sometimes|string',
             'horas' => 'sometimes|numeric',
             'tipo' => 'nullable|string',
-            'nota_minima' => 'nullable|numeric'
+            'nota_minima' => 'nullable|numeric',
+            'duracion_minutos' => 'nullable|integer'
         ]);
 
         $materia->update($data);

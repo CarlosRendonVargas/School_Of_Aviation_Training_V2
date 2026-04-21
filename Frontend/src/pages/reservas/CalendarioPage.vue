@@ -261,17 +261,11 @@ onMounted(cargar)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low    { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-left   { border-left: 5px solid #A10B13 !important; }
 .border-column     { border-right: 1px solid rgba(255,255,255,0.05); &:last-child { border-right: none; } }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
+
 .bg-black-20       { background: rgba(0,0,0,0.2); }
-.rounded-12 { border-radius: 12px; }
-.rounded-20 { border-radius: 20px; }
+
 .bg-red-10-opacity { background: rgba(161, 11, 19, 0.06); }
 .opacity-20 { opacity: 0.2; }
 
@@ -324,10 +318,10 @@ onMounted(cargar)
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.12) 0%, transparent 50%); pointer-events:none; }
-.glow-primary { filter: drop-shadow(0 0 12px rgba(161, 11, 19, 0.4)); }
+
 .pulsate { animation: pulsate 2.5s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-.line-height-1 { line-height: 1.1; }
+
 .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
 .bonus-grid { background-image: radial-gradient(rgba(161, 11, 19, 0.04) 1px, transparent 1px); background-size: 28px 28px; }
 

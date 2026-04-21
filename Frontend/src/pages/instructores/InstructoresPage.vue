@@ -223,16 +223,13 @@ onMounted(cargar)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
+
 .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 .glow-avatar { border: 3px solid rgba(161, 11, 19, 0.3); box-shadow: 0 0 20px rgba(161,11,19,0.2); }
 .status-dot { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #0a0c11; }
-.bg-emerald { background: #10b981; }
-.text-emerald { color: #10b981; }
-.rounded-20 { border-radius: 20px; }
 
 .premium-hover-card {
   transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -244,9 +241,7 @@ onMounted(cargar)
     }
   }
 }
-.border-red-glow { border-color: rgba(161, 11, 19, 0.4) !important; box-shadow: 0 0 20px rgba(161, 11, 19, 0.12); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
-.line-height-1 { line-height: 1.1; }
+
 .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .premium-input-login {

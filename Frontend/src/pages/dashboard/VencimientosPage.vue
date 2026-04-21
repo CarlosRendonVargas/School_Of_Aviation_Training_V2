@@ -184,16 +184,15 @@ onMounted(() => store.cargar())
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
+
 .animate-slide-up { animation: slideUp 0.6s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .glow-red-border { border: 1px solid rgba(161, 11, 19, 0.4) !important; box-shadow: 0 0 20px rgba(161, 11, 19, 0.1); }
-.border-red-left { border-left: 5px solid #A10B13 !important; }
 
 .kpi-icon-round {
   width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
@@ -216,7 +215,6 @@ onMounted(() => store.cargar())
 }
 
 .hover-row { transition: all 0.2s; &:hover { background: rgba(255,255,255,0.03); } }
-.text-emerald { color: #10b981; }
-.line-height-1 { line-height: 1.1; }
+
 .alert-vencido-item { transition: transform 0.2s; &:hover { transform: scale(1.005); } }
 </style>

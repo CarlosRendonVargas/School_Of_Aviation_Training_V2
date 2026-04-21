@@ -121,7 +121,13 @@
           <!-- ════ SECCIÓN: DOSSIER ACADÉMICO ════ -->
           <q-tab-panel name="notas" class="q-pa-xl">
              <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-xl">Historial de Calificaciones Teóricas</div>
-             <q-table :rows="expediente.estudiante.notas || []" :columns="columnasNotas" flat dark class="rac-table shadow-24">
+             <q-table 
+                :rows="expediente.estudiante.notas || []" 
+                :columns="columnasNotas" 
+                flat dark 
+                class="rac-table shadow-24"
+                :grid="$q.screen.lt.md"
+             >
                 <template #body-cell-nota="props">
                    <q-td :props="props" class="text-center">
                       <span class="font-mono text-weight-bolder" :class="props.row.aprobado?'text-emerald':'text-red-9'" style="font-size:16px">
@@ -134,7 +140,33 @@
                       <q-icon :name="props.row.aprobado?'check_circle':'cancel'" :color="props.row.aprobado?'emerald':'red-9'" size="22px" />
                    </q-td>
                 </template>
+
+                <!-- Modo Grid Móvil: Notas -->
+                <template v-slot:item="props">
+                  <div class="col-12 q-pa-xs">
+                    <q-card class="bg-black-20 shadow-24 q-mb-sm p-0 border-red-low">
+                      <q-card-section class="q-pa-md">
+                        <div class="row items-center justify-between">
+                          <span class="text-caption text-grey-5 font-mono uppercase">{{ props.row.materia?.codigo }}</span>
+                          <q-icon :name="props.row.aprobado?'check_circle':'cancel'" :color="props.row.aprobado?'emerald':'red-9'" size="20px" />
+                        </div>
+                        <div class="text-white text-weight-bold font-head q-mt-sm" style="font-size:15px">{{ props.row.materia?.nombre }}</div>
+                        <div class="row items-center justify-between q-mt-md border-top-border pt-sm">
+                           <div>
+                              <div class="text-grey-6 font-mono uppercase" style="font-size:8px">FECHA EVAL.</div>
+                              <div class="text-white font-mono" style="font-size:11px">{{ dayjs(props.row.fecha_evaluacion).format('DD/MM/YYYY') }}</div>
+                           </div>
+                           <div class="text-right">
+                              <div class="text-grey-6 font-mono uppercase" style="font-size:8px">RESULTADO</div>
+                              <div class="text-h6 font-mono text-weight-bolder" :class="props.row.aprobado?'text-emerald':'text-red-9'">{{ Number(props.row.nota || 0).toFixed(1) }}</div>
+                           </div>
+                        </div>
+                      </q-card-section>
+                    </q-card>
+                  </div>
+                </template>
              </q-table>
+
           </q-tab-panel>
 
           <!-- ════ SECCIÓN: SALUD RAC 67 ════ -->
@@ -173,22 +205,49 @@
            <!-- ════ SECCIÓN: BITÁCORAS DE VUELO ════ -->
            <q-tab-panel name="bitacoras" class="q-pa-xl">
               <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-xl">Registro de Misiones (Bitácora Digital)</div>
-              <q-table 
-                 :rows="expediente.estudiante.vuelos || []" 
-                 :columns="columnasBitacora" 
-                 flat dark 
-                 class="rac-table shadow-24 border-red-low"
-                 row-key="id"
-              >
-                 <template #body-cell-horas="props">
-                    <q-td :props="props" class="text-right font-mono text-red-9 text-weight-bolder">
-                       {{ Number(props.value || 0).toFixed(1) }}H
-                    </q-td>
-                 </template>
-                 <template #body-cell-fecha="props">
-                    <q-td :props="props" class="font-mono text-grey-5">{{ props.value }}</q-td>
-                 </template>
-              </q-table>
+               <q-table 
+                  :rows="expediente.estudiante.vuelos || []" 
+                  :columns="columnasBitacora" 
+                  flat dark 
+                  class="rac-table shadow-24 border-red-low"
+                  row-key="id"
+                  :grid="$q.screen.lt.md"
+               >
+                  <template #body-cell-horas="props">
+                     <q-td :props="props" class="text-right font-mono text-red-9 text-weight-bolder">
+                        {{ Number(props.value || 0).toFixed(1) }}H
+                     </q-td>
+                  </template>
+                  <template #body-cell-fecha="props">
+                     <q-td :props="props" class="font-mono text-grey-5">{{ props.value }}</q-td>
+                  </template>
+
+                  <!-- Modo Grid Móvil: Bitácora -->
+                  <template v-slot:item="props">
+                    <div class="col-12 q-pa-xs">
+                      <q-card class="bg-black-20 shadow-24 q-mb-sm p-0 border-red-low">
+                        <q-card-section class="q-pa-md">
+                           <div class="row items-center justify-between">
+                              <span class="font-mono text-grey-5">{{ props.row.fecha ? dayjs(props.row.fecha).format('DD/MM/YYYY') : '---' }}</span>
+                              <q-badge outline color="red-9" :label="props.row.aeronave?.matricula" class="font-mono text-weight-bolder" />
+                           </div>
+                           <div class="text-white font-head q-mt-md" style="font-size:15px">{{ props.row.tipo_vuelo || 'Instrucción' }}</div>
+                           <div class="row items-center justify-between q-mt-md border-top-border pt-sm">
+                              <div>
+                                 <div class="text-grey-6 font-mono uppercase" style="font-size:8px">INSTRUCTOR</div>
+                                 <div class="text-white font-head" style="font-size:12px">{{ props.row.instructor?.persona?.apellidos || 'N/A' }}</div>
+                              </div>
+                              <div class="text-right">
+                                 <div class="text-grey-6 font-mono uppercase" style="font-size:8px">DURACIÓN</div>
+                                 <div class="text-h6 text-red-9 font-mono text-weight-bolder">{{ Number(props.row.horas_totales || 0).toFixed(1) }}H</div>
+                              </div>
+                           </div>
+                        </q-card-section>
+                      </q-card>
+                    </div>
+                  </template>
+               </q-table>
+
            </q-tab-panel>
 
         </q-tab-panels>
@@ -267,18 +326,9 @@ onMounted(cargar)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low  { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-left { border-left: 4px solid #A10B13 !important; }
-.border-red-top  { border-top: 4px solid #A10B13 !important; }
-.border-red-glow { border: 1px solid rgba(161, 11, 19, 0.4) !important; box-shadow: 0 0 20px rgba(161, 11, 19, 0.1); }
 .shadow-inner    { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
-.text-emerald    { color: #10b981; }
-.bg-emerald      { background: #10b981 !important; }
-.line-height-1   { line-height: 1.1; }
+
 .flex-shrink-0   { flex-shrink: 0; }
 .min-w-0         { min-width: 0; }
 

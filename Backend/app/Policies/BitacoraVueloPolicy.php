@@ -93,6 +93,11 @@ class BitacoraVueloPolicy
             return $persona?->estudiante?->id === $bitacora->estudiante_id;
         }
 
+        // El Admin o Director de Operaciones pueden firmar/validar cualquier bitácora
+        if (in_array($rol, ['admin', 'dir_ops'])) {
+            return true;
+        }
+
         return false;
     }
 }

@@ -139,15 +139,63 @@
             </q-select>
           </div>
         </div>
-        <q-table :rows="registrosFiltrados" :columns="colsRegistros" row-key="id" class="rac-table" flat />
+        <q-table :rows="registrosFiltrados" :columns="colsRegistros" row-key="id" class="rac-table" flat :grid="$q.screen.lt.md">
+          <template v-slot:item="props">
+            <div class="col-12 q-pa-xs grid-style-transition">
+               <q-card class="premium-glass-card shadow-24 border-red-low q-mb-sm p-0">
+                  <q-card-section>
+                     <div class="row items-center justify-between">
+                       <span class="text-red-9 font-mono text-weight-bolder uppercase">[{{ props.row.tipo }}]</span>
+                       <span class="font-mono text-grey-5">{{ props.row.fecha_realizado }}</span>
+                     </div>
+                     <div class="text-white text-weight-bold q-mt-md">{{ props.row.descripcion }}</div>
+                     <q-separator dark class="opacity-5 q-my-sm" />
+                     <div class="row justify-between">
+                       <div class="text-caption text-grey-4">Téc: {{ props.row.realizado_por }}</div>
+                       <div class="font-mono text-grey-6" style="font-size:10px">TTAE: {{ props.row.horas_aeronave }}h</div>
+                     </div>
+                  </q-card-section>
+               </q-card>
+            </div>
+          </template>
+        </q-table>
       </q-tab-panel>
 
       <q-tab-panel name="mel" class="q-pa-none">
-        <q-table :rows="melItems" :columns="colsMel" row-key="id" class="rac-table" flat />
+        <q-table :rows="melItems" :columns="colsMel" row-key="id" class="rac-table" flat :grid="$q.screen.lt.md">
+          <template v-slot:item="props">
+            <div class="col-12 q-pa-xs grid-style-transition">
+               <q-card class="premium-glass-card shadow-24 q-mb-sm" :class="props.row.estado === 'cerrado' ? 'border-emerald-low' : 'border-orange-9'">
+                  <q-card-section>
+                     <div class="row items-center justify-between">
+                       <q-badge :color="props.row.estado === 'cerrado' ? 'emerald' : 'orange-9'" class="font-mono text-weight-bolder uppercase">{{ props.row.estado }}</q-badge>
+                       <span class="font-mono text-grey-5">{{ props.row.fecha_apertura }}</span>
+                     </div>
+                     <div class="text-white font-head text-weight-bold q-mt-md" style="font-size: 16px;">ATA: {{ props.row.item_ata }} · CAT {{ props.row.categoria }}</div>
+                     <div class="text-grey-3 q-mt-xs">{{ props.row.descripcion }}</div>
+                  </q-card-section>
+               </q-card>
+            </div>
+          </template>
+        </q-table>
       </q-tab-panel>
 
       <q-tab-panel name="ads" class="q-pa-none">
-        <q-table :rows="adItems" :columns="colsAds" row-key="id" class="rac-table" flat />
+        <q-table :rows="adItems" :columns="colsAds" row-key="id" class="rac-table" flat :grid="$q.screen.lt.md">
+          <template v-slot:item="props">
+            <div class="col-12 q-pa-xs grid-style-transition">
+               <q-card class="premium-glass-card shadow-24 q-mb-sm" :class="props.row.cumplido ? 'border-emerald-low' : 'border-red-low'">
+                  <q-card-section>
+                     <div class="row items-center justify-between">
+                       <span class="text-white font-mono text-weight-bolder" style="font-size: 14px">{{ props.row.numero_ad }}</span>
+                       <q-badge :color="props.row.cumplido ? 'emerald' : 'red-9'" class="font-mono text-weight-bolder uppercase">{{ props.row.cumplido ? 'CUMPLIDO' : 'PENDIENTE' }}</q-badge>
+                     </div>
+                     <div class="text-grey-4 q-mt-md">{{ props.row.titulo }}</div>
+                  </q-card-section>
+               </q-card>
+            </div>
+          </template>
+        </q-table>
       </q-tab-panel>
 
     </q-tab-panels>
@@ -366,8 +414,6 @@ onMounted(cargarTodo)
 .hover-red { transition: color 0.2s; &:hover { color: #A10B13 !important; } }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
 .pb-md { padding-bottom: 16px; }
-.border-bottom-border { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.rounded-20 { border-radius: 20px !important; }
 
 .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

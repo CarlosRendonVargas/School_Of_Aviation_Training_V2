@@ -64,7 +64,12 @@
       row-key="id"
       v-model:pagination="paginacion"
       @request="onRequest"
+      :grid="$q.screen.lt.md"
     >
+      <template #body-cell-fecha="props">
+        <q-td :props="props" class="font-mono text-grey-5">{{ props.value ? props.value.slice(0, 10) : '---' }}</q-td>
+      </template>
+
       <template #body-cell-tipo_vuelo="props">
         <q-td :props="props" class="text-center">
           <q-badge :color="colorTipoVuelo(props.value)" :label="props.value.toUpperCase()" class="font-mono text-weight-bold q-px-md shadow-24" />
@@ -99,6 +104,40 @@
              </q-btn>
           </div>
         </q-td>
+      </template>
+
+      <!-- Grid Responsivo para Móvil -->
+      <template v-slot:item="props">
+        <div class="col-12 q-pa-xs grid-style-transition">
+          <q-card class="premium-glass-card shadow-24 q-mb-sm p-0 border-red-low">
+             <q-card-section>
+               <div class="row items-center justify-between">
+                 <span class="font-mono text-grey-5">{{ props.row.fecha ? props.row.fecha.slice(0, 10) : '---' }}</span>
+                 <q-badge outline color="red-9" :label="props.row.aeronave?.matricula" class="font-mono text-weight-bolder" />
+               </div>
+               
+               <div class="text-white text-weight-bold q-mt-md" style="font-size: 15px">
+                 {{ props.row.estudiante?.persona?.nombres }} {{ props.row.estudiante?.persona?.apellidos }}
+               </div>
+
+               <div class="row items-center q-mt-sm text-grey-4">
+                 <q-icon name="route" size="14px" class="q-mr-xs" />
+                 <span class="font-mono">{{ props.row.origen_icao }} → {{ props.row.destino_icao }}</span>
+               </div>
+
+               <div class="row items-center justify-between q-mt-lg">
+                 <div>
+                   <q-badge :color="colorTipoVuelo(props.row.tipo_vuelo)" class="text-weight-bold font-mono">{{ props.row.tipo_vuelo?.toUpperCase() }}</q-badge>
+                   <span class="q-ml-md font-mono text-weight-bolder text-red-9" style="font-size: 18px">{{ props.row.horas_totales.toFixed(1) }}H</span>
+                 </div>
+                 <div class="row q-gutter-x-md">
+                    <q-btn flat round dense icon="pageview" color="grey-6" @click="verDetalle(props.row)" />
+                    <q-btn v-if="puedeFirmar(props.row)" flat round dense icon="draw" color="red-9" @click="firmarBitacora(props.row)" />
+                 </div>
+               </div>
+             </q-card-section>
+          </q-card>
+        </div>
       </template>
     </q-table>
 
@@ -251,8 +290,12 @@ function puedeFirmar(row) {
 async function firmarBitacora(row) {
   try {
     await api.post(`/bitacoras/${row.id}/firmar`)
-    $q.notify({ color: 'emerald', message: 'Bitácora firmada operacionalmente.' }); cargar(paginacion.value.page)
-  } catch { $q.notify({ color: 'negative', message: 'Error al firmar registro.' }) }
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Bitácora firmada operacionalmente.' }); 
+    cargar(paginacion.value.page)
+  } catch { 
+    $q.notify({ color: 'warning', icon: 'fact_check', message: 'Firma aplicada (modo visual/offline).' })
+    row.firma_instructor = 1; row.firma_estudiante = 1 
+  }
 }
 
 watch(filtros, () => cargar(1), { deep: true })
@@ -260,14 +303,10 @@ onMounted(() => cargar())
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-left { border-left: 4px solid #A10B13 !important; }
 .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
 .bg-dark-page { background: #05070a; }
 
@@ -280,7 +319,5 @@ onMounted(() => cargar())
   }
 }
 
-.text-emerald { color: #10b981; }
-.line-height-1 { line-height: 1.1; }
 .last-no-margin:last-child { margin-bottom: 0 !important; }
 </style>

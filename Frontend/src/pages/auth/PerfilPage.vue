@@ -16,45 +16,50 @@
       <!-- Columna Izquierda: Credencial (ID License) -->
       <div class="col-12 col-lg-5">
         <q-card class="premium-glass-card q-pa-none overflow-hidden welcome-hero shadow-24" style="border-radius: 20px;">
-          <!-- Franja Superior de la Credencial -->
-          <div class="bg-red-10 q-pa-md row items-center justify-between shadow-inner">
-             <div class="row items-center">
-                <q-icon name="verified" color="white" size="24px" class="q-mr-sm" />
+          <div class="bg-red-10 q-pa-md d-flex justify-between items-center shadow-inner" style="display: flex; justify-content: space-between;">
+             <div class="d-flex items-center" style="display: flex; align-items: center; gap: 8px;">
+                <q-icon name="verified" color="white" size="24px" />
                 <div class="font-head text-white text-weight-bolder tracking-widest uppercase">ID OFICIAL · {{ authStore.rol?.replace('_',' ') }}</div>
              </div>
              <q-icon name="wifi_tethering" color="white" size="24px" class="pulsate" />
           </div>
 
-          <div class="q-pa-xl hero-glow row flex-center column">
-             <!-- Holograma / Avatar -->
-             <div class="relative-position q-mb-lg">
-                <div class="hologram-ring"></div>
-                <q-avatar size="140px" class="glow-avatar shadow-24 z-top" :style="`background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})`">
-                   <span class="text-h1 text-white font-head text-weight-bolder">{{ iniciales }}</span>
-                </q-avatar>
-                <q-badge floating rounded color="emerald-9" class="q-pa-sm border-white z-top shadow-24" style="border: 2px solid rgba(255,255,255,0.2)">
-                   <q-icon name="admin_panel_settings" size="18px" />
-                </q-badge>
-             </div>
-
-             <!-- Datos del Titular -->
-             <div class="text-h4 text-white font-head text-weight-bolder tracking-tighter text-center q-mb-md">{{ authStore.nombre }}</div>
+          <div class="q-pa-xl text-center relative-position">
+             <!-- Background glow -->
+             <div class="absolute-full" style="background: radial-gradient(circle at 50% 20%, rgba(161,11,19,0.15) 0%, transparent 60%); z-index: 0"></div>
              
-             <div class="full-width q-pa-md bg-black-20 rounded-12 border-red-low shadow-inner q-gutter-y-md">
-                <div class="row justify-between items-center">
-                   <span class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:10px">Usuario de Red</span>
-                   <span class="text-white text-weight-bolder font-mono text-subtitle2">{{ authStore.usuario?.email.split('@')[0] }}</span>
-                </div>
-                <q-separator dark class="opacity-5" />
-                <div class="row justify-between items-center">
-                   <span class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:10px">Frecuencia / Email</span>
-                   <span class="text-grey-3 text-weight-bold font-mono" style="font-size:12px">{{ authStore.usuario?.email }}</span>
-                </div>
-                <q-separator dark class="opacity-5" />
-                <div class="row justify-between items-center">
-                   <span class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:10px">Estado de Permisos</span>
-                   <q-badge color="emerald-9" label="AUTORIZADO ACTIVO" class="font-mono text-weight-bolder" />
-                </div>
+             <!-- Content layer -->
+             <div class="relative-position" style="z-index: 10;">
+                 <div class="flex flex-center relative-position q-mb-lg" style="margin: 0 auto; width: 140px;">
+                    <div class="hologram-ring"></div>
+                    <q-avatar size="140px" class="glow-avatar shadow-24" :style="`background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})`">
+                       <span class="text-h1 text-white font-head text-weight-bolder">{{ iniciales }}</span>
+                    </q-avatar>
+                    <q-badge floating rounded color="emerald-9" class="q-pa-sm border-white shadow-24" style="border: 2px solid rgba(255,255,255,0.2); z-index: 20;">
+                       <q-icon name="admin_panel_settings" size="18px" />
+                    </q-badge>
+                 </div>
+
+                 <!-- Datos del Titular -->
+                 <div class="text-h5 text-white font-head text-weight-bolder text-center q-mb-lg" style="line-height: 1.3;">{{ authStore.nombre }}</div>
+                 
+                 <!-- Bloque Negro de Datos -->
+                 <div class="full-width q-pa-lg rounded-12 shadow-inner text-left" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(161,11,19,0.2);">
+                    <div class="q-mb-md">
+                       <div class="text-grey-6 font-mono uppercase tracking-widest q-mb-xs" style="font-size:9px">Usuario de Red</div>
+                       <div class="text-white text-weight-bolder font-mono" style="font-size:14px; word-break: break-all;">{{ authStore.usuario?.email.split('@')[0] }}</div>
+                    </div>
+                    <q-separator dark class="opacity-10 q-my-md" />
+                    <div class="q-mb-md">
+                       <div class="text-grey-6 font-mono uppercase tracking-widest q-mb-xs" style="font-size:9px">Frecuencia / Email</div>
+                       <div class="text-grey-3 text-weight-bold font-mono" style="font-size:13px; word-break: break-all;">{{ authStore.usuario?.email }}</div>
+                    </div>
+                    <q-separator dark class="opacity-10 q-my-md" />
+                    <div>
+                       <div class="text-grey-6 font-mono uppercase tracking-widest q-mb-xs" style="font-size:9px">Estado de Permisos</div>
+                       <q-badge color="emerald-9" label="AUTORIZADO ACTIVO" class="font-mono text-weight-bolder" />
+                    </div>
+                 </div>
              </div>
           </div>
           <!-- Código de Barras Decorativo -->
@@ -76,35 +81,47 @@
               <div class="text-caption text-grey-5 font-mono uppercase tracking-widest q-mb-xl" style="font-size:10px">Módulo de actualización de cifrado de red (Cambio de Contraseña).</div>
               
               <q-form @submit.prevent="cambiarPassword" class="q-gutter-y-lg">
-                <q-input v-model="passForm.password_actual" type="password" 
+                <q-input v-model="passForm.password_actual" :type="verP1 ? 'text' : 'password'" 
                   filled dark label="CREDENCIAL ACTUAL" 
                   class="premium-input-login" 
                   stack-label hide-bottom-space
                   :rules="[v=>!!v||'Requerido']" 
                 >
                   <template #prepend><q-icon name="vpn_key" color="red-9" /></template>
+                  <template #append>
+                    <q-icon :name="verP1 ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="verP1 = !verP1" />
+                  </template>
                 </q-input>
+
 
                 <div class="row q-col-gutter-lg">
                   <div class="col-12 col-md-6">
-                    <q-input v-model="passForm.password_nuevo" type="password" 
+                    <q-input v-model="passForm.password_nuevo" :type="verP2 ? 'text' : 'password'" 
                       filled dark label="NUEVO CIFRADO (MIN. 8 CHARS)" 
                       class="premium-input-login" 
                       stack-label hide-bottom-space
                       :rules="[v=>v&&v.length>=8||'Mínimo 8 caracteres']"
                     >
                       <template #prepend><q-icon name="enhanced_encryption" color="emerald-9" /></template>
+                      <template #append>
+                        <q-icon :name="verP2 ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="verP2 = !verP2" />
+                      </template>
                     </q-input>
+
                   </div>
                   <div class="col-12 col-md-6">
-                    <q-input v-model="passForm.password_nuevo_confirmation" type="password" 
+                    <q-input v-model="passForm.password_nuevo_confirmation" :type="verP3 ? 'text' : 'password'" 
                       filled dark label="RE-VERIFICAR CIFRADO" 
                       class="premium-input-login" 
                       stack-label hide-bottom-space
                       :rules="[v=>v===passForm.password_nuevo||'Las contraseñas no coinciden']"
                     >
                       <template #prepend><q-icon name="fact_check" color="emerald-9" /></template>
+                      <template #append>
+                        <q-icon :name="verP3 ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="verP3 = !verP3" />
+                      </template>
                     </q-input>
+
                   </div>
                 </div>
 
@@ -140,6 +157,10 @@ const router   = useRouter()
 const authStore = useAuthStore()
 const guardando = ref(false)
 const passForm  = ref({ password_actual: '', password_nuevo: '', password_nuevo_confirmation: '' })
+const verP1 = ref(false)
+const verP2 = ref(false)
+const verP3 = ref(false)
+
 
 const iniciales = computed(() => {
   const n = authStore.nombre || '?'
@@ -171,20 +192,12 @@ async function cambiarPassword() {
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-left { border-left: 5px solid #A10B13 !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
-.rounded-12 { border-radius: 12px; }
-.rounded-20 { border-radius: 20px; }
+
 .h-full { height: 100%; }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
 
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
 .glow-emerald { filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)); }
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }

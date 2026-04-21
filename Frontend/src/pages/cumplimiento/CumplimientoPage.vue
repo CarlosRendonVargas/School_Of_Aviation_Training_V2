@@ -14,6 +14,7 @@
         v-if="puedeEditar" 
         unelevated color="red-9" icon="file_download" label="Generar Reporte UAEAC" 
         class="premium-btn shadow-24" 
+        @click="exportarRegistroRAC"
       />
     </div>
 
@@ -67,7 +68,7 @@
         <q-tab-panel name="documentos" class="q-pa-xl">
           <div class="row justify-between items-center q-mb-xl">
              <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest">Documentación Técnica Certificada</div>
-             <q-btn v-if="puedeEditar" outline color="red-9" icon="upload_file" label="Subir Enmienda" class="font-mono text-weight-bold" />
+             <q-btn v-if="puedeEditar" outline color="red-9" icon="upload_file" label="Subir Enmienda" class="font-mono text-weight-bold" @click="notificarProximamente" />
           </div>
 
           <div class="row q-col-gutter-lg">
@@ -136,6 +137,37 @@ const documentos  = ref([])
 const auditLogs   = ref([])
 const puedeEditar = ['dir_ops', 'admin'].includes(authStore.rol)
 
+import { useQuasar, exportFile } from 'quasar'
+const $q = useQuasar()
+
+function exportarRegistroRAC() {
+  if (auditLogs.value.length === 0) {
+    $q.notify({ color: 'orange-10', icon: 'warning', message: 'No hay registros de trazabilidad para exportar.' })
+    return
+  }
+
+  let content = 'FECHA_UTC,MODUL_AFECTADO,ACCION_TECNICA,REFERENCIA_ID\r\n'
+  
+  auditLogs.value.forEach(row => {
+    const fecha = row.created_at ? row.created_at.slice(0,19).replace('T', ' ') : 'N/A'
+    const tabla = row.tabla || 'N/A'
+    const accion = row.accion || 'N/A'
+    const ref_id = row.registro_id || 'N/A'
+    content += `"${fecha}","${tabla}","${accion}","${ref_id}"\r\n`
+  })
+
+  // BOM para reconocimiento UTF-8 nativo en Excel
+  const blobData = "\ufeff" + content
+  
+  const status = exportFile('Registro_Auditoria_UAEAC_RAC141_77.csv', blobData, 'text/csv;charset=utf-8;')
+
+  if (status !== true) {
+    $q.notify({ color: 'red-9', icon: 'report_problem', message: 'Fallo al exportar o bloqueado por el navegador.' })
+  } else {
+    $q.notify({ color: 'emerald-9', icon: 'verified', message: 'Reporte Oficial UAEAC RAC 141.77 descargado.' })
+  }
+}
+
 const checklistItems = [
   { rac: 'RAC 141.11', desc: 'Certificado de aprobación de la escuela vigente', ok: true },
   { rac: 'RAC 141.13', desc: 'Manual de Operaciones de la Escuela (MOE) aprobado', ok: true },
@@ -170,24 +202,15 @@ onMounted(cargar)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-left { border-left: 5px solid #A10B13 !important; }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-glow { border-color: rgba(161, 11, 19, 0.4) !important; box-shadow: 0 0 20px rgba(161, 11, 19, 0.12); }
-
 .hover-row { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; &:hover { background: rgba(255,255,255,0.03); transform: scale(1.005); } }
 .premium-hover-card { transition: all 0.3s; &:hover { transform: translateY(-8px); border-color: #A10B13 !important; box-shadow: 0 20px 40px rgba(0,0,0,0.4); } }
-.text-emerald { color: #10b981; }
-.bg-emerald { background: #10b981; }
+
 .bg-black-20 { background: rgba(0,0,0,0.2); }
-.rounded-12 { border-radius: 12px; }
-.rounded-20 { border-radius: 20px; }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .flex-shrink-0 { flex-shrink: 0; }
 .min-w-0 { min-width: 0; }
 .truncate-2-lines {

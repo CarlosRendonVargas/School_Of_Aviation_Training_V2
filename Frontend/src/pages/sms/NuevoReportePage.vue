@@ -29,10 +29,10 @@
 
         <!-- ─── Columna 1: Datos Técnicos del Hallazgo ─────────────────────────── -->
         <div class="col-12 col-lg-7">
-          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low h-full flex column">
-            <div class="text-h6 text-white font-head text-weight-bolder q-mb-xl flex items-center border-bottom-border pb-md uppercase tracking-tighter">
-               <q-icon name="assignment_late" color="red-9" size="24px" class="q-mr-md" />
-               Detalles del Evento Observado
+          <q-card class="premium-glass-card shadow-24 border-red-low h-full flex column" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+            <div class="text-h6 text-white font-head text-weight-bolder flex items-center border-bottom-border pb-md uppercase tracking-tighter" :class="$q.screen.lt.md ? 'q-mb-lg' : 'q-mb-xl'">
+               <q-icon name="assignment_late" color="red-9" :size="$q.screen.lt.md ? '20px' : '24px'" class="q-mr-md" />
+               Detalles del Evento
             </div>
 
             <div class="q-gutter-y-lg col">
@@ -83,10 +83,10 @@
 
         <!-- ─── Columna 2: Evaluación de Riesgo UAEAC ────────────────────────── -->
         <div class="col-12 col-lg-5">
-          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low sticky-card">
-            <div class="text-h6 text-white font-head text-weight-bolder q-mb-xl flex items-center border-bottom-border pb-md uppercase tracking-tighter">
-               <q-icon name="query_stats" color="red-9" size="24px" class="q-mr-md" />
-               Clasificación de Riesgo OACI
+          <q-card class="premium-glass-card shadow-24 border-red-low" :class="[$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl', $q.screen.gt.md ? 'sticky-card' : '']">
+            <div class="text-h6 text-white font-head text-weight-bolder flex items-center border-bottom-border pb-md uppercase tracking-tighter" :class="$q.screen.lt.md ? 'q-mb-lg' : 'q-mb-xl'">
+               <q-icon name="query_stats" color="red-9" :size="$q.screen.lt.md ? '20px' : '24px'" class="q-mr-md" />
+               Riesgo OACI
             </div>
 
             <!-- Severidad Selector de Cristal -->
@@ -114,12 +114,12 @@
             </div>
 
             <!-- Dashboard de Riesgo Dinámico -->
-            <div v-if="nivelRiesgo > 0" class="risk-result-vault q-pa-xl shadow-24 welcome-hero overflow-hidden" :style="`border-color: ${borderResultado}`">
-               <div class="hero-glow"></div>
-               <div class="text-center relative-position">
-                  <div class="text-caption font-mono uppercase tracking-widest q-mb-sm" :style="`color: ${colorResultado}`">Nivel de Riesgo Calculado</div>
-                  <div class="text-h1 font-mono text-weight-bolder line-height-1" :style="`color: ${colorResultado}; text-shadow: 0 0 20px ${borderResultado}`">{{ nivelRiesgo }}</div>
-                  <div class="text-h6 font-head text-weight-bolder uppercase tracking-tighter q-mt-md" :style="`color: ${colorResultado}`">{{ clasificacionRiesgo }}</div>
+             <div v-if="nivelRiesgo > 0" class="risk-result-vault shadow-24 welcome-hero overflow-hidden" :style="`border-color: ${borderResultado}`" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+                <div class="hero-glow"></div>
+                <div class="text-center relative-position">
+                   <div class="text-caption font-mono uppercase tracking-widest q-mb-sm" :style="`color: ${colorResultado}`">Riesgo Calculado</div>
+                   <div class="font-mono text-weight-bolder line-height-1" :style="`color: ${colorResultado}; text-shadow: 0 0 20px ${borderResultado}; font-size: ${$q.screen.lt.md ? '60px' : '88px'}`">{{ nivelRiesgo }}</div>
+                   <div class="text-weight-bolder uppercase tracking-tighter q-mt-md" :class="$q.screen.lt.md ? 'text-subtitle1' : 'text-h6'" :style="`color: ${colorResultado}`">{{ clasificacionRiesgo }}</div>
                   
                   <div v-if="nivelRiesgo >= 15" class="q-mt-lg q-pa-md border-red-low shadow-inner rounded-8 bg-red-10 animate-pulse">
                     <div class="text-white font-mono text-weight-bolder" style="font-size:11px">⚠️ REPORTE OBLIGATORIO UAEAC</div>
@@ -203,15 +203,9 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
-.line-height-1 { line-height: 1.1; }
 
 .premium-input-login {
   :deep(.q-field__control) {
@@ -230,7 +224,7 @@ onMounted(async () => {
 .sticky-card { position: sticky; top: 20px; }
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 

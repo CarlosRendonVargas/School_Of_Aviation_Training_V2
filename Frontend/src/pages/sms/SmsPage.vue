@@ -21,30 +21,31 @@
     <q-card class="premium-glass-card overflow-hidden shadow-24 bonus-grid q-mb-xl">
       <q-tabs v-model="tabActivo" dense align="left" no-caps
         active-color="red-9" indicator-color="red-9" class="text-grey-5 border-bottom"
+        outside-arrows mobile-arrows
         style="padding-left: 10px"
       >
-        <q-tab name="dashboard" icon="analytics" label="Tendencias" />
-        <q-tab name="reportes"  icon="inventory_2" label="Registro de Reportes" />
-        <q-tab name="acciones"  icon="fact_check" label="Acciones Mitigadoras" />
-        <q-tab name="matriz"    icon="grid_view" label="Matriz de Riesgo UAEAC" />
+        <q-tab name="dashboard" icon="analytics" :label="$q.screen.gt.xs ? 'Tendencias' : ''" />
+        <q-tab name="reportes"  icon="inventory_2" :label="$q.screen.gt.xs ? 'Registro de Reportes' : 'Reportes'" />
+        <q-tab name="acciones"  icon="fact_check" :label="$q.screen.gt.xs ? 'Acciones Mitigadoras' : 'Acciones'" />
+        <q-tab name="matriz"    icon="grid_view" :label="$q.screen.gt.xs ? 'Matriz de Riesgo UAEAC' : 'Matriz'" />
       </q-tabs>
 
       <q-tab-panels v-model="tabActivo" animated dark class="bg-transparent min-h-600">
 
         <!-- ─── DASHBOARD DE PREVENCIÓN ─────────────────────────────────────────── -->
-        <q-tab-panel name="dashboard" class="q-pa-xl">
-          <div class="row q-col-gutter-xl q-mb-xl">
-            <div class="col-6 col-md-3" v-for="kpi in kpisSms" :key="kpi.label">
-              <q-card class="premium-glass-card q-pa-lg border-red-low shadow-inner flex items-center no-wrap welcome-hero overflow-hidden">
+        <q-tab-panel name="dashboard" class="q-pa-md q-pa-md-xl">
+          <div class="row q-col-gutter-md q-mb-xl">
+            <div class="col-12 col-sm-6 col-md-3" v-for="kpi in kpisSms" :key="kpi.label">
+              <q-card class="premium-glass-card q-pa-md q-pa-md-lg border-red-low shadow-inner flex items-center no-wrap welcome-hero overflow-hidden" style="min-height: 100px">
                 <div class="hero-glow"></div>
-                <div class="kpi-icon-premium q-mr-lg flex flex-center shadow-24" :style="`background: ${kpi.bg}`">
-                  <q-icon :name="kpi.icon" :color="kpi.color" size="28px" />
+                <div class="kpi-icon-premium q-mr-md q-mr-md-lg flex flex-center shadow-24" :style="`background: ${kpi.bg}; flex-shrink: 0`" :class="$q.screen.lt.md ? 'icon-sm' : ''">
+                  <q-icon :name="kpi.icon" :color="kpi.color" :size="$q.screen.lt.md ? '20px' : '28px'" />
                 </div>
                 <div class="relative-position">
                   <div class="text-h4 text-weight-bolder font-mono text-white line-height-1">
                     {{ kpi.valor }}
                   </div>
-                  <div class="text-caption text-grey-6 uppercase font-mono tracking-widest q-mt-xs" style="font-size:9px">
+                  <div class="text-caption text-grey-6 uppercase font-mono tracking-widest q-mt-xs" :style="$q.screen.lt.md ? 'font-size:8px; letter-spacing:1px' : 'font-size:9px'">
                     {{ kpi.label }}
                   </div>
                 </div>
@@ -59,23 +60,25 @@
                     <q-icon name="history" color="red-9" size="24px" class="q-mr-md shadow-inner" />
                     <div class="text-h5 font-head text-white text-weight-bolder uppercase tracking-tighter">Eventos de Seguridad Recientes</div>
                  </div>
-                 <q-btn flat color="grey-6" label="Ver Historial Completo" size="sm" icon-right="chevron_right" />
+                 <q-btn flat color="grey-6" label="Ver Historial Completo" size="sm" icon-right="chevron_right" @click="notificarProximamente" />
               </div>
               
               <q-list dark separator class="shadow-inner rounded-12 overflow-hidden border-red-low">
-                <q-item v-for="r in reportesRecientes" :key="r.id" class="q-pa-xl hover-row border-bottom">
-                  <q-item-section avatar>
-                    <div class="riesgo-hex-indicator shadow-24" :style="`background:${bgRiesgo(r.nivel_riesgo)}`">
+                <q-item v-for="r in reportesRecientes" :key="r.id" class="hover-row border-bottom" :class="$q.screen.lt.md ? 'q-pa-md' : 'q-pa-xl'">
+                  <q-item-section avatar :class="$q.screen.lt.md ? 'q-pr-sm' : ''">
+                    <div class="riesgo-hex-indicator shadow-24" :style="`background:${bgRiesgo(r.nivel_riesgo)}; ${$q.screen.lt.md ? 'width:32px; height:32px; font-size:12px' : ''}`">
                       {{ r.nivel_riesgo }}
                     </div>
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label class="text-weight-bold text-white font-head text-h6 line-height-1 q-mb-xs">{{ r.descripcion?.slice(0,80) }}...</q-item-label>
-                    <q-item-label caption class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:9px">
-                       {{ r.tipo || 'HALLAZGO' }} · REPORTE ID: #{{ r.id }} · {{ r.fecha_evento }}
+                    <q-item-label class="text-weight-bold text-white font-head line-height-tight q-mb-xs" :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'">
+                      {{ r.descripcion }}
+                    </q-item-label>
+                    <q-item-label caption class="font-mono text-grey-6 uppercase tracking-widest" :style="$q.screen.lt.md ? 'font-size:8px' : 'font-size:9px'">
+                       {{ r.tipo || 'HALLAZGO' }} · #{{ r.id }} · {{ r.fecha_evento?.slice(0, 10) }}
                     </q-item-label>
                   </q-item-section>
-                  <q-item-section side>
+                  <q-item-section side v-if="$q.screen.gt.xs">
                      <q-badge outline :color="colorEstado(r.estado)" :label="r.estado?.toUpperCase()" class="font-mono text-weight-bolder q-px-md shadow-24" />
                   </q-item-section>
                 </q-item>
@@ -88,9 +91,11 @@
         <q-tab-panel name="reportes" class="q-pa-xl">
           <div class="row items-center justify-between q-mb-xl">
              <div class="text-h5 font-head text-white text-weight-bolder">Archivo Maestro de Seguridad</div>
-             <q-btn outline color="red-9" icon="file_download" label="Exportar Auditoría" class="font-mono shadow-24" />
+             <q-btn outline color="red-9" icon="file_download" :label="$q.screen.gt.sm ? 'Exportar Auditoría' : ''" class="font-mono shadow-24" @click="exportarSMS">
+                <q-tooltip v-if="$q.screen.lt.md">Exportar Auditoría</q-tooltip>
+             </q-btn>
           </div>
-          <q-table :rows="reportes" :columns="columnasReportes" row-key="id" class="rac-table shadow-24 border-red-low" flat dark>
+          <q-table :rows="reportes" :columns="columnasReportes" row-key="id" class="rac-table shadow-24 border-red-low" flat dark :grid="$q.screen.lt.md">
             <template #body-cell-nivel_riesgo="{ row }">
               <q-td class="text-center">
                 <q-badge :style="`background:${bgRiesgo(row.nivel_riesgo)}`" class="font-mono text-weight-bolder q-px-md shadow-24">
@@ -102,7 +107,32 @@
               <q-td><q-chip dense :color="colorTipo(value)" text-color="white" :label="value?.toUpperCase()" size="xs" class="font-mono text-weight-bold q-px-sm" /></q-td>
             </template>
             <template #body-cell-fecha_evento="{ value }">
-               <q-td class="font-mono text-grey-5">{{ value }}</q-td>
+               <q-td class="font-mono text-grey-5">{{ value ? value.slice(0, 10) : '---' }}</q-td>
+            </template>
+
+            <!-- Card Móvil SMS -->
+            <template v-slot:item="props">
+              <div class="col-12 q-pa-xs">
+                <q-card class="premium-glass-card shadow-24 q-mb-sm border-red-low">
+                  <q-card-section>
+                    <div class="row items-center justify-between q-mb-md">
+                      <div class="riesgo-hex-indicator shadow-24" :style="`background:${bgRiesgo(props.row.nivel_riesgo)}; width:36px; height:36px; font-size:14px`" title="Nivel de Riesgo">
+                        {{ props.row.nivel_riesgo }}
+                      </div>
+                      <span class="font-mono text-grey-6" style="font-size:11px">{{ props.row.fecha_evento?.slice(0, 10) }}</span>
+                    </div>
+
+                    <div class="text-white text-weight-bold q-mb-sm" style="line-height:1.3">
+                      {{ props.row.descripcion }}
+                    </div>
+
+                    <div class="row items-center justify-between q-mt-md">
+                      <q-chip dense :color="colorTipo(props.row.tipo)" text-color="white" :label="props.row.tipo?.toUpperCase()" size="xs" class="font-mono" />
+                      <q-badge outline :color="colorEstado(props.row.estado)" :label="props.row.estado?.toUpperCase()" class="font-mono" style="font-size:9px" />
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
             </template>
           </q-table>
         </q-tab-panel>
@@ -110,12 +140,27 @@
         <!-- ─── SEGUIMIENTO DE ACCIONES ───────────────────────────────────── -->
         <q-tab-panel name="acciones" class="q-pa-xl">
           <div class="text-h5 font-head text-white text-weight-bolder q-mb-xl">Gestión de Mitigaciones Pendientes</div>
-          <q-table :rows="acciones" :columns="columnasAcciones" row-key="id" class="rac-table shadow-24 border-red-low" flat dark>
+          <q-table :rows="acciones" :columns="columnasAcciones" row-key="id" class="rac-table shadow-24 border-red-low" flat dark :grid="$q.screen.lt.md">
               <template #body-cell-fecha_limite="{ value }">
                  <q-td class="font-mono text-red-9 text-weight-bolder text-center">{{ value }}</q-td>
               </template>
               <template #body-cell-estado="{ value }">
                  <q-td class="text-center"><q-badge color="orange-10" :label="value?.toUpperCase()" class="font-mono q-px-md" /></q-td>
+              </template>
+
+              <!-- Card Móvil Acciones -->
+              <template v-slot:item="props">
+                <div class="col-12 q-pa-xs">
+                  <q-card class="premium-glass-card shadow-24 q-mb-sm border-emerald-low">
+                    <q-card-section>
+                      <div class="row items-center justify-between q-mb-sm">
+                        <q-badge color="orange-10" :label="props.row.estado?.toUpperCase()" class="font-mono" />
+                        <div class="text-red-9 font-mono text-weight-bold" style="font-size:12px">LÍMITE: {{ props.row.fecha_limite }}</div>
+                      </div>
+                      <div class="text-white q-mt-sm">{{ props.row.descripcion }}</div>
+                    </q-card-section>
+                  </q-card>
+                </div>
               </template>
           </q-table>
         </q-tab-panel>
@@ -165,11 +210,50 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { api } from 'boot/axios'
+import { exportFile, useQuasar } from 'quasar'
 
 const tabActivo = ref('dashboard')
 const kpis = ref(null)
 const reportes = ref([])
 const acciones = ref([])
+
+const $q = useQuasar()
+
+function notificarProximamente() {
+  $q.notify({ color: 'info', icon: 'info', message: 'Función en desarrollo para próxima versión.' })
+}
+
+function exportarSMS() {
+  if (!reportes.value.length) {
+    $q.notify({ type: 'warning', message: 'No hay datos para exportar.' })
+    return
+  }
+
+  const columnas = ['ID', 'Nivel Riesgo', 'Tipo', 'Descripción', 'Fecha Evento', 'Estado']
+  const contenido = [
+    columnas.join(','),
+    ...reportes.value.map(r => [
+      r.id,
+      r.nivel_riesgo,
+      `"${r.tipo}"`,
+      `"${r.descripcion?.replace(/"/g, '""')}"`,
+      r.fecha_evento,
+      `"${r.estado}"`
+    ].join(','))
+  ].join('\r\n')
+
+  const status = exportFile(
+    `Reporte_SMS_RAC141_${new Date().toISOString().slice(0,10)}.csv`,
+    contenido,
+    'text/csv'
+  )
+
+  if (status === true) {
+    $q.notify({ color: 'emerald', icon: 'download_done', message: 'Archivo de auditoría generado correctamente.' })
+  } else {
+    $q.notify({ color: 'negative', icon: 'warning', message: 'El navegador bloqueó la descarga.' })
+  }
+}
 
 const kpisSms = computed(() => [
   { label: 'Eventos Capturados', valor: kpis.value?.total_reportes || 0, icon: 'radar', color: 'red-9', bg: 'rgba(161,11,19,0.05)' },
@@ -228,17 +312,12 @@ onMounted(cargarDatos)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
 .border-bottom { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .min-h-600 { min-height: 600px; }
-.line-height-1 { line-height: 1.1; }
 
-.kpi-icon-premium { width: 50px; height: 50px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
+.kpi-icon-premium { width: 50px; height: 50px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); &.icon-sm { width: 38px; height: 38px; border-radius: 10px; } }
 .riesgo-hex-indicator {
   width: 42px; height: 42px; border-radius: 10px; font-family: 'JetBrains Mono';
   font-weight: 900; color: white; display: flex; align-items: center; justify-content: center;
@@ -246,21 +325,23 @@ onMounted(cargarDatos)
 
 .hover-row { transition: all 0.2s; &:hover { background: rgba(255,255,255,0.03); transform: translateX(5px); } }
 
-.matriz-ops-container { padding: 50px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+.matriz-ops-container { background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); @media (max-width: 600px) { padding: 15px 5px; } @media (min-width: 601px) { padding: 50px; } }
 .matriz-grid-premium { display: flex; flex-direction: column; gap: 10px; }
-.matriz-row-premium { display: flex; gap: 10px; align-items: center; }
+.matriz-row-premium { display: flex; gap: 4px; align-items: center; @media (min-width: 601px) { gap: 10px; } }
 .matriz-cell-premium {
-  flex: 1; height: 60px; display: flex; align-items: center; justify-content: center;
-  border-radius: 12px; color: white; transition: transform 0.2s;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; color: white; transition: transform 0.2s;
+  @media (max-width: 600px) { height: 40px; border-radius: 6px; font-size: 12px; }
+  @media (min-width: 601px) { height: 60px; border-radius: 12px; }
   &:hover { transform: scale(1.05); z-index: 10; border: 1px solid white; cursor: help; }
 }
 .cell-safe { background: #10b981; }
 .cell-caution { background: #f59e0b; }
 .cell-danger { background: #A10B13; }
 
-.row-num-premium { width: 50px; height: 60px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; border-radius: 10px; }
-.matriz-cell-num-premium { flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; border-radius: 10px; }
-.y-axis-label-premium { position: absolute; left: -20px; top: 50%; transform: rotate(-90deg) translateY(-50%); font-size: 10px; color: #475569; letter-spacing: 2px; }
+.row-num-premium { display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 11px; border-radius: 6px; @media (max-width: 600px) { width: 30px; height: 40px; } @media (min-width: 601px) { width: 50px; height: 60px; font-size: 14px; } }
+.matriz-cell-num-premium { flex: 1; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 11px; border-radius: 6px; @media (max-width: 600px) { height: 30px; } @media (min-width: 601px) { height: 40px; font-size: 14px; } }
+.y-axis-label-premium { position: absolute; left: -10px; top: 50%; transform: rotate(-90deg) translateY(-50%); font-size: 8px; color: #475569; letter-spacing: 2px; }
 .x-axis-label-premium { text-align: center; margin-top: 30px; font-size: 10px; color: #475569; letter-spacing: 2px; }
 
 .legend-box-premium { width: 18px; height: 18px; border-radius: 5px; }
@@ -277,7 +358,7 @@ onMounted(cargarDatos)
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 </style>

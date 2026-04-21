@@ -106,6 +106,9 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/',            [BitacoraVueloController::class, 'index']);
         Route::post('/',           [BitacoraVueloController::class, 'store']);
         Route::get('{id}',         [BitacoraVueloController::class, 'show']);
+        Route::put('{id}',         [BitacoraVueloController::class, 'update']);
+        Route::post('{id}/firmar', [BitacoraVueloController::class, 'firmar']);
+        Route::get('{id}/pdf',     [BitacoraVueloController::class, 'exportarPdf']);
     });
 
     Route::prefix('cumplimiento')->group(function () {

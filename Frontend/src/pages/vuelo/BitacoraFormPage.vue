@@ -251,15 +251,9 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
-.line-height-1 { line-height: 1.1; }
 .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .glow-red { text-shadow: 0 0 20px rgba(161, 11, 19, 0.6); }
 
 .premium-input-login {

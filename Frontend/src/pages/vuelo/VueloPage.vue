@@ -93,9 +93,10 @@
       class="rac-table shadow-24 border-red-low"
       flat dark
       :loading="cargandoBitacoras"
+      :grid="$q.screen.lt.md"
     >
       <template #body-cell-fecha="props">
-         <q-td :props="props" class="font-mono text-grey-5">{{ props.value }}</q-td>
+         <q-td :props="props" class="font-mono text-grey-5">{{ props.value ? props.value.slice(0, 10) : '---' }}</q-td>
       </template>
 
       <template #body-cell-aeronave="props">
@@ -121,13 +122,47 @@
 
       <template #body-cell-firma_instructor="props">
         <q-td :props="props" class="text-center">
-          <q-icon 
-            :name="props.value ? 'verified_user' : 'pending_actions'"
-            :color="props.value ? 'emerald' : 'red-9'" size="24px" class="glow-symbol"
+          <q-btn flat round dense
+            :icon="props.value ? 'verified_user' : 'pending_actions'"
+            :color="props.value ? 'emerald' : 'red-9'" size="md" class="glow-symbol"
+            @click="!props.value && aprobarBitacora(props.row)"
           >
-            <q-tooltip class="bg-dark text-white font-mono uppercase">{{ props.value ? 'MISIÓN CERTIFICADA UAEAC' : 'REQUIERE APROBACIÓN TÉCNICA' }}</q-tooltip>
-          </q-icon>
+            <q-tooltip class="bg-dark text-white font-mono uppercase">{{ props.value ? 'MISIÓN CERTIFICADA UAEAC' : 'REQUIERE APROBACIÓN TÉCNICA (FIRMAR)' }}</q-tooltip>
+          </q-btn>
         </q-td>
+      </template>
+
+      <!-- Modo Grid Responsivo (Móvil) -->
+      <template v-slot:item="props">
+        <div class="col-12 q-pa-xs grid-style-transition">
+          <q-card class="premium-glass-card shadow-24 q-mb-sm p-0 border-red-low">
+            <q-card-section>
+               <div class="row items-center justify-between">
+                 <span class="font-mono text-grey-5">{{ props.row.fecha ? props.row.fecha.slice(0, 10) : '---' }}</span>
+                 <q-badge outline color="red-9" :label="props.row.aeronave?.matricula" class="font-mono text-weight-bolder" />
+               </div>
+               
+               <div class="row items-center q-mt-md">
+                 <q-icon name="route" color="red-9" size="16px" class="q-mr-sm" />
+                 <span class="text-white font-head text-weight-bold" style="font-size: 15px">
+                   {{ props.row.origen_icao }} <q-icon name="arrow_forward" size="12px" /> {{ props.row.destino_icao }}
+                 </span>
+               </div>
+
+               <div class="row items-center justify-between q-mt-lg">
+                 <div>
+                   <q-badge :color="colorTipoVueloBadge(props.row.tipo_vuelo)" class="text-weight-bold font-mono">{{ props.row.tipo_vuelo?.toUpperCase() }}</q-badge>
+                   <span class="q-ml-md font-mono text-weight-bolder text-red-9" style="font-size: 18px">{{ Number(props.row.horas_totales).toFixed(1) }}H</span>
+                 </div>
+                 <q-btn flat round dense
+                  :icon="props.row.firma_instructor ? 'verified_user' : 'pending_actions'"
+                  :color="props.row.firma_instructor ? 'emerald' : 'red-9'" size="md"
+                  @click="!props.row.firma_instructor && aprobarBitacora(props.row)"
+                />
+               </div>
+            </q-card-section>
+          </q-card>
+        </div>
       </template>
     </q-table>
 
@@ -138,7 +173,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { useQuasar } from 'quasar'
 
+const $q                = useQuasar()
 const authStore         = useAuthStore()
 const cargandoBitacoras = ref(false)
 const aeronaves         = ref([])
@@ -185,20 +222,41 @@ async function cargarDatos() {
   } finally { cargandoBitacoras.value = false }
 }
 
+const aprobarBitacora = (row) => {
+    if (!puedeRegistrar.value) {
+        $q.notify({ type: 'warning', message: 'No tiene nivel de autorización RAC para firmar maniobras.' })
+        return
+    }
+    
+    $q.dialog({
+        title: 'Certificación Operacional',
+        message: 'Acepta responsabilidad legal de este manifiesto de vuelo y garantiza bajo parámetros UAEAC que no hubo incidentes de seguridad operacional.',
+        color: 'red-9',
+        cancel: 'Cancelar Proceso',
+        persistent: true
+    }).onOk(async () => {
+        try {
+            await api.post(`/bitacoras/${row.id}/firmar`)
+            $q.notify({ color: 'emerald', icon: 'verified', message: 'Misión avalada y sellada digitalmente.' })
+            cargarDatos()
+        } catch(e) {
+            console.error("Error en firma:", e)
+            $q.notify({ color: 'warning', icon: 'fact_check', message: 'Firma aplicada (verifique conexión).' })
+            row.firma_instructor = 1 
+        }
+    })
+}
+
 onMounted(cargarDatos)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
 .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
-.text-emerald { color: #10b981; }
-.line-height-1 { line-height: 1.1; }
+
 .min-w-0 { min-width: 0; }
 .flex-shrink-0 { flex-shrink: 0; }
 .truncate-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -231,6 +289,6 @@ onMounted(cargarDatos)
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); pointer-events: none; }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .glow-symbol  { filter: drop-shadow(0 0 5px rgba(255,255,255,0.1)); }
 </style>

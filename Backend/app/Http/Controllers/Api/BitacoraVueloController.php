@@ -163,10 +163,10 @@ class BitacoraVueloController extends Controller
         $rol     = $usuario->rol?->nombre;
         $ts      = now()->timestamp;
 
-        if ($rol === 'instructor') {
-            $instructorId = $usuario->persona?->instructor?->id;
+        if ($rol === 'instructor' || $rol === 'admin' || $rol === 'dir_ops') {
+            $idFirma = ($rol === 'instructor') ? $usuario->persona?->instructor?->id : $usuario->id;
             $bitacora->update([
-                'firma_instructor' => "signed:{$instructorId}:{$ts}",
+                'firma_instructor' => "signed:{$idFirma}:{$ts}",
             ]);
         } elseif ($rol === 'estudiante') {
             $estudianteId = $usuario->persona?->estudiante?->id;

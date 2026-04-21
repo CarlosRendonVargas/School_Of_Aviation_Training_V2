@@ -172,8 +172,69 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    
+    <!-- ══ DIÁLOGO: VISOR DE FACTURA ELECTRÓNICA ══ -->
+    <q-dialog v-model="dialogDetalleFactura" backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width: min(700px, 95vw);">
+         <div class="rac-dialog-header q-pa-xl">
+            <div class="row items-center justify-between">
+               <div class="row items-center">
+                  <q-icon name="visibility" color="red-9" size="32px" class="q-mr-md glow-primary" />
+                  <div class="text-h5 text-white font-head text-weight-bolder uppercase line-height-1">Manifiesto Fiscal DIAN</div>
+               </div>
+               <q-btn flat round dense icon="close" v-close-popup color="grey-7" class="bg-black-20 hover-red" />
+            </div>
+         </div>
+         
+         <div class="q-pa-xl">
+            <div class="q-mb-xl q-pa-xl bg-black-20 rounded-16 border-red-low shadow-inner">
+               <div class="row q-col-gutter-lg">
+                  <div class="col-12 col-md-6 border-right-border">
+                     <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">FOLIO AERONÁUTICO</div>
+                     <div class="text-h5 text-white font-mono text-weight-bolder">{{ facturaSeleccionada?.numero_factura }}</div>
+                  </div>
+                  <div class="col-12 col-md-6 text-right-md">
+                     <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">ESTADO CONTABLE</div>
+                     <q-badge :color="colorEstado(facturaSeleccionada?.estado)" :label="facturaSeleccionada?.estado?.toUpperCase()" class="font-mono q-px-md text-weight-bold" />
+                  </div>
+               </div>
+            </div>
+
+            <div class="row q-col-gutter-xl q-mb-xl">
+               <div class="col-12">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-sm" style="font-size:9px">CONCEPTO DE OPERACIÓN</div>
+                  <div class="text-h6 text-grey-3 font-head">{{ facturaSeleccionada?.concepto || 'Entrenamiento de Vuelo / PIA' }}</div>
+               </div>
+            </div>
+
+            <div class="row q-col-gutter-xl q-mb-xl border-bottom-border pb-md">
+               <div class="col-6">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">VALOR BRUTO (COP)</div>
+                  <div class="text-h5 text-white font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.total) }}</div>
+               </div>
+               <div class="col-6 text-right">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">RECAUDO CERTIFICADO</div>
+                  <div class="text-h5 text-emerald font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.total_pagado || 0) }}</div>
+               </div>
+            </div>
+
+            <div class="q-pa-lg text-center" v-if="facturaSeleccionada?.cufe">
+               <div class="text-caption text-grey-7 font-mono uppercase q-mb-sm" style="font-size:8px">CÓDIGO ÚNICO DE FACTURA ELECTRÓNICA (CUFE)</div>
+               <div class="text-caption text-grey-5 font-mono break-all" style="font-size:10px">{{ facturaSeleccionada.cufe }}</div>
+            </div>
+
+            <div class="row q-gutter-md q-mt-xl justify-center">
+               <q-btn color="red-9" icon="picture_as_pdf" label="Descargar PDF" class="premium-btn q-px-xl" @click="generarPdf(facturaSeleccionada)" />
+               <q-btn outline color="emerald" icon="point_of_sale" label="Registrar Recaudo" class="premium-btn q-px-xl" 
+                  v-if="facturaSeleccionada?.estado !== 'pagada'"
+                  @click="registrarPago(facturaSeleccionada)" />
+            </div>
+         </div>
+      </q-card>
+    </q-dialog>
 
   </q-page>
+
 </template>
 
 <script setup>
@@ -191,8 +252,10 @@ const fechaDesde        = ref('')
 const fechaHasta        = ref('')
 const dialogNueva       = ref(false)
 const dialogPago        = ref(false)
+const dialogDetalleFactura = ref(false)
 const facturaSeleccionada = ref(null)
 const guardando         = ref(false)
+
 
 const formPago = ref({ valor: '', metodo: null, referencia: '', fecha_pago: new Date().toISOString().slice(0,10) })
 
@@ -240,7 +303,11 @@ function formatCOP(val, abrev=false) {
   return new Intl.NumberFormat('es-CO', { style:'currency', currency:'COP', minimumFractionDigits:0 }).format(n)
 }
 
-function verFactura(f) { facturaSeleccionada.value = f; $q.notify({ color: 'red-9', icon: 'visibility', message: 'Sincronizando visor electrónico...' }) }
+function verFactura(f) { 
+  facturaSeleccionada.value = f; 
+  dialogDetalleFactura.value = true;
+}
+
 
 function registrarPago(f) {
   facturaSeleccionada.value = f
@@ -277,24 +344,17 @@ onMounted(cargar)
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); opacity: 0.8; } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-red-top { border-top: 5px solid #A10B13 !important; }
-.border-red-left { border-left: 5px solid #A10B13 !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
-.rounded-20 { border-radius: 20px; }
-.line-height-1 { line-height: 1.1; }
+
 .min-h-10 { min-height: 10px; }
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.15) 0%, transparent 50%); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .glow-red { text-shadow: 0 0 20px rgba(161, 11, 19, 0.6); }
 
 .premium-input-login {

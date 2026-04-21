@@ -167,7 +167,7 @@
             </div>
 
             <div class="row justify-center q-mt-lg">
-                <q-btn unelevated color="red-9" icon="print" label="Descargar / Imprimir" @click="window.print()" class="premium-btn q-px-xl q-py-md text-weight-bolder" no-caps />
+                <q-btn unelevated color="red-9" icon="print" label="Descargar / Imprimir" @click="imprimir" class="premium-btn q-px-xl q-py-md text-weight-bolder" no-caps />
             </div>
         </div>
       </q-card>
@@ -278,6 +278,8 @@ const generarReporte = () => {
         dialogReporte.value = true
     }, 1500)
 }
+
+const imprimir = () => window.print()
 
 onMounted(async () => {
   try {

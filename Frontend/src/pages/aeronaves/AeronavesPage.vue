@@ -278,7 +278,6 @@ onMounted(cargar)
 .hover-red { transition: color 0.2s; &:hover { color: #A10B13 !important; } }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
 .pb-md { padding-bottom: 16px; }
-.border-bottom-border { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 
 .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }

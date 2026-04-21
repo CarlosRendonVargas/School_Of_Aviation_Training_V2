@@ -160,14 +160,6 @@ async function iniciarSesion() {
   box-shadow: 0 20px 40px rgba(161, 11, 19, 0.2);
 }
 
-.premium-glass-card {
-  background: rgba(10, 12, 17, 0.7);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-.border-red-top { border-top: 4px solid #A10B13 !important; }
-
 .premium-input-login {
   :deep(.q-field__control) {
     border-radius: 12px !important;
@@ -191,14 +183,9 @@ async function iniciarSesion() {
   border-radius: 12px;
 }
 
-.animate-fade {
-  animation: loginAppear 1s cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
 @keyframes loginAppear {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.line-height-1 { line-height: 1.1; }
 </style>

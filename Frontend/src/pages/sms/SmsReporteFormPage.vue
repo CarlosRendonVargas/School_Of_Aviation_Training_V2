@@ -1,31 +1,35 @@
 <template>
-  <q-page class="rac-page">
+  <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
 
-    <div class="page-header q-mb-lg">
-      <q-btn flat round dense icon="arrow_back" to="/sms" class="q-mr-sm" />
-      <div>
-        <h1 class="page-title">Nuevo Reporte SMS</h1>
-        <div class="page-sub" style="font-size:11px;color:rgba(255,255,255,.4);font-family:'JetBrains Mono',monospace">OACI Anexo 19 · Cultura de seguridad</div>
+    <div class="row items-center justify-between q-mb-xl rac-page-header">
+      <div class="row items-center">
+        <q-icon name="privacy_tip" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
+        <div>
+          <div class="rac-page-subtitle">SISTEMA DE GESTIÓN · OACI ANEXO 19</div>
+          <h1 class="rac-page-title">Nuevo Reporte SMS</h1>
+        </div>
       </div>
+      <q-btn flat round dense icon="arrow_back" color="white" to="/sms" />
     </div>
 
     <!-- Banner cultura seguridad -->
     <div class="cultura-banner q-mb-lg">
       <q-icon name="shield" size="22px" color="green-4" />
       <div>
-        <div style="font-weight:600;font-size:14px">Reporte sin represalias</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">
+        <div class="font-head text-weight-bold" style="font-size:14px">Reporte sin represalias</div>
+        <div class="font-mono text-grey-5" style="font-size:11px; margin-top:2px">
           El SMS tiene como objetivo mejorar la seguridad, no sancionar. Puedes reportar de forma anónima.
         </div>
       </div>
     </div>
 
     <q-form @submit.prevent="enviar" greedy>
-      <div class="form-grid">
+      <div class="row q-col-gutter-xl">
 
         <!-- Col 1 -->
-        <div class="form-col">
-          <div class="form-section-title">Información del evento</div>
+        <div class="col-12 col-md-6">
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low rounded-20 h-100">
+            <div class="form-section-title q-mb-lg">Información del evento</div>
 
           <!-- Anonimato -->
           <div class="anonimo-row q-mb-md">
@@ -98,14 +102,16 @@
             rows="6"
             :rules="[v => v?.length >= 20 || 'Mínimo 20 caracteres']"
           />
+          </q-card>
         </div>
 
         <!-- Col 2: Matriz de riesgo -->
-        <div class="form-col">
-          <div class="form-section-title">
-            Evaluación de riesgo
-            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.4);margin-left:8px">OACI Matriz 5×5</span>
-          </div>
+        <div class="col-12 col-md-6">
+          <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low rounded-20 h-100">
+            <div class="form-section-title q-mb-lg">
+              Evaluación de riesgo
+              <span class="text-weight-regular" style="font-size:10px; margin-left:4px; letter-spacing:0">OACI Matriz 5×5</span>
+            </div>
 
           <!-- Severidad -->
           <div class="riesgo-label q-mb-xs">Severidad del evento</div>
@@ -153,18 +159,20 @@
             </div>
           </div>
 
+          </q-card>
         </div>
       </div>
 
       <!-- Acciones -->
-      <div class="form-actions q-mt-lg">
-        <q-btn flat label="Cancelar" to="/sms" color="grey-5" />
+      <div class="row justify-end q-mt-xl q-gutter-x-md">
+        <q-btn flat label="Cancelar" to="/sms" color="grey-5" no-caps class="font-mono" />
         <q-btn
           type="submit"
-          label="Enviar reporte"
+          label="Enviar Reporte de Seguridad"
           icon="send"
-          color="green"
+          color="red-9"
           unelevated
+          class="premium-btn shadow-24 q-px-xl q-py-md"
           :loading="enviando"
         />
       </div>
@@ -256,10 +264,6 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.rac-page { padding: 24px; background: #0a0c10; min-height: 100vh; @media(max-width:600px){padding:16px;} }
-.page-header { display: flex; align-items: center; }
-.page-title  { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin: 0; }
-
 .cultura-banner {
   background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.15);
   border-radius: 10px; padding: 14px 16px;
@@ -270,21 +274,19 @@ onMounted(async () => {
   background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
   border-radius: 10px; padding: 12px;
 }
-.form-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-  @media (max-width: 768px) { grid-template-columns: 1fr; gap: 14px; }
-  @media (max-width: 599px) { gap: 10px; }
-}
-.form-col { background: #0f1218; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 20px; }
-.form-section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; }
 
-.riesgo-label { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 600; }
+.pb-sm { padding-bottom: 8px; }
+.h-100 { height: 100%; }
+.pulsate { animation: pulsate 2s infinite; }
+@keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+.riesgo-label { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 600; font-family: 'Syne', sans-serif;}
 .riesgo-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
 .riesgo-opt {
   flex: 1; min-width: 60px; border: 1px solid rgba(255,255,255,.1);
   border-radius: 8px; padding: 10px 6px; text-align: center; cursor: pointer;
   transition: all .15s; background: rgba(255,255,255,.03);
-  &:hover { border-color: rgba(255,255,255,.25); }
+  &:hover { border-color: rgba(255,255,255,.25); transform: translateY(-2px); }
   &.selected { border-width: 2px; }
   &.selected.color-green  { border-color: #22c55e; background: rgba(34,197,94,.1); }
   &.selected.color-teal   { border-color: #14b8a6; background: rgba(20,184,166,.1); }
@@ -292,11 +294,11 @@ onMounted(async () => {
   &.selected.color-orange { border-color: #f97316; background: rgba(249,115,22,.1); }
   &.selected.color-red    { border-color: #ef4444; background: rgba(239,68,68,.1); }
   .riesgo-num { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
-  .riesgo-txt { font-size: 9px; color: rgba(255,255,255,.5); margin-top: 2px; }
+  .riesgo-txt { font-size: 9px; color: rgba(255,255,255,.5); margin-top: 2px; font-family: 'JetBrains Mono', monospace;}
 }
 
 .matriz-resultado {
-  border-radius: 12px; padding: 20px; text-align: center;
+  border-radius: 12px; padding: 20px; text-align: center; margin-top: 10px;
   &.verde   { background: rgba(34,197,94,.08);  border: 2px solid rgba(34,197,94,.25); }
   &.amarillo{ background: rgba(245,158,11,.08); border: 2px solid rgba(245,158,11,.25); }
   &.rojo    { background: rgba(239,68,68,.08);  border: 2px solid rgba(239,68,68,.25); }
@@ -308,13 +310,5 @@ onMounted(async () => {
 .alerta-uaeac {
   background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2);
   border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: flex-start;
-}
-.form-actions {
-  display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,.07); flex-wrap: wrap;
-  @media (max-width: 599px) {
-    flex-direction: column-reverse;
-    > * { width: 100% !important; }
-  }
 }
 </style>

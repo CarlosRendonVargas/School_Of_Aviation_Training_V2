@@ -1,7 +1,7 @@
 // src/css/app.scss — Global Design System: SCHOOL OF AVIATION PREMIUM (RAC 141) — RESPONSIVE v3.0
 
-// Premium Typography
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+// Premium Elegant Typography
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Cinzel:wght@400;500;600;700;800;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
 // ══ Breakpoints ══
 $xs: 599px;   // mobile portrait
@@ -26,7 +26,7 @@ $sm: 1023px;  // mobile landscape / tablet
 }
 
 body { 
-  font-family: 'Outfit', sans-serif; 
+  font-family: 'Lato', sans-serif; 
   background-color: var(--rac-bg); 
   background-image: 
     radial-gradient(circle at 10% 20%, rgba(161, 11, 19, 0.05) 0%, transparent 40%),
@@ -38,8 +38,8 @@ body {
   overflow-x: hidden;
 }
 
-.font-mono { font-family: 'JetBrains Mono', monospace !important; }
-.font-head { font-family: 'Syne', sans-serif !important; }
+.font-mono { font-family: 'Courier Prime', monospace !important; }
+.font-head { font-family: 'Cinzel', serif !important; letter-spacing: 0.02em; }
 
 // ══════════════════════════════════════════
 // GLOBAL CARD SYSTEM — RESPONSIVE
@@ -492,3 +492,24 @@ body {
 // ══════════════════════════════════════════
 .hide-mobile  { @media (max-width: $xs)  { display: none !important; } }
 .hide-desktop { @media (min-width: 600px) { display: none !important; } }
+
+// ══════════════════════════════════════════
+// PREMIUM POPUP MENUS (q-select / q-menu)
+// ══════════════════════════════════════════
+.rac-popup {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
+  border-radius: 12px !important;
+  .q-item {
+    color: #cbd5e1;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s ease;
+    &:hover {
+      background: rgba(161, 11, 19, 0.1) !important;
+      color: white;
+    }
+  }
+}
+

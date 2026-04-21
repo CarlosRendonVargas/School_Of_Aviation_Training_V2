@@ -224,19 +224,13 @@ onMounted(() => { cargar(); cargarAeronaves() })
 </script>
 
 <style lang="scss" scoped>
-.animate-fade { animation: fadeIn 0.8s ease-out; }
+
 .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-left { border-left: 4px solid #A10B13 !important; }
-.border-red-top { border-top: 4px solid #A10B13 !important; }
-.border-red-low { border: 1px solid rgba(161, 11, 19, 0.2) !important; }
-.border-bottom-border { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
-.rounded-20 { border-radius: 20px; }
 
 .hover-row { 
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
@@ -249,10 +243,9 @@ onMounted(() => { cargar(); cargarAeronaves() })
 
 .welcome-hero { position: relative; }
 .hero-glow { position: absolute; top:0; right:0; bottom:0; left:0; background: radial-gradient(circle at 100% 0%, rgba(161, 11, 19, 0.1) 0%, transparent 50%); }
-.glow-primary { filter: drop-shadow(0 0 15px rgba(161, 11, 19, 0.4)); }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-.line-height-1 { line-height: 1.1; }
 
 .premium-input-login {
   :deep(.q-field__control) {

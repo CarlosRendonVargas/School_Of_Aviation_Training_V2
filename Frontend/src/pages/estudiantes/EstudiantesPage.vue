@@ -307,8 +307,7 @@ onMounted(() => { cargar(); cargarProgramas() })
 .hover-red { transition: color 0.2s; &:hover { color: #A10B13 !important; } }
 .bg-black-20 { background: rgba(0,0,0,0.2); }
 .pb-md { padding-bottom: 16px; }
-.border-bottom-border { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.rounded-20 { border-radius: 20px !important; }
+
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 </style>

@@ -47,7 +47,7 @@
               <template v-else-if="paso === 2">
                 <div class="text-center q-py-md">
                    <q-icon name="mark_email_read" color="emerald" size="80px" class="q-mb-lg shadow-glow-emerald" />
-                   <div class="text-h6 text-white font-head q-mb-md">Enlace de Seguridad Enviada</div>
+                   <div class="text-h6 text-white font-head q-mb-md">Enlace de Seguridad Enviado</div>
                    <div class="text-caption text-grey-5 font-mono line-height-1" style="font-size: 11px">
                       SI EL CORREO <span class="text-white text-weight-bold">{{ email }}</span> EXISTE, RECIBIRÁ INSTRUCCIONES EN UNOS MINUTOS. REVISTE SU BANDEJA DE SPAM.
                    </div>
@@ -155,8 +155,7 @@ onMounted(() => {
   &.orb-2 { width: 500px; height: 500px; bottom: -100px; left: -100px; background: radial-gradient(circle, #05070a 0%, #A10B13 70%); }
 }
 .premium-logo { height: 90px; width: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(161, 11, 19, 0.2); }
-.premium-glass-card { background: rgba(10, 12, 17, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
-.border-red-top { border-top: 4px solid #A10B13 !important; }
+
 .premium-input-login {
   :deep(.q-field__control) {
     border-radius: 12px !important;
@@ -168,9 +167,9 @@ onMounted(() => {
   }
   &.q-field--focused :deep(.q-field__control) { background: rgba(161, 11, 19, 0.05) !important; border-color: #A10B13 !important; box-shadow: 0 0 15px rgba(161, 11, 19, 0.2); }
 }
-.animate-fade { animation: loginAppear 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; }
+
 @keyframes loginAppear { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-.text-emerald { color: #10b981; }
+
 .shadow-glow-emerald { filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4)); }
-.line-height-1 { line-height: 1.4; }
+
 </style>
