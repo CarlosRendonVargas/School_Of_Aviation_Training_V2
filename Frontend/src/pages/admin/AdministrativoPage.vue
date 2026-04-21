@@ -171,6 +171,23 @@
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="dialogEditMatricula" persistent backdrop-filter="blur(10px)">
+      <q-card class="premium-glass-card shadow-24" style="min-width: 500px">
+        <q-card-section class="q-pa-lg text-white">
+          <div class="text-h6 font-head q-mb-lg">Editar Matrícula</div>
+          <q-form @submit="guardarMatriculaEdit" class="row q-col-gutter-md">
+            <div class="col-6"><q-select v-model="formMatEdit.estado" :options="[{label: 'Activa', value: 'activa'}, {label: 'Suspendida', value: 'suspendida'}, {label: 'Terminada', value: 'terminada'}]" option-value="value" option-label="label" label="Estado *" outlined /></div>
+            <div class="col-6"><q-input v-model.number="formMatEdit.descuento" type="number" label="Descuento %" outlined /></div>
+            <div class="col-12"><q-input v-model="formMatEdit.observaciones" label="Observaciones" outlined type="textarea" rows="3" /></div>
+            <div class="col-12 row justify-end q-gutter-sm q-mt-md">
+              <q-btn flat label="Cancelar" color="grey-6" v-close-popup />
+              <q-btn type="submit" label="Actualizar Matrícula" color="red-9" class="premium-btn" />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="dialogAbono" persistent backdrop-filter="blur(10px)">
       <q-card class="premium-glass-card border-emerald shadow-24" style="min-width: 450px">
         <q-card-section class="q-pa-lg text-white">
@@ -189,6 +206,7 @@
     </q-dialog>
 
   </q-page>
+
 </template>
 
 <script setup>
@@ -308,7 +326,49 @@ const guardarAbono = async () => {
     } catch { $q.notify({ type: 'negative', message: 'Error en proceso' }) }
 }
 
+const abrirEditarMatricula = (row) => {
+    formMatEdit.value = { ...row, estado: row.estado || 'activa' }
+    dialogEditMatricula.value = true
+}
+
+const guardarMatriculaEdit = async () => {
+    try {
+        await api.patch(`/matriculas/${formMatEdit.value.id}`, formMatEdit.value)
+        $q.notify({ color: 'positive', message: 'Matrícula actualizada', icon: 'edit' })
+        dialogEditMatricula.value = false
+        cargarTodo()
+    } catch {
+        $q.notify({ color: 'negative', message: 'Error al actualizar', icon: 'error' })
+    }
+}
+
+const generarPDF = async (row) => {
+    $q.loading.show({ message: 'Generando PDF DIAN...' })
+    try {
+        await api.get(`/facturas/${row.id}/pdf`)
+        $q.notify({ color: 'positive', message: 'PDF descargado correctamente', icon: 'picture_as_pdf' })
+    } catch (error) {
+        $q.notify({ color: 'negative', message: 'Error al generar PDF', icon: 'error' })
+    } finally {
+        $q.loading.hide()
+    }
+}
+
+const cargarCartera = async () => {
+    loadingFacturas.value = true
+    try {
+        const { data } = await api.get('/facturas/cartera/vencida')
+        cartera.value = data.data || []
+        $q.notify({ color: 'positive', message: 'Cartera sincronizada', icon: 'sync' })
+    } catch {
+        $q.notify({ color: 'negative', message: 'Error al sincronizar', icon: 'error' })
+    } finally {
+        loadingFacturas.value = false
+    }
+}
+
 onMounted(cargarTodo)
+
 </script>
 
 <style lang="scss" scoped>
