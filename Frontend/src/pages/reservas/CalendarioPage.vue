@@ -63,7 +63,7 @@
                 class="reserva-slot-mini q-px-xs q-py-xs font-mono flex items-center no-wrap shadow-inner"
                 :style="`border-left: 3px solid ${colorReserva(r.estado)}`"
               >
-                <q-icon name="flight" size="9px" color="grey-7" class="q-mr-xs" />
+                <q-icon :name="r.tipo === 'virtual' ? 'video_chat' : 'flight'" size="9px" color="grey-7" class="q-mr-xs" />
                 <span class="truncate-text" style="font-size:9px; color:rgba(255,255,255,0.8)">
                   {{ r.hora_inicio?.slice(0,5) }} · <b class="text-white">{{ r.aeronave?.matricula }}</b>
                 </span>
@@ -95,7 +95,7 @@
               <div v-for="r in dia.reservas.slice(0,2)" :key="r.id"
                 class="reserva-slot-mini q-px-sm q-py-sm font-mono flex items-center no-wrap shadow-inner"
                 :style="`border-left: 3px solid ${colorReserva(r.estado)}`">
-                <q-icon name="flight" size="12px" color="grey-7" class="q-mr-sm" />
+                <q-icon :name="r.tipo === 'virtual' ? 'video_chat' : 'flight'" size="12px" color="grey-7" class="q-mr-sm" />
                 <span style="font-size:11px; color:rgba(255,255,255,0.9)">
                   {{ r.hora_inicio?.slice(0,5) }} · <b class="text-white">{{ r.aeronave?.matricula }}</b>
                 </span>
@@ -149,7 +149,7 @@
               
               <div class="q-gutter-y-md q-pa-lg bg-black-20 rounded-12 shadow-inner border-red-low">
                 <div class="row items-center q-gutter-x-md">
-                  <q-icon name="flight" color="red-9" size="18px" />
+                  <q-icon :name="r.tipo === 'virtual' ? 'video_chat' : 'flight'" color="red-9" size="18px" />
                   <div class="col">
                     <div class="text-white text-weight-bolder font-head line-height-1">{{ r.aeronave?.matricula }}</div>
                     <div class="text-grey-6 font-mono text-caption uppercase" style="font-size:9px">{{ r.aeronave?.modelo }}</div>
@@ -238,16 +238,17 @@ const leyenda = [
   { label: 'PENDIENTE',  color: '#f59e0b' },
   { label: 'AUTORIZADA', color: '#10b981' },
   { label: 'COMPLETADA', color: '#0ea5e9' },
+  { label: 'VIRTUAL',    color: '#8b5cf6' },
   { label: 'CANCELADA',  color: '#A10B13' },
 ]
 
-const colorReserva = (e) => ({ pendiente: '#f59e0b', confirmada: '#10b981', completada: '#0ea5e9', cancelada: '#A10B13' }[e] || '#6b7280')
-const colorBadge   = (e) => ({ pendiente: 'orange-10', confirmada: 'emerald', completada: 'blue-10', cancelada: 'red-10' }[e] || 'grey-8')
+const colorReserva = (e) => ({ pendiente: '#f59e0b', confirmada: '#10b981', completada: '#0ea5e9', cancelada: '#A10B13', virtual: '#8b5cf6' }[e] || '#6b7280')
+const colorBadge   = (e) => ({ pendiente: 'orange-10', confirmada: 'emerald', completada: 'blue-10', cancelada: 'red-10', virtual: 'purple-9' }[e] || 'grey-8')
 
 function seleccionarDia(dia) { diaSeleccionado.value = dia; dialogDia.value = true }
 function mesAnterior()       { mesActual.value = mesActual.value.subtract(1, 'month'); cargar() }
 function mesSiguiente()      { mesActual.value = mesActual.value.add(1, 'month'); cargar() }
-function irHoy()             { mesActual.value = dayjs(); cargar() }
+function irHoy()             { mesActual.value = dayjs().startOf('month'); cargar() }
 
 async function cargar() {
   cargando.value = true

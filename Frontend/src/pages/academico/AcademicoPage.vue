@@ -27,6 +27,7 @@
         <q-tab name="programas"   icon="menu_book"      :label="$q.screen.gt.xs ? 'Programas (PIA)' : ''" />
         <q-tab name="estudiantes" icon="groups"         :label="$q.screen.gt.xs ? 'Archivo Digital' : ''" />
         <q-tab name="vuelo"       icon="flight_takeoff" :label="$q.screen.gt.xs ? 'Fase de Vuelo' : ''" />
+        <q-tab name="tesoreria"   icon="payments"       :label="$q.screen.gt.xs ? 'Habilitaciones' : ''" />
       </q-tabs>
 
       <q-tab-panels v-model="tab" animated class="bg-transparent text-white" style="min-height:600px">
@@ -283,6 +284,92 @@
               </q-td>
             </template>
           </q-table>
+        </q-tab-panel>
+
+        <!-- ════ SECCIÓN: TESORERÍA / HABILITACIONES ════ -->
+        <q-tab-panel name="tesoreria" class="q-pa-none">
+          <div class="row q-col-gutter-lg q-pa-lg">
+            <div class="col-12 col-md-4">
+              <q-card class="premium-glass-card border-red-low shadow-24">
+                <q-card-section class="q-pa-xl">
+                  <div class="text-h6 font-head text-weight-bolder text-white q-mb-lg">Buscador de Alumnos</div>
+                  <q-input 
+                    v-model="filtroTesore" 
+                    dark filled 
+                    label="Nombre o Documento" 
+                    class="premium-input-login q-mb-md"
+                    @keyup.enter="buscarAlumnoTesore"
+                  >
+                    <template v-slot:append>
+                      <q-btn flat round icon="search" @click="buscarAlumnoTesore" color="red-9" />
+                    </template>
+                  </q-input>
+
+                  <q-list dark separator class="bg-black-20 rounded-12 shadow-inner" v-if="alumnosTesore.length">
+                    <q-item v-for="est in alumnosTesore" :key="est.id" clickable @click="seleccionarEstTesore(est)" :active="estSelTesore?.id === est.id" active-class="bg-red-10-opacity">
+                      <q-item-section>
+                        <q-item-label class="text-weight-bold font-head">{{ est.persona.nombres }} {{ est.persona.apellidos }}</q-item-label>
+                        <q-item-label caption class="text-grey-6 font-mono">EXP: {{ est.num_expediente }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-card-section>
+              </q-card>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <q-card v-if="estSelTesore" class="premium-glass-card border-red-low shadow-24 animate-fade">
+                <q-card-section class="q-pa-xl">
+                  <div class="row items-center justify-between q-mb-xl">
+                    <div>
+                      <div class="text-h5 font-head text-weight-bolder text-white">{{ estSelTesore.persona.nombres }} {{ estSelTesore.persona.apellidos }}</div>
+                      <div class="text-grey-6 font-mono uppercase" style="font-size:10px">GESTIÓN DE REINTENTOS PARA: {{ estSelTesore.programa?.nombre }}</div>
+                    </div>
+                    <q-badge color="red-10" class="q-pa-sm font-mono text-weight-bolder">{{ estSelTesore.estado }}</q-badge>
+                  </div>
+
+                  <div class="row q-col-gutter-md">
+                    <div v-for="mat in materiasEstTesore" :key="mat.id" class="col-12 col-sm-6">
+                      <div class="premium-glass-card q-pa-lg border-red-low bg-black-10 hover-row flex items-center justify-between rounded-12 h-full">
+                        <div>
+                          <div class="text-weight-bold text-white font-head" style="font-size:15px; line-height: 1.2;">{{ mat.nombre }}</div>
+                          <div class="text-caption text-grey-6 font-mono q-mt-sm">Nota Max: <span class="text-red-9 font-weight-bolder">{{ mat.nota_max || '0' }}%</span> • Intentos: {{ mat.intentos }}</div>
+                        </div>
+                        <div class="q-ml-sm">
+                           <q-btn 
+                             v-if="mat.intentos > 0 && mat.nota_max < 75 && !mat.habilitado_manual"
+                             color="orange-10" 
+                             icon="payments" 
+                             label="Habilitar" 
+                             size="sm" 
+                             class="premium-btn shadow-24"
+                             @click="abrirDialogHabilitar(mat)"
+                           />
+                           <q-btn 
+                             v-else-if="mat.intentos > 0 && mat.nota_max < 75 && mat.habilitado_manual"
+                             color="blue-9" 
+                             icon="check_circle" 
+                             label="Habilitado" 
+                             size="sm" 
+                             class="premium-btn shadow-24"
+                             disable
+                           />
+                           <q-icon v-else-if="mat.nota_max >= 75" name="verified" color="emerald" size="32px" class="glow-primary" />
+                           <span v-else class="text-grey-8 font-mono" style="font-size:9px">SIN INTENTOS</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+              <div v-else class="flex flex-center full-height opacity-30">
+                <div class="text-center">
+                  <q-icon name="payments" size="100px" color="grey-8" />
+                  <div class="text-h6 font-head">SELECCIONE UN ALUMNO</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </q-tab-panel>
 
       </q-tab-panels>
@@ -707,7 +794,59 @@
                         <q-input v-model.number="matActiva.nota_minima" type="number" filled dark label="NOTA MÍNIMA PARA APROBAR (%)" class="premium-input-login" prefix="%" />
                         <q-input v-model.number="matActiva.duracion_minutos" type="number" filled dark label="DURACIÓN EXAMEN (MINUTOS)" class="premium-input-login" />
                         <q-input v-model.number="matActiva.max_intentos" type="number" filled dark label="NÚMERO MÁXIMO DE INTENTOS" class="premium-input-login" />
-                        <q-input v-model="matActiva.link_meet" filled dark label="ENLACE GOOGLE MEET (CLASE VIVO)" class="premium-input-login" />
+                        <div class="row q-col-gutter-md">
+                           <div class="col-12">
+                              <q-input v-model="matActiva.link_meet" filled dark label="ENLACE DE REUNIÓN (GOOGLE MEET / EXTERNO)" class="premium-input-login">
+                                 <template #append>
+                                    <q-btn flat dense icon="calendar_month" color="red-9" @click="programarEnGoogle" label="GENERAR EVENTO">
+                                       <q-tooltip>Abrir Google Calendar con estos datos</q-tooltip>
+                                    </q-btn>
+                                 </template>
+                              </q-input>
+                           </div>
+                        </div>
+
+                        <div class="row q-col-gutter-lg q-mt-sm">
+                           <div class="col-12 col-md-6">
+                              <div class="text-caption text-grey-7 font-mono q-mb-xs uppercase" style="font-size: 10px">Inicia:</div>
+                              <q-input filled v-model="matActiva.sesion_viva_inicio" dark placeholder="Seleccione fecha y hora" class="premium-input-login">
+                                 <template v-slot:prepend>
+                                 <q-icon name="event" class="cursor-pointer text-red-9">
+                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                       <q-date v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
+                                    </q-popup-proxy>
+                                 </q-icon>
+                                 </template>
+                                 <template v-slot:append>
+                                 <q-icon name="schedule" class="cursor-pointer text-red-9">
+                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                       <q-time v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
+                                    </q-popup-proxy>
+                                 </q-icon>
+                                 </template>
+                              </q-input>
+                           </div>
+                           <div class="col-12 col-md-6">
+                              <div class="text-caption text-grey-7 font-mono q-mb-xs uppercase" style="font-size: 10px">Finaliza:</div>
+                              <q-input filled v-model="matActiva.sesion_viva_fin" dark placeholder="Seleccione fecha y hora" class="premium-input-login">
+                                 <template v-slot:prepend>
+                                 <q-icon name="event" class="cursor-pointer text-red-9">
+                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                       <q-date v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
+                                    </q-popup-proxy>
+                                 </q-icon>
+                                 </template>
+                                 <template v-slot:append>
+                                 <q-icon name="schedule" class="cursor-pointer text-red-9">
+                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                       <q-time v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
+                                    </q-popup-proxy>
+                                 </q-icon>
+                                 </template>
+                              </q-input>
+                           </div>
+                        </div>
+
                         <q-input v-model="matActiva.video_url" filled dark label="VIDEO INTRODUCTORIO (YOUTUBE/DRIVE)" class="premium-input-login" />
                         <q-btn color="red-10" label="Guardar Configuración General" @click="guardarConfigGeneral" class="full-width premium-btn q-py-lg shadow-24" :loading="guardandoLms" />
                      </q-form>
@@ -1204,7 +1343,11 @@ function eliminarMateria(id) {
 
 // ── Gestión LMS (Lecciones y Preguntas) ──
 async function gestionarLms(mat) {
-  matActiva.value = mat
+  matActiva.value = { ...mat }
+  // Formatear fechas para los pickers de Quasar
+  if (matActiva.value.sesion_viva_inicio) matActiva.value.sesion_viva_inicio = dayjs(matActiva.value.sesion_viva_inicio).format('YYYY-MM-DD HH:mm')
+  if (matActiva.value.sesion_viva_fin)    matActiva.value.sesion_viva_fin    = dayjs(matActiva.value.sesion_viva_fin).format('YYYY-MM-DD HH:mm')
+  
   tabLms.value = 'lecciones'
   loadingLms.value = true
   try {
@@ -1376,6 +1519,108 @@ async function guardarCertMedico() {
   } catch { $q.notify({ color: 'negative', message: 'Error al registrar certificado.' }) }
   finally { guardandoCert.value = false }
 }
+const programarEnGoogle = () => {
+    if (!matActiva.value.sesion_viva_inicio) {
+        $q.notify({ type: 'warning', message: 'Seleccione fecha y hora de inicio primero.' });
+        return;
+    }
+    // Formatear fechas para Google Calendar (Formato: YYYYMMDDTHHmmSS)
+    // Asumimos hora local, para UTC se añadiría 'Z' al final
+    const fmt = (str) => {
+        if (!str) return '';
+        const clean = str.replace(/[- :]/g, ''); // 202604211200
+        return clean.substring(0, 8) + 'T' + clean.substring(8, 12) + '00';
+    }
+
+    const start = fmt(matActiva.value.sesion_viva_inicio);
+    const end = fmt(matActiva.value.sesion_viva_fin || matActiva.value.sesion_viva_inicio);
+    
+    const title = encodeURIComponent('CLASE VIRTUAL RAC 141: ' + matActiva.value.nombre);
+    
+    // Simplificamos el URL para evitar errores de creación en Google
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
+    
+    window.open(url, '_blank');
+    
+    $q.notify({ 
+        color: 'blue-9', 
+        icon: 'info', 
+        message: 'Se ha abierto Google Calendar. Haz clic en "GUARDAR" en la página de Google y luego COPIA el link de Meet.',
+        timeout: 10000
+    });
+}
+
+// --- Tesorería Logic ---
+const filtroTesore = ref('')
+const alumnosTesore = ref([])
+const estSelTesore = ref(null)
+const materiasEstTesore = ref([])
+const dialogHabilitar = ref(false)
+const matAHabilitar = ref(null)
+const numReciboHabil = ref('')
+
+const buscarAlumnoTesore = async () => {
+    if (!filtroTesore.value) return
+    const { data } = await api.get('/estudiantes', { params: { buscar: filtroTesore.value } })
+    alumnosTesore.value = data.data.data
+}
+
+const seleccionarEstTesore = async (est) => {
+    estSelTesore.value = est
+    const res = await api.get(`/estudiantes/${est.id}/expediente`)
+    const reintentos = res.data.data.estudiante.reintentos_autorizados || []
+    
+    materiasEstTesore.value = res.data.data.estudiante.notas.reduce((acc, n) => {
+        const exist = acc.find(x => x.id === n.materia_id)
+        if (!exist) acc.push({ ...n.materia, nota_max: n.nota, intentos: 1 })
+        else {
+            exist.intentos++
+            if (n.nota > exist.nota_max) exist.nota_max = n.nota
+        }
+        return acc
+    }, [])
+    
+    // Si la materia no tiene notas aún, pero está en el programa, la agregamos
+    est.programa.etapas.forEach(et => {
+        et.materias.forEach(m => {
+            let target = materiasEstTesore.value.find(x => x.id === m.id)
+            if (!target) {
+                target = { ...m, nota_max: 0, intentos: 0 }
+                materiasEstTesore.value.push(target)
+            }
+        })
+    })
+
+    materiasEstTesore.value.forEach(m => {
+        m.habilitado_manual = reintentos.some(r => r.materia_id === m.id && r.usado === 0)
+    })
+}
+
+const abrirDialogHabilitar = (mat) => {
+    matAHabilitar.value = mat
+    $q.dialog({
+        title: '🔑 HABILITAR REINTENTO DE EXAMEN',
+        message: `Estás autorizando un nuevo intento para <b>${estSelTesore.value.persona.nombres}</b> en la materia <b>${mat.nombre}</b>. <br><br>Ingrese el número de recibo de caja de Tesorería:`,
+        html: true,
+        prompt: { model: numReciboHabil.value, type: 'text' },
+        cancel: true,
+        persistent: true,
+        ok: { label: 'Autorizar Ahora', color: 'emerald', unelevated: true }
+    }).onOk(async (val) => {
+        try {
+            await api.post('/aula-virtual/autorizar-reintento', {
+                estudiante_id: estSelTesore.value.id,
+                materia_id: mat.id,
+                num_recibo: val
+            })
+            $q.notify({ type: 'positive', message: 'Examen habilitado correctamente.' })
+            seleccionarEstTesore(estSelTesore.value) // Refresh
+        } catch (e) {
+            $q.notify({ type: 'negative', message: 'Error habilitando examen.' })
+        }
+    })
+}
+
 </script>
 
 <style lang="scss" scoped>

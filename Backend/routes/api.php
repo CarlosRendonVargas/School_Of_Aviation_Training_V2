@@ -166,6 +166,9 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         
         // Reporte de Notas Automáticas
         Route::get('reporte-notas',       [AulaVirtualController::class, 'todasLasNotas']);
+        
+        // Tesorería / Admin
+        Route::post('autorizar-reintento', [AulaVirtualController::class, 'autorizarReintento']);
     });
 
     // --- Gestión Académica Avanzada (Instructores/Admin) ---
@@ -192,4 +195,15 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::get('vuelos',         [MisionVueloController::class, 'index']);
     Route::post('vuelos',        [MisionVueloController::class, 'store']);
     Route::delete('vuelos/{id}', [MisionVueloController::class, 'destroy']);
+
+    Route::prefix('reservas')->group(function () {
+        Route::get('/',              [ReservaController::class, 'index']);
+        Route::post('/',             [ReservaController::class, 'store']);
+        Route::get('calendario',     [ReservaController::class, 'calendario']);
+        Route::get('disponibilidad', [ReservaController::class, 'disponibilidad']);
+        Route::get('{id}',           [ReservaController::class, 'show']);
+        Route::put('{id}',           [ReservaController::class, 'update']);
+        Route::post('{id}/confirmar', [ReservaController::class, 'confirmar']);
+        Route::post('{id}/cancelar',  [ReservaController::class, 'cancelar']);
+    });
 });

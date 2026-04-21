@@ -97,10 +97,10 @@
         <q-tab-panel name="facturas" class="q-pa-lg">
           <div class="row justify-between items-center q-mb-lg">
               <div>
-                <div class="text-h6 font-head">Facturación Electrónica</div>
-                <div class="text-caption text-grey-6 font-mono">Emisión y control de documentos DIAN</div>
+                <div class="text-h6 font-head">Facturación & Documentos Equivalentes</div>
+                <div class="text-caption text-grey-6 font-mono">Emisión y control de recibos internos</div>
               </div>
-              <q-btn color="red-9" icon="receipt" label="Generar Factura" class="premium-btn" @click="prepararNuevaFactura" />
+              <q-btn color="red-9" icon="receipt" label="Generar Documento Equivalente" class="premium-btn" @click="prepararNuevaFactura" />
           </div>
 
           <q-table
@@ -137,7 +137,7 @@
                 </q-btn>
 
                 <q-btn flat round color="grey-5" icon="picture_as_pdf" size="sm" @click="generarPDF(props.row)">
-                  <q-tooltip>Exportar DIAN (PDF)</q-tooltip>
+                  <q-tooltip>Exportar PDF</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -205,7 +205,7 @@
                     <q-tooltip>Registrar Abono</q-tooltip>
                   </q-btn>
                   <q-btn flat round color="grey-5" icon="picture_as_pdf" size="sm" @click="generarPDF(props.row)">
-                    <q-tooltip>Exportar DIAN (PDF)</q-tooltip>
+                    <q-tooltip>Exportar PDF</q-tooltip>
                   </q-btn>
                 </q-td>
               </template>
@@ -245,7 +245,7 @@
             <div class="row items-center justify-between">
                <div class="row items-center">
                   <q-icon name="visibility" color="red-9" size="32px" class="q-mr-md glow-primary" />
-                  <div class="text-h5 text-white font-head text-weight-bolder uppercase line-height-1">Manifiesto Fiscal DIAN</div>
+                  <div class="text-h5 text-white font-head text-weight-bolder uppercase line-height-1">Documento Equivalente</div>
                </div>
                <q-btn flat round dense icon="close" v-close-popup color="grey-7" class="bg-black-20 hover-red" />
             </div>
@@ -318,15 +318,15 @@
     <q-dialog v-model="dialogFactura" persistent backdrop-filter="blur(10px)">
       <q-card class="premium-glass-card shadow-24 pb-md" :class="$q.screen.lt.md ? 'q-pa-sm' : ''" style="width: 500px; max-width: 90vw;">
         <q-card-section class="text-white" :class="$q.screen.lt.md ? 'q-pa-md' : 'q-pa-lg'">
-          <div class="text-h6 font-head q-mb-lg">Generar Nueva Factura de Vuelo / Curso</div>
+          <div class="text-h6 font-head q-mb-lg">Generar Nuevo Documento Equivalente / Recibo</div>
           <q-form @submit="guardarFactura" class="row q-col-gutter-md">
             <div class="col-12"><q-select v-model="formFact.matricula_id" :options="matriculas" option-value="id" :option-label="opt => opt && opt.estudiante?.persona ? `${opt.estudiante.persona.nombres} ${opt.estudiante.persona.apellidos} (Mat. #${opt.id})` : ''" label="Matrícula Asociada *" outlined emit-value map-options behavior="menu" popup-content-class="bg-secondary text-white rac-popup" /></div>
-            <div class="col-6"><q-input v-model="formFact.numero_factura" label="Folio Factura" outlined /></div>
+            <div class="col-6"><q-input v-model="formFact.numero_factura" label="Folio Interno" outlined /></div>
             <div class="col-6"><q-input v-model="formFact.concepto" label="Concepto General *" outlined /></div>
             <div class="col-12"><q-input v-model.number="formFact.total" type="number" label="Valor a Cobrar (COP) *" outlined /></div>
             <div class="col-12 row justify-end q-gutter-sm q-mt-md">
               <q-btn flat label="Descartar" color="grey-6" v-close-popup />
-              <q-btn type="submit" label="Emitir Factura Electrónica" color="red-9" class="premium-btn" />
+              <q-btn type="submit" label="Emitir Documento Equivalente" color="red-9" class="premium-btn" />
             </div>
           </q-form>
         </q-card-section>
@@ -472,18 +472,24 @@ const guardarMatricula = async () => {
 const prepararNuevaFactura = async () => {
     formFact.value = { 
         matricula_id: '', numero_factura: 'F-GEN', concepto: 'Servicios Aeronáuticos', 
-        fecha_factura: new Date().toISOString().split('T')[0], total: 0 
+        fecha_factura: new Date().toISOString().split('T')[0], 
+        fecha_vencimiento_pago: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
+        subtotal: 0, iva: 0, total: 0 
     }
     dialogFactura.value = true
 }
 
 const guardarFactura = async () => {
     try {
+        formFact.value.subtotal = formFact.value.total
         await api.post('/facturas', formFact.value)
-        $q.notify({ type: 'positive', message: 'Factura emitida' })
+        $q.notify({ type: 'positive', message: 'Documento Equivalente emitido' })
         dialogFactura.value = false
         cargarTodo()
-    } catch { $q.notify({ type: 'negative', message: 'Error DIAN' }) }
+    } catch (error) { 
+        const errMensaje = error.response?.data?.message || 'Error de validación (revisa los campos obligatorios)'
+        $q.notify({ type: 'negative', message: errMensaje }) 
+    }
 }
 
 const abrirAbono = (row) => {
@@ -524,7 +530,7 @@ const guardarMatriculaEdit = async () => {
 }
 
 const generarPDF = async (row) => {
-    $q.loading.show({ message: 'Conectando con plataforma DIAN...' })
+    $q.loading.show({ message: 'Generando PDF de comprobante...' })
     try {
         const response = await api.get(`/facturas/${row.id}/pdf`, { responseType: 'arraybuffer' })
         const fileName = row.numero_factura ? `Factura_${row.numero_factura}.pdf` : `Documento_DIAN_${row.id}.pdf`

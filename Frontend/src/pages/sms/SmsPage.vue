@@ -224,29 +224,28 @@ function notificarProximamente() {
 }
 
 function exportarSMS() {
-  if (!reportes.value.length) {
-    $q.notify({ type: 'warning', message: 'No hay datos para exportar.' })
+  if (!reportes.value || reportes.value.length === 0) {
+    $q.notify({ color: 'warning', message: 'No hay datos para exportar.' })
     return
   }
 
   const columnas = ['ID', 'Nivel Riesgo', 'Tipo', 'Descripción', 'Fecha Evento', 'Estado']
-  const contenido = [
-    columnas.join(','),
-    ...reportes.value.map(r => [
-      r.id,
-      r.nivel_riesgo,
-      `"${r.tipo}"`,
-      `"${r.descripcion?.replace(/"/g, '""')}"`,
-      r.fecha_evento,
-      `"${r.estado}"`
-    ].join(','))
-  ].join('\r\n')
+  const filas = reportes.value.map(r => [
+    r.id,
+    r.nivel_riesgo,
+    `"${r.tipo || ''}"`,
+    `"${(r.descripcion || '').replace(/"/g, '""')}"`,
+    r.fecha_evento ? r.fecha_evento.slice(0, 10) : '',
+    `"${r.estado || ''}"`
+  ].join(','))
 
-  const status = exportFile(
-    `Reporte_SMS_RAC141_${new Date().toISOString().slice(0,10)}.csv`,
-    contenido,
-    'text/csv'
-  )
+  const contenidoCsv = [columnas.join(','), ...filas].join('\r\n')
+  
+  // Usar la misma técnica de CumplimientoPage (BOM UTF-8)
+  const blobData = "\ufeff" + contenidoCsv
+  const nombreArchivo = `Reporte_SMS_RAC141_${new Date().toISOString().slice(0,10)}.csv`
+
+  const status = exportFile(nombreArchivo, blobData, 'text/csv;charset=utf-8;')
 
   if (status === true) {
     $q.notify({ color: 'emerald', icon: 'download_done', message: 'Archivo de auditoría generado correctamente.' })

@@ -69,6 +69,11 @@ class Estudiante extends Model
         return $this->hasMany(Matricula::class, 'estudiante_id');
     }
 
+    public function reintentosAutorizados(): HasMany
+    {
+        return $this->hasMany(ReintentoAutorizado::class, 'estudiante_id');
+    }
+
     /* ─── Scopes ─── */
 
     public function scopeActivos($query)

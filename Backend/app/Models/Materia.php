@@ -15,11 +15,14 @@ class Materia extends Model
         'tipo', 'nota_minima', 'rac_referencia',
         'link_meet', 'documento_url', 'video_url', 'temario',
         'max_intentos', 'costo_reintento', 'duracion_minutos',
+        'sesion_viva_inicio', 'sesion_viva_fin',
     ];
 
     protected $casts = [
         'horas'       => 'decimal:1',
         'nota_minima' => 'decimal:2',
+        'sesion_viva_inicio' => 'datetime',
+        'sesion_viva_fin'    => 'datetime',
     ];
 
     public function etapa(): BelongsTo
@@ -45,5 +48,10 @@ class Materia extends Model
     public function lecciones(): HasMany
     {
         return $this->hasMany(LeccionMateria::class, 'materia_id')->orderBy('orden');
+    }
+
+    public function reintentosAutorizados(): HasMany
+    {
+        return $this->hasMany(ReintentoAutorizado::class, 'materia_id');
     }
 }

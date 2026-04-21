@@ -9,6 +9,7 @@ use App\Models\NotaLeccion;
 use App\Models\BancoPregunta;
 use App\Models\LeccionMateria;
 use App\Models\Estudiante;
+use App\Models\ReintentoAutorizado;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,46 +21,62 @@ class AulaVirtualController extends Controller
      */
     public function misMaterias(Request $request): JsonResponse
     {
-        $usuario = $request->user();
-        if (!$usuario) {
-            return response()->json(['ok' => false, 'mensaje' => 'No autenticado'], 401);
+        try {
+            $usuario = $request->user();
+            if (!$usuario) {
+                return response()->json(['ok' => false, 'mensaje' => 'No autenticado'], 401);
+            }
+
+            $persona = $usuario->persona;
+            if (!$persona) {
+                return response()->json(['ok' => false, 'mensaje' => 'El usuario no tiene un perfil personal vinculado'], 403);
+            }
+
+            $estudiante = $persona->estudiante;
+            if (!$estudiante) {
+                return response()->json(['ok' => false, 'mensaje' => 'No es un perfil de estudiante'], 403);
+            }
+
+            $materias = Materia::whereHas('etapa', function($q) use ($estudiante) {
+                $q->where('programa_id', $estudiante->programa_id);
+            })
+            ->with(['etapa', 'notas' => function($q) use ($estudiante) {
+                $q->where('estudiante_id', $estudiante->id);
+            }, 'reintentosAutorizados' => function($q) use ($estudiante) {
+                $q->where('estudiante_id', $estudiante->id)->where('usado', false);
+            }])
+            ->get()
+            ->map(function($m) use ($estudiante) {
+                $mejorNota = $m->notas->max('nota');
+                $aprobado = $m->notas->where('aprobado', true)->count() > 0;
+                
+                // Verificación manual por si el eager loading falla
+                $habilitadoManual = \App\Models\ReintentoAutorizado::where('estudiante_id', $estudiante->id)
+                    ->where('materia_id', $m->id)
+                    ->where('usado', false)
+                    ->exists();
+                
+                return [
+                    'id' => $m->id,
+                    'codigo' => $m->codigo,
+                    'nombre' => $m->nombre,
+                    'horas' => $m->horas,
+                    'etapa' => $m->etapa->nombre,
+                    'nota_max' => $mejorNota,
+                    'aprobado' => $aprobado,
+                    'intentos' => $m->notas->count(),
+                    'habilitado' => $habilitadoManual,
+                    'link_meet' => $m->link_meet,
+                    'sesion_viva_inicio' => $m->sesion_viva_inicio,
+                    'sesion_viva_fin' => $m->sesion_viva_fin,
+                    'has_docs' => !empty($m->documento_url)
+                ];
+            });
+
+            return response()->json(['ok' => true, 'data' => $materias]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
         }
-
-        $persona = $usuario->persona;
-        if (!$persona) {
-            return response()->json(['ok' => false, 'mensaje' => 'El usuario no tiene un perfil personal vinculado'], 403);
-        }
-
-        $estudiante = $persona->estudiante;
-        if (!$estudiante) {
-            return response()->json(['ok' => false, 'mensaje' => 'No es un perfil de estudiante'], 403);
-        }
-
-        $materias = Materia::whereHas('etapa', function($q) use ($estudiante) {
-            $q->where('programa_id', $estudiante->programa_id);
-        })
-        ->with(['etapa', 'notas' => function($q) use ($estudiante) {
-            $q->where('estudiante_id', $estudiante->id);
-        }])
-        ->get()
-        ->map(function($m) {
-            $mejorNota = $m->notas->max('nota');
-            $aprobado = $m->notas->where('aprobado', true)->count() > 0;
-            return [
-                'id' => $m->id,
-                'codigo' => $m->codigo,
-                'nombre' => $m->nombre,
-                'horas' => $m->horas,
-                'etapa' => $m->etapa->nombre,
-                'nota_max' => $mejorNota,
-                'aprobado' => $aprobado,
-                'intentos' => $m->notas->count(),
-                'link_meet' => $m->link_meet,
-                'has_docs' => !empty($m->documento_url)
-            ];
-        });
-
-        return response()->json(['ok' => true, 'data' => $materias]);
     }
 
     /**
@@ -101,6 +118,14 @@ class AulaVirtualController extends Controller
 
         $res = $materia->toArray();
         $res['promedio_lecciones'] = round($promedioLecciones, 2);
+        
+        $res['habilitado'] = false;
+        if ($estudiante) {
+            $res['habilitado'] = \App\Models\ReintentoAutorizado::where('estudiante_id', $estudiante->id)
+                ->where('materia_id', $id)
+                ->where('usado', false)
+                ->exists();
+        }
 
         return response()->json(['ok' => true, 'data' => $res]);
     }
@@ -129,7 +154,8 @@ class AulaVirtualController extends Controller
             ->where('activo', true)
             ->inRandomOrder()
             ->limit(5)
-            ->get();
+            ->get()
+            ->makeHidden(['respuesta_correcta', 'explicacion']);
 
         if ($preguntas->isEmpty()) {
             return response()->json(['ok' => false, 'mensaje' => 'No hay preguntas para esta lección'], 404);
@@ -171,6 +197,7 @@ class AulaVirtualController extends Controller
                 $notaInstancia->aciertos = $aciertos;
                 $notaInstancia->total = $total;
             }
+            $notaInstancia->fraude_intentos = $request->fraude_intentos ?? 0;
             $notaInstancia->save();
         } else {
             $notaInstancia = NotaLeccion::create([
@@ -179,7 +206,8 @@ class AulaVirtualController extends Controller
                 'nota' => $notaFinal,
                 'aciertos' => $aciertos,
                 'total' => $total,
-                'intentos' => 1
+                'intentos' => 1,
+                'fraude_intentos' => $request->fraude_intentos ?? 0
             ]);
         }
 
@@ -191,50 +219,64 @@ class AulaVirtualController extends Controller
      */
     public function generarExamen($id, Request $request): JsonResponse
     {
-        $estudiante = $request->user()->persona?->estudiante;
-        if (!$estudiante) return response()->json(['ok' => false, 'mensaje' => 'Perfil no encontrado'], 403);
+        try {
+            $estudiante = $request->user()->persona?->estudiante;
+            if (!$estudiante) return response()->json(['ok' => false, 'mensaje' => 'Perfil no encontrado'], 403);
 
-        $materia = Materia::findOrFail($id);
+            $materia = Materia::findOrFail($id);
 
-        $yaAprobo = NotaAcademica::where('estudiante_id', $estudiante->id)
-            ->where('materia_id', $id)
-            ->where('aprobado', true)
-            ->exists();
-        
-        if ($yaAprobo) {
-            return response()->json(['ok' => false, 'mensaje' => 'Ya has aprobado esta materia.'], 403);
-        }
-
-        $intentos = NotaAcademica::where('estudiante_id', $estudiante->id)
-            ->where('materia_id', $id)
-            ->count();
-
-        if ($intentos >= 1) {
-            if ($materia->costo_reintento > 0) {
-                // Verificar si tiene un pago pendiente/aprobado para el reintento (Lógica simplificada por ahora)
-                // return response()->json(['ok' => false, 'requiere_pago' => true ...]);
+            $yaAprobo = NotaAcademica::where('estudiante_id', $estudiante->id)
+                ->where('materia_id', $id)
+                ->where('aprobado', true)
+                ->exists();
+            
+            if ($yaAprobo) {
+                return response()->json(['ok' => false, 'mensaje' => 'Ya has aprobado esta materia.'], 403);
             }
+
+            $intentos = NotaAcademica::where('estudiante_id', $estudiante->id)
+                ->where('materia_id', $id)
+                ->count();
+
+            if ($intentos >= 1) {
+                // Verificar si tiene una autorización de reintento vigente
+                $autorizado = \App\Models\ReintentoAutorizado::where('estudiante_id', $estudiante->id)
+                    ->where('materia_id', $id)
+                    ->where('usado', false)
+                    ->exists();
+
+                if (!$autorizado) {
+                    return response()->json([
+                        'ok' => false, 
+                        'mensaje' => 'Has fallado el intento previo. Debes solicitar la habilitación en Tesorería para presentar el examen nuevamente.',
+                        'requiere_pago' => true
+                    ], 403);
+                }
+            }
+
+            if ($intentos >= ($materia->max_intentos ?? 3)) {
+                return response()->json(['ok' => false, 'mensaje' => 'Límite de intentos alcanzado.'], 403);
+            }
+
+            // SEPARAR CUIDADOSAMENTE: Solo preguntas generales (sin leccion_id)
+            $preguntas = BancoPregunta::where('materia_id', $id)
+                ->where(function($q) {
+                    $q->whereNull('leccion_id')->orWhere('leccion_id', 0);
+                })
+                ->where('activo', true)
+                ->inRandomOrder()
+                ->limit(10)
+                ->get()
+                ->makeHidden(['respuesta_correcta', 'explicacion']);
+
+            if ($preguntas->isEmpty()) {
+                return response()->json(['ok' => false, 'mensaje' => 'No hay preguntas generales disponibles para el examen final.'], 404);
+            }
+
+            return response()->json(['ok' => true, 'data' => $preguntas]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'mensaje' => 'Error: ' . $e->getMessage()], 500);
         }
-
-        if ($intentos >= ($materia->max_intentos ?? 3)) {
-            return response()->json(['ok' => false, 'mensaje' => 'Límite de intentos alcanzado.'], 403);
-        }
-
-        // SEPARAR CUIDADOSAMENTE: Solo preguntas generales (sin leccion_id)
-        $preguntas = BancoPregunta::where('materia_id', $id)
-            ->where(function($q) {
-                $q->whereNull('leccion_id')->orWhere('leccion_id', 0);
-            })
-            ->where('activo', true)
-            ->inRandomOrder()
-            ->limit(10)
-            ->get();
-
-        if ($preguntas->isEmpty()) {
-            return response()->json(['ok' => false, 'mensaje' => 'No hay preguntas generales disponibles para el examen final.'], 404);
-        }
-
-        return response()->json(['ok' => true, 'data' => $preguntas]);
     }
 
     /**
@@ -297,15 +339,21 @@ class AulaVirtualController extends Controller
                 ->where('materia_id', $id)
                 ->count() + 1;
 
-            $notaInstancia = NotaAcademica::create([
+            $notaInstancia = \App\Models\NotaAcademica::create([
                 'estudiante_id' => $estudiante->id,
                 'materia_id' => $id,
                 'nota' => $notaFinalFinal,
                 'aprobado' => $aprobado,
                 'intento_num' => $intentoNum,
-                'fecha_evaluacion' => now()->toDateString(),
-                'observaciones' => $obs
+                'fecha_evaluacion' => now(),
+                'fraude_intentos' => $request->fraude_intentos ?? 0
             ]);
+
+            // Consumir la autorización de reintento si existe
+            \App\Models\ReintentoAutorizado::where('estudiante_id', $estudiante->id)
+                ->where('materia_id', $id)
+                ->where('usado', false)
+                ->update(['usado' => true]);
 
             return response()->json([
                 'ok' => true,
@@ -316,7 +364,7 @@ class AulaVirtualController extends Controller
                     'total' => count($request->respuestas)
                 ]
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'ok' => false,
                 'mensaje' => 'Error en el servidor: ' . $e->getMessage(),
@@ -332,5 +380,32 @@ class AulaVirtualController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         return response()->json(['data' => $notas]);
+    }
+
+    /**
+     * POST /api/v1/aula-virtual/autorizar-reintento
+     * Endpoint para Tesorería/Administración
+     */
+    public function autorizarReintento(Request $request): JsonResponse
+    {
+        $request->validate([
+            'estudiante_id' => 'required|exists:estudiantes,id',
+            'materia_id'    => 'required|exists:materias,id',
+            'num_recibo'    => 'nullable|string'
+        ]);
+
+        $auth = ReintentoAutorizado::create([
+            'estudiante_id'  => $request->estudiante_id,
+            'materia_id'     => $request->materia_id,
+            'num_recibo'     => $request->num_recibo,
+            'autorizado_por' => $request->user()->id,
+            'usado'          => false
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'mensaje' => 'Reintento habilitado correctamente para el estudiante.',
+            'data' => $auth
+        ]);
     }
 }

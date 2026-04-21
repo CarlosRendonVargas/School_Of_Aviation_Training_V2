@@ -217,6 +217,7 @@ const menuCompleto = computed(() => {
   return [
     { to: '/dashboard',     label: 'Dashboard',    icono: 'dashboard', roles: ['all'] },
     { to: '/vencimientos',  label: 'Alertas RAC',  icono: 'shutter_speed', roles: ['all'], badge: v || null, badgeColor: 'red-5' },
+    { to: '/calendario',    label: 'Calendario',   icono: 'event_available', roles: ['all'], sublabel: 'Planificación de Vuelos' },
     
     { separador: true, sectionLabel: 'Operatividad' },
     { to: '/vuelo',         label: 'Vuelo y Diario',icono: 'flight_takeoff', roles: ['all'], sublabel: 'Bitácoras RAC 91.417' },

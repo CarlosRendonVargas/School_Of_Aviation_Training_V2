@@ -166,6 +166,7 @@ class EstudianteController extends Controller
             'certMedicos',
             'notas.materia',
             'bitacoras' => fn($q) => $q->orderByDesc('fecha')->limit(50),
+            'reintentosAutorizados' => fn($q) => $q->where('usado', false)
         ]);
 
         $totalMaterias = 0;

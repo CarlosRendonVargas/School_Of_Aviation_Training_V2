@@ -10,7 +10,7 @@ class NotaLeccion extends Model
     protected $table = 'notas_lecciones';
 
     protected $fillable = [
-        'estudiante_id', 'leccion_id', 'nota', 'aciertos', 'total', 'intentos'
+        'estudiante_id', 'leccion_id', 'nota', 'aciertos', 'total', 'intentos', 'fraude_intentos'
     ];
 
     public function leccion(): BelongsTo

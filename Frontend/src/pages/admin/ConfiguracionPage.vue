@@ -180,6 +180,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useQuasar, exportFile } from 'quasar'
+import { api } from 'boot/axios'
 
 const $q = useQuasar()
 const guardando = ref(false)
@@ -249,12 +250,39 @@ const exportDB = () => {
   }
 }
 
-const auditSms = () => {
-    $q.loading.show({ message: 'Compilando bitácoras SMS...' })
-    setTimeout(() => {
+const auditSms = async () => {
+    $q.loading.show({ message: 'Compilando bitácoras maestras SMS para UAEAC...' })
+    try {
+        const { data } = await api.get('/sms/reportes')
+        const reportes = data.data?.data || data.data || []
+        
+        if (!reportes.length) {
+            $q.notify({ color: 'warning', message: 'No hay datos de SMS para exportar.' })
+            return
+        }
+
+        const columnas = ['ID', 'Nivel Riesgo', 'Tipo', 'Descripción', 'Fecha Evento', 'Estado']
+        const filas = reportes.map(r => [
+            r.id,
+            r.nivel_riesgo,
+            `"${r.tipo || ''}"`,
+            `"${(r.descripcion || '').replace(/"/g, '""')}"`,
+            r.fecha_evento ? r.fecha_evento.slice(0, 10) : '',
+            `"${r.estado || ''}"`
+        ].join(','))
+
+        const contenidoCsv = [columnas.join(','), ...filas].join('\r\n')
+        const blobData = "\ufeff" + contenidoCsv
+        const status = exportFile(`Auditoria_SMS_Integral_${new Date().toISOString().slice(0,10)}.csv`, blobData, 'text/csv;charset=utf-8;')
+
+        if (status === true) {
+            $q.notify({ color: 'emerald', icon: 'verified', message: 'Reporte de Auditoría SMS generado exitosamente.', textColor: 'dark' })
+        }
+    } catch {
+        $q.notify({ color: 'negative', message: 'Error al conectar con el servidor SMS.' })
+    } finally {
         $q.loading.hide()
-        $q.notify({ color: 'orange-10', icon: 'policy', message: 'Reporte de Auditoría SMS generado en cola de impresión.' })
-    }, 1200)
+    }
 }
 
 const diagnose = () => {

@@ -22,6 +22,7 @@
             <div class="row items-center justify-between q-mb-lg">
                 <q-badge outline color="red-9" class="font-mono text-weight-bold" :label="m.codigo" />
                 <q-chip v-if="m.aprobado" color="emerald" text-color="white" icon="verified" size="xs" dense class="shadow-24">APROBADO</q-chip>
+                <q-chip v-else-if="m.habilitado" color="blue-9" text-color="white" icon="check_circle" size="xs" dense class="shadow-24">HABILITADO</q-chip>
                 <q-chip v-else color="red-9" text-color="white" icon="pending_actions" size="xs" dense class="shadow-24">EN CURSO</q-chip>
             </div>
             <div class="text-h6 text-white text-weight-bolder font-head q-mb-sm line-height-1">{{ m.nombre }}</div>
@@ -164,23 +165,78 @@
                         <q-tab-panel name="temario" class="text-grey-3 line-height-2 shadow-inner" 
                              :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'"
                              style="white-space: pre-wrap; font-size: 14px; letter-spacing: 0.5px;">
-                            <div class="font-head text-white text-subtitle1 q-mb-lg uppercase text-weight-bold border-bottom-border pb-sm">Contenido Programático Autorizado</div>
-                            {{ materiaActiva.temario || 'Expediente de temario no disponible para este módulo.' }}
+                             <div class="font-head text-white text-subtitle1 q-mb-lg uppercase text-weight-bold border-bottom-border pb-sm">Contenido Programático Autorizado</div>
+                             
+                             <div v-if="materiaActiva.video_url" class="q-mb-xl video-container-premium shadow-24 border-red-low">
+                                <q-video :src="getEmbedUrl(materiaActiva.video_url)" style="width: 100%; aspect-ratio: 16/9;" class="rounded-12" />
+                                <div class="q-pa-md text-center text-grey-6 font-mono text-caption uppercase" style="font-size:9px">INTRODUCCIÓN TÉCNICA DEL MÓDULO</div>
+                             </div>
+
+                             {{ materiaActiva.temario || 'Expediente de temario no disponible para este módulo.' }}
                         </q-tab-panel>
 
 
-                        <!-- BRIEFING EN VIVO -->
-                        <q-tab-panel name="clase" class="q-pa-xl text-center shadow-inner">
-                            <q-icon name="podcasts" size="120px" color="red-9" class="q-mb-xl glow-primary pulsate" />
-                            <div class="text-h3 font-head text-white text-weight-bolder tracking-tighter">Sesión de Instrucción Virtual</div>
-                            <p class="text-grey-6 max-width-700 q-mx-auto font-mono text-h6 line-height-1">Accede a la sala de conferencias para interactuar en tiempo real con el Capitán Instructor y recibir formación teórica avanzada.</p>
-                            <q-btn 
-                              v-if="materiaActiva.link_meet" 
-                              label="Ingresar al Briefing" color="red-10" 
-                              icon="video_chat" class="premium-btn q-mt-xl shadow-24 q-px-xl q-py-lg" size="lg"
-                              @click="abrirEnlace(materiaActiva.link_meet)" 
-                            />
-                            <div v-else class="text-red-9 q-mt-xl font-mono text-weight-bolder shadow-inner q-pa-lg rounded-12 border-red-low">SALA VIRTUAL TEMPORALMENTE NO DISPONIBLE</div>
+                        <!-- BRIEFING EN VIVO (IFRAME EMBED) -->
+                        <q-tab-panel name="clase" class="q-pa-none bg-black overflow-hidden relative-position" :style="$q.screen.lt.md ? 'height: 500px' : 'height: 750px'">
+                            <div v-if="materiaActiva.link_meet" class="full-height column">
+                                <div class="row items-center justify-between q-pa-md bg-black-20 border-bottom">
+                                    <div class="row items-center">
+                                        <q-icon name="podcasts" color="red-9" size="sm" class="q-mr-sm pulsate" />
+                                        <div class="font-head text-weight-bold text-caption gt-xs">SALA DE INSTRUCCIÓN EN VIVO</div>
+                                        <div class="font-head text-weight-bold text-caption lt-sm">SALA EN VIVO</div>
+                                        <q-badge v-if="materiaActiva.sesion_viva_inicio" color="red-low" text-color="red-9" class="q-ml-md font-mono text-weight-bolder">
+                                            {{ formatFecha(materiaActiva.sesion_viva_inicio) }}
+                                        </q-badge>
+                                    </div>
+                                    <div class="q-gutter-x-sm">
+                                        <q-btn flat dense icon="refresh" color="white" size="sm" @click="tabAula = 'lecciones'; setTimeout(() => tabAula = 'clase', 100)" />
+                                        <q-btn flat dense icon="open_in_new" label="Ventana Externa" color="red-9" size="sm" class="text-weight-bold" @click="abrirEnlace(materiaActiva.link_meet)" />
+                                    </div>
+                                </div>
+                                <div class="col relative-position bg-black-30 flex flex-center">
+                                    <!-- Si es Google Meet, mostramos una interfaz de "Unirse" premium en lugar de un iframe roto -->
+                                    <div v-if="materiaActiva.link_meet.includes('meet.google.com')" class="text-center q-pa-xl animate-fade">
+                                        <div class="video-preview-placeholder shadow-24 q-mb-xl flex flex-center">
+                                            <q-icon name="videocam" size="100px" color="red-9" class="pulsate opacity-20" />
+                                            <div class="absolute-center full-width">
+                                                <div class="text-h6 font-head text-weight-bold">GOOGLE MEET</div>
+                                                <div class="text-caption font-mono text-grey-5">SESIÓN EXTERNA REQUERIDA</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-h4 font-head text-white text-weight-bolder q-mb-md">Sala de Instrucción Lista</div>
+                                        <p class="text-grey-6 font-mono max-width-500 q-mx-auto q-mb-xl">Debido a políticas de seguridad de Google, las sesiones de Meet deben abrirse en una ventana independiente para habilitar cámara y micrófono.</p>
+                                        <q-btn 
+                                            label="Unirse a la Sesión Ahora" 
+                                            color="red-10" 
+                                            icon="open_in_new" 
+                                            class="premium-btn q-px-xl q-py-lg shadow-24" 
+                                            size="lg"
+                                            @click="abrirEnlace(materiaActiva.link_meet)" 
+                                        />
+                                    </div>
+
+                                    <!-- Para otros servicios que permitan iframe (Jitsi, Zoom Web, etc) -->
+                                    <iframe 
+                                        v-else
+                                        :src="materiaActiva.link_meet" 
+                                        allow="camera; microphone; fullscreen; display-capture; autoplay"
+                                        class="full-width full-height no-border"
+                                        title="Sala Virtual"
+                                    ></iframe>
+
+                                    <!-- Overlay informativo discreto -->
+                                    <div class="absolute-bottom q-pa-xs bg-black-50 text-center text-grey-8" style="font-size: 9px; letter-spacing: 1px;">
+                                        RAC 141 · CONEXIÓN CIFRADA DE PUNTO A PUNTO
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="flex flex-center full-height column q-pa-xl text-center welcome-hero overflow-hidden">
+                                <div class="hero-glow"></div>
+                                <q-icon name="videocam_off" size="120px" color="red-9" class="q-mb-lg pulsate opacity-50" />
+                                <div class="text-h4 font-head text-white text-weight-bolder tracking-tighter">SALA VIRTUAL EN HANGAR</div>
+                                <p class="text-grey-6 font-mono q-mt-md max-width-500">El Capitán Instructor aún no ha habilitado la frecuencia para la sesión en vivo. Por favor, verifica el horario programado en tu syllabus.</p>
+                                <q-btn flat label="Revisar Syllabus" color="red-9" icon="description" @click="tabAula = 'temario'" class="q-mt-xl" />
+                            </div>
                         </q-tab-panel>
                     </q-tab-panels>
                 </q-card>
@@ -213,7 +269,27 @@
                             <q-separator dark class="opacity-10" />
                         </div>
 
+                        <!-- Lógica de Botón de Examen Inteligente -->
+                        <div v-if="materiaActiva.aprobado" class="text-center q-pa-lg bg-emerald-transparent rounded-12 border-emerald shadow-inner">
+                            <q-icon name="verified" color="emerald" size="48px" class="q-mb-sm" />
+                            <div class="text-emerald font-head text-weight-bolder">CERTIFICACIÓN OBTENIDA</div>
+                            <div class="text-grey-6 font-mono text-caption uppercase" style="font-size:9px">CONTENIDO COMPLETADO SEGÚN RAC 141</div>
+                        </div>
+
+                        <template v-else-if="materiaActiva.intentos > 0 && (materiaActiva.nota_max || 0) < 75 && !materiaActiva.habilitado">
+                            <q-btn 
+                              label="Solicitar Habilitación de Reintento" 
+                              color="orange-10" class="full-width premium-btn shadow-24 py-xl" 
+                              icon="payments" size="lg"
+                              @click="solicitarReintento" 
+                            />
+                            <div class="q-mt-lg text-center text-orange-9 font-mono text-weight-bolder animate-pulse" style="font-size:11px">
+                               <q-icon name="warning" class="q-mr-xs" /> EXAMEN BLOQUEADO: REQUIERE PAGO DE REINTENTO
+                            </div>
+                        </template>
+
                         <q-btn 
+                          v-else
                           label="Presentar Examen Final" 
                           color="red-9" class="full-width premium-btn shadow-24 py-xl" 
                           icon="history_edu" size="lg"
@@ -231,10 +307,11 @@
     </div>
 
     <!-- ════ SISTEMA DE EXAMEN INMERSIVO (PREMIUM DESIGN) ════ -->
-    <q-dialog v-model="dialogExamen" persistent maximized transition-show="fade" transition-hide="fade">
-        <q-card class="bg-dark-page text-white overflow-hidden relative-position">
+    <q-dialog v-model="dialogExamen" persistent maximized transition-show="fade" transition-hide="fade" @show="setupAntiFraude" @hide="cleanupAntiFraude">
+        <q-card class="bg-dark-page text-white overflow-hidden relative-position no-select" @contextmenu.prevent>
             <!-- Botón Cerrar (Emergencia) -->
-            <q-btn flat round icon="close" color="grey-9" v-close-popup class="absolute-top-right q-ma-md z-max" />
+            <!-- Botón Abandonar (Con Advertencia) -->
+            <q-btn flat round icon="close" color="grey-9" @click="abandonarExamen" class="absolute-top-right q-ma-md z-max" />
 
             <!-- Capas de Decoración / Ambient Glow -->
             <div class="exam-ambient-glow top-left"></div>
@@ -339,9 +416,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import dayjs from 'dayjs'
 
 const $q = useQuasar()
 const materias = ref([])
@@ -359,6 +437,10 @@ const cargandoExamen = ref(false)
 const enviandoExamen = ref(false)
 const timeLeft = ref(0)
 const timer = ref(null)
+
+// Anti-Fraude State
+const fraudWarnings = ref(0)
+const isExamActive = ref(false)
 
 const formattedTime = computed(() => {
     const min = Math.floor(timeLeft.value / 60); const sec = timeLeft.value % 60
@@ -383,46 +465,178 @@ const cargarMaterias = async () => {
 const entrarAula = async (m) => {
     try {
         const { data } = await api.get(`/aula-virtual/materia/${m.id}`)
-        materiaActiva.value = data.data; materiaActiva.value.aprobado = m.aprobado; materiaActiva.value.nota_max = m.nota_max
+        materiaActiva.value = data.data; 
+        materiaActiva.value.aprobado = m.aprobado; 
+        materiaActiva.value.nota_max = m.nota_max;
+        materiaActiva.value.intentos = m.intentos;
+        materiaActiva.value.habilitado = m.habilitado;
     } catch (e) {}
 }
 
 const finalizarExamen = async () => {
     enviandoExamen.value = true; if (timer.value) clearInterval(timer.value)
+    isExamActive.value = false // Detener monitoreo
     try {
         const url = examMode.value === 'final' ? `/aula-virtual/materia/${materiaActiva.value.id}/examen` : `/aula-virtual/leccion/${leccionActivaQuiz.value.id}/quiz`
-        const { data } = await api.post(url, { respuestas: respuestasTemporales.value })
+        const { data } = await api.post(url, { 
+            respuestas: respuestasTemporales.value,
+            fraude_intentos: fraudWarnings.value
+        })
         const res = data.resultado; dialogExamen.value = false
         $q.dialog({ title: res.aprobado ? '¡ÉXITO EN CERTIFICACIÓN!' : 'RESULTADO INSUFICIENTE', message: `Calificación final: ${res.nota.toFixed(0)}%. ${res.aprobado ? 'Capacidad teórica demostrada, excelente trabajo.' : 'Revisar material de estudio y reintentar.'}`, color: res.aprobado ? 'emerald' : 'red-9', ok: 'Confirmar' }).onOk(cerrarTodo)
-    } finally { enviandoExamen.value = false }
+    } finally { 
+        enviandoExamen.value = false
+        cleanupAntiFraude()
+    }
 }
 
 const seleccionarRespuesta = (val) => { respuestasTemporales.value = { ...respuestasTemporales.value, [preguntaActual.value.id]: val } }
 
 const comenzarExamen = () => {
-    $q.dialog({ title: 'CONTROL DE EVALUACIÓN', message: '¿Confirmas el inicio del examen final UAEAC? El cronómetro no podrá detenerse.', color: 'red-9', cancel: 'Abortar', persistent: true }).onOk(async () => {
+    $q.dialog({ 
+        title: '🔒 PROTOCOLO DE EVALUACIÓN SEGURA', 
+        message: `Estás por iniciar el examen final. Se han activado los protocolos de seguridad RAC 141:
+        \n• El cronómetro no se detendrá.
+        \n• Salir de esta ventana o cambiar de pestaña generará una alerta de fraude.
+        \n• Un segundo intento de salida resultará en la ANULACIÓN y ENVÍO automático del examen.
+        \n• Acciones de copiar, pegar e inspección están bloqueadas.
+        \n\n¿Confirmas el inicio del examen?`, 
+        color: 'red-10', 
+        cancel: { label: 'Abortar', flat: true, color: 'white' },
+        ok: { label: 'Iniciar Examen', color: 'red-9', unelevated: true },
+        persistent: true 
+    }).onOk(async () => {
         cargandoExamen.value = true; examMode.value = 'final'
         try {
             const { data } = await api.get(`/aula-virtual/materia/${materiaActiva.value.id}/examen`)
             preguntas.value = data.data; respuestasTemporales.value = {}; currentQuestionIndex.value = 0; dialogExamen.value = true; startTimer(materiaActiva.value.duracion_minutos || 15)
+            fraudWarnings.value = 0
+            isExamActive.value = true
         } finally { cargandoExamen.value = false }
     })
 }
 
 const abrirQuizLeccion = async (lec) => {
-    cargandoExamen.value = true
-    try {
-        const { data } = await api.get(`/aula-virtual/leccion/${lec.id}/quiz`)
-        preguntas.value = data.data; leccionActivaQuiz.value = lec; examMode.value = 'quiz'; respuestasTemporales.value = {}; currentQuestionIndex.value = 0; dialogExamen.value = true; startTimer(5)
-    } catch (e) {
-        $q.notify({ type: 'negative', message: 'Error cargando el quiz' })
-    } finally {
-        cargandoExamen.value = false
-    }
+    $q.dialog({
+        title: '🔒 VALIDACIÓN DE CONOCIMIENTO',
+        message: 'Esta evaluación cuenta con monitoreo anti-fraude. Si sales de la ventana, el quiz será enviado automáticamente tras la segunda advertencia. ¿Deseas comenzar?',
+        color: 'red-10',
+        cancel: { label: 'Cancelar', flat: true, color: 'white' },
+        ok: { label: 'Comenzar Quiz', color: 'red-9', unelevated: true },
+        persistent: true
+    }).onOk(async () => {
+        cargandoExamen.value = true
+        try {
+            const { data } = await api.get(`/aula-virtual/leccion/${lec.id}/quiz`)
+            preguntas.value = data.data; leccionActivaQuiz.value = lec; examMode.value = 'quiz'; respuestasTemporales.value = {}; currentQuestionIndex.value = 0; dialogExamen.value = true; startTimer(5)
+            fraudWarnings.value = 0
+            isExamActive.value = true
+        } catch (e) {
+            $q.notify({ type: 'negative', message: 'Error cargando el quiz' })
+        } finally {
+            cargandoExamen.value = false
+        }
+    })
 }
 
 const cerrarTodo = () => {
     const mid = materiaActiva.value.id; materiaActiva.value = null; cargarMaterias().then(() => { const mat = materias.value.find(x => x.id === mid); if (mat) entrarAula(mat) })
+}
+
+const abandonarExamen = () => {
+    $q.dialog({
+        title: '⚠️ ABANDONAR EXAMEN',
+        message: 'Si cierras el examen ahora, se enviará con las respuestas que hayas marcado hasta el momento y contará como un intento consumido. ¿Realmente deseas abandonar?',
+        color: 'red-10',
+        cancel: 'Permanecer en Examen',
+        ok: { label: 'Abandonar y Enviar', color: 'red-9', unelevated: true },
+        persistent: true
+    }).onOk(() => {
+        finalizarExamen()
+    })
+}
+
+const solicitarReintento = () => {
+    $q.dialog({
+        title: '💳 HABILITACIÓN DE REINTENTO',
+        message: `Se ha detectado un intento previo no satisfactorio en <b>${materiaActiva.value.nombre}</b>.
+        <br><br>
+        Para habilitar un nuevo examen final, debes:<br>
+        1. Dirigirte a la <b>Tesorería de la Escuela</b>.<br>
+        2. Realizar el pago correspondiente al <b>Derecho de Reintento</b>.<br>
+        3. Una vez validado el pago, el sistema desbloqueará automáticamente el acceso.
+        <br><br>
+        <small class="text-grey-7">Nota: El valor es determinado por las tarifas vigentes de la Tesorería.</small>`,
+        html: true,
+        ok: { label: 'Entendido', color: 'red-9', unelevated: true },
+        persistent: true
+    })
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 🛡️ SISTEMA ANTI-FRAUDE (RAC 141 COMPLIANCE)
+// ════════════════════════════════════════════════════════════════════
+
+const setupAntiFraude = () => {
+    window.addEventListener('blur', detectFraude)
+    document.addEventListener('visibilitychange', detectFraude)
+    window.addEventListener('keydown', preventKeyCombos)
+    window.addEventListener('beforeunload', preventTabClose)
+}
+
+const cleanupAntiFraude = () => {
+    window.removeEventListener('blur', detectFraude)
+    document.removeEventListener('visibilitychange', detectFraude)
+    window.removeEventListener('keydown', preventKeyCombos)
+    window.removeEventListener('beforeunload', preventTabClose)
+    isExamActive.value = false
+}
+
+const preventTabClose = (e) => {
+    if (isExamActive.value) {
+        e.preventDefault()
+        e.returnValue = ''
+    }
+}
+
+const detectFraude = () => {
+    if (!isExamActive.value || !dialogExamen.value) return
+
+    fraudWarnings.value++
+    
+    if (fraudWarnings.value >= 2) {
+        $q.notify({
+            type: 'negative',
+            message: 'DETECCIÓN DE FRAUDE CRÍTICA: Se ha detectado salida de la ventana. El examen ha sido enviado automáticamente.',
+            position: 'center',
+            timeout: 8000,
+            icon: 'gavel'
+        })
+        finalizarExamen()
+    } else {
+        $q.dialog({
+            title: '⚠️ ALERTA DE INTEGRIDAD',
+            message: 'Has salido de la ventana del examen. Según las regulaciones RAC, esta acción está prohibida. Si vuelves a salir de la ventana, tu examen será ENVIADO Y ANULADO automáticamente.',
+            color: 'red-10',
+            persistent: true,
+            ok: { label: 'Entendido, volver al examen', color: 'red-9', unelevated: true }
+        })
+    }
+}
+
+const preventKeyCombos = (e) => {
+    // Bloquear F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C, Ctrl+V, PrintScreen
+    if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+        (e.ctrlKey && e.key === 'u') ||
+        (e.ctrlKey && e.key === 'c') ||
+        (e.ctrlKey && e.key === 'v') ||
+        e.key === 'PrintScreen'
+    ) {
+        e.preventDefault()
+        $q.notify({ type: 'warning', message: 'Acción bloqueada por seguridad del examen.', position: 'top' })
+    }
 }
 
 const abrirEnlace = (url) => { window.open(url, '_blank') }
@@ -445,6 +659,11 @@ const getEmbedUrl = (url) => {
 }
 
 onMounted(cargarMaterias)
+onUnmounted(cleanupAntiFraude)
+const formatFecha = (f) => {
+    if (!f) return ''
+    return dayjs(f).format('DD MMM, HH:mm')
+}
 </script>
 
 <style lang="scss" scoped>
@@ -518,25 +737,25 @@ onMounted(cargarMaterias)
 .progress-label { font-family: 'Courier Prime', monospace; font-size: 10px; letter-spacing: 5px; color: rgba(161, 11, 19, 0.8); font-weight: 900; text-transform: uppercase; }
 
 .exam-question-text {
-    font-family: 'Cinzel', serif; font-size: 25px; font-weight: 900; color: #fff;
-    text-shadow: 0 0 30px rgba(161, 11, 19, 0.3), 0 5px 10px #000;
-    letter-spacing: -2px; display: block; line-height: 1;
+    font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 20px rgba(161, 11, 19, 0.2), 0 3px 6px #000;
+    letter-spacing: -1px; display: block; line-height: 1.2;
 }
 
 .answer-card-premium {
     background: rgba(10, 12, 16, 0.8) !important;
     border: 1px solid rgba(161, 11, 19, 0.2) !important;
     border-radius: 8px !important;
-    padding: 10px 20px !important;
+    padding: 8px 16px !important;
     transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
     
     .answer-letter-box {
-        width: 60px; height: 60px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
-        background: transparent; color: #64748b; font-size: 26px; font-weight: 900; border: 2px solid rgba(161, 11, 19, 0.1);
+        width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+        background: transparent; color: #64748b; font-size: 18px; font-weight: 900; border: 2px solid rgba(161, 11, 19, 0.1);
         flex-shrink: 0; transition: all 0.3s;
     }
     
-    .answer-text-content { font-size: 22px; font-weight: 500; color: #94a3b8; line-height: 1.4; flex: 1; margin-left: 30px; }
+    .answer-text-content { font-size: 16px; font-weight: 500; color: #94a3b8; line-height: 1.4; flex: 1; margin-left: 20px; }
 
     &.is-selected {
         background: #000 !important;
@@ -582,4 +801,22 @@ onMounted(cargarMaterias)
 }
 
 .hover-row { transition: background 0.2s; &:hover { background: rgba(255,255,255,0.03); } }
+
+.video-preview-placeholder {
+    width: 300px; height: 180px; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(161, 11, 19, 0.1) 0%, rgba(0,0,0,0.8) 100%);
+    border: 1px solid rgba(161, 11, 19, 0.3);
+    margin: 0 auto; position: relative; overflow: hidden;
+    &::after {
+        content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+        background: repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 2px);
+    }
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 </style>

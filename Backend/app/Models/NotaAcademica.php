@@ -13,6 +13,7 @@ class NotaAcademica extends Model
         'estudiante_id', 'materia_id', 'instructor_id',
         'nota', 'aprobado', 'intento_num',
         'fecha_evaluacion', 'observaciones', 'pagado',
+        'fraude_intentos',
     ];
 
     protected $casts = [

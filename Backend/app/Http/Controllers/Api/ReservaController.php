@@ -182,6 +182,39 @@ class ReservaController extends Controller
             ->orderBy('fecha')->orderBy('hora_inicio')
             ->get();
 
-        return response()->json(['ok' => true, 'data' => $reservas]);
+        $usuario = $request->user();
+        $rol     = $usuario->rol?->nombre;
+
+        $clasesQuery = \App\Models\Materia::whereNotNull('sesion_viva_inicio')
+            ->whereYear('sesion_viva_inicio', $anio)
+            ->whereMonth('sesion_viva_inicio', $m);
+
+        // Si es estudiante, filtrar solo las materias de su programa
+        if ($rol === 'estudiante') {
+            $estudiante = $usuario->persona?->estudiante;
+            if ($estudiante && $estudiante->programa_id) {
+                $clasesQuery->whereHas('etapa', function($q) use ($estudiante) {
+                    $q->where('programa_id', $estudiante->programa_id);
+                });
+            }
+        }
+
+        $clasesVirtuales = $clasesQuery->get()
+            ->map(function($m) {
+                return [
+                    'id' => 'vc-' . $m->id,
+                    'fecha' => $m->sesion_viva_inicio->toDateString(),
+                    'hora_inicio' => $m->sesion_viva_inicio->toTimeString(),
+                    'hora_fin' => $m->sesion_viva_fin ? $m->sesion_viva_fin->toTimeString() : null,
+                    'estado' => 'virtual',
+                    'aeronave' => ['matricula' => 'LIVE', 'modelo' => 'Aula Virtual'],
+                    'estudiante' => ['persona' => ['nombres' => 'Clase:', 'apellidos' => $m->nombre]],
+                    'tipo' => 'virtual'
+                ];
+            });
+
+        $merge = $reservas->concat($clasesVirtuales);
+
+        return response()->json(['ok' => true, 'data' => $merge]);
     }
 }

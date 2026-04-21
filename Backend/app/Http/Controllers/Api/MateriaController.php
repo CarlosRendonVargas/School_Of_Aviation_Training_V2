@@ -26,6 +26,8 @@ class MateriaController extends Controller
             'max_intentos' => 'nullable|integer',
             'costo_reintento' => 'nullable|numeric',
             'duracion_minutos' => 'nullable|integer',
+            'sesion_viva_inicio' => 'nullable|date',
+            'sesion_viva_fin' => 'nullable|date',
         ]);
 
         $materia->update($data);
