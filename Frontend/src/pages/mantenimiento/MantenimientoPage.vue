@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="settings_suggest" size="48px" color="red-9" class="q-mr-md glow-primary" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">MANTENIMIENTO & FLOTA · RAC 43 / 91</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Centro de Ingeniería</h1>
+          <div class="rac-page-subtitle">MANTENIMIENTO & FLOTA · RAC 43 / 91</div>
+          <h1 class="rac-page-title">Centro de Ingeniería</h1>
         </div>
       </div>
       <div class="row q-gutter-sm">

@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="event_note" size="40px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">SCHEDULING & FLEET OPS · RAC 141</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Consola de Planificación</h1>
+          <div class="rac-page-subtitle">SCHEDULING & FLEET OPS · RAC 141</div>
+          <h1 class="rac-page-title">Consola de Planificación</h1>
         </div>
       </div>
 
@@ -120,7 +120,7 @@
             <div class="row items-center">
               <q-icon name="departure_board" color="red-9" size="32px" class="q-mr-md glow-primary" />
               <div>
-                <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">Manifiesto de Vuelo</div>
+                <div class="rac-page-subtitle">Manifiesto de Vuelo</div>
                 <div class="text-h6 font-head text-white text-weight-bolder uppercase tracking-tighter">{{ diaSeleccionado?.label }}</div>
               </div>
             </div>

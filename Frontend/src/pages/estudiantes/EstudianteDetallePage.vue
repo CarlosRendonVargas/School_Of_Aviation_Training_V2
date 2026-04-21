@@ -18,7 +18,7 @@
               {{ expediente.estudiante.persona?.nombres }} {{ expediente.estudiante.persona?.apellidos }}
             </div>
             <div class="row items-center q-gutter-sm q-mt-sm flex-wrap">
-              <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">EXP Nº {{ expediente.estudiante.num_expediente }}</div>
+              <div class="rac-page-subtitle">EXP Nº {{ expediente.estudiante.num_expediente }}</div>
               <q-badge :color="colorEstado" :label="expediente.estudiante.estado?.toUpperCase()" class="font-mono text-weight-bold" />
               <q-badge outline color="red-9" :label="expediente.estudiante.programa?.nombre" class="font-mono text-weight-bold" />
             </div>

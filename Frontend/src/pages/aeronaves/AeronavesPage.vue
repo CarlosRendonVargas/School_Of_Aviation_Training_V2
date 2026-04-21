@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="flight_takeoff" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">GESTIÓN DE FLOTA · RAC 91 / 121 / 141</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Registro de Aeronaves HK</h1>
+          <div class="rac-page-subtitle">GESTIÓN DE FLOTA · RAC 91 / 121 / 141</div>
+          <h1 class="rac-page-title">Registro de Aeronaves HK</h1>
         </div>
       </div>
       <q-btn v-if="authStore.esDirOps || authStore.esAdmin" unelevated color="red-9" icon="add"

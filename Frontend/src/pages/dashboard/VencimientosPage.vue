@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="radar" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">SISTEMA INTEGRADO DE SEGURIDAD · RAC 141</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Radar de Vencimientos</h1>
+          <div class="rac-page-subtitle">SISTEMA INTEGRADO DE SEGURIDAD · RAC 141</div>
+          <h1 class="rac-page-title">Radar de Vencimientos</h1>
         </div>
       </div>
       <q-btn 

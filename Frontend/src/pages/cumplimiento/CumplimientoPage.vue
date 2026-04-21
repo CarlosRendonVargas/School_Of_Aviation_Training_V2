@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="fact_check" size="48px" color="red-9" class="q-mr-md glow-primary" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">CERTIFICACIÓN VIGENTE · RAC 141.11 / 141.77</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Cumplimiento Regulatorio</h1>
+          <div class="rac-page-subtitle">CERTIFICACIÓN VIGENTE · RAC 141.11 / 141.77</div>
+          <h1 class="rac-page-title">Cumplimiento Regulatorio</h1>
         </div>
       </div>
       <q-btn 

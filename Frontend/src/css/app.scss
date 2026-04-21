@@ -191,8 +191,7 @@ body {
 // ══════════════════════════════════════════
 // GLOBAL UTILITIES
 // ══════════════════════════════════════════
-.bg-dark-page { background: var(--rac-bg) !important; }
-.border-red-left { border-left: 4px solid var(--rac-primary) !important; }
+.bg-dark-page         { background: var(--rac-bg) !important; }
 .border-bottom-border { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 
 // Standardized Dialog Header Section
@@ -288,15 +287,208 @@ body {
   }
 }
 
-// Dialog responsive
+// Dialog responsive — slide-up sheet on mobile
 .q-dialog__inner {
   @media (max-width: $xs) {
-    padding: 8px !important;
+    padding: 0 !important;
+    align-items: flex-end !important;
     > .q-card {
       width: 100% !important;
       max-width: 100% !important;
-      border-radius: 16px 16px 0 0 !important;
+      border-radius: 20px 20px 0 0 !important;
       margin: 0 !important;
     }
   }
+  @media (min-width: 600px) {
+    padding: 24px !important;
+  }
 }
+
+// ══════════════════════════════════════════
+// SCROLLABLE DIALOG BODY
+// ══════════════════════════════════════════
+.rac-dialog-scroll {
+  max-height: 72vh;
+  overflow-y: auto;
+  @media (max-width: $xs) { max-height: 78vh; }
+  // Custom scrollbar inside dialogs
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(161,11,19,0.25); border-radius: 4px; }
+}
+
+// ══════════════════════════════════════════
+// GLOBAL ANIMATIONS
+// ══════════════════════════════════════════
+@keyframes racFadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes racSlideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes racPulsate {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.animate-fade      { animation: racFadeIn  0.55s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.animate-slide-up  { animation: racSlideUp 0.5s  cubic-bezier(0.23, 1, 0.32, 1) 0.08s both; }
+.pulsate           { animation: racPulsate 2s ease-in-out infinite; }
+
+// ══════════════════════════════════════════
+// PAGE HEADER — TÍTULOS ESTÁNDAR
+// Usar en todos los módulos para consistencia
+// ══════════════════════════════════════════
+
+// Título principal de módulo — sustituye text-h4 en todas las páginas
+.rac-page-title {
+  font-family: 'Syne', sans-serif !important;
+  font-size: 2.125rem !important;     // igual a Quasar text-h4 — uniforme en todos los módulos
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  @media (max-width: $xs)  { font-size: 1.4rem !important; }
+  @media (max-width: $sm)  { font-size: 1.7rem !important; }
+}
+
+// Subtítulo/breadcrumb de módulo (reemplaza inline style="font-size:10px")
+.rac-page-subtitle {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  color: #64748b !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  line-height: 1.4;
+}
+
+// ══════════════════════════════════════════
+// TYPOGRAPHY UTILITIES
+// ══════════════════════════════════════════
+.line-height-1    { line-height: 1.1 !important; }
+.tracking-tighter { letter-spacing: -0.5px !important; }
+.tracking-widest  { letter-spacing: 3px !important; }
+
+.text-gradient-white {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-emerald { color: #10b981 !important; }
+.bg-emerald   { background-color: #10b981 !important; }
+.bg-black-20  { background: rgba(0, 0, 0, 0.2) !important; }
+.rounded-12   { border-radius: 12px !important; }
+.last-no-margin { &:last-child { margin-bottom: 0 !important; } }
+
+// ══════════════════════════════════════════
+// BORDER VARIANTS
+// ══════════════════════════════════════════
+.border-red-low  { border: 1px solid rgba(161, 11, 19, 0.18) !important; }
+.border-red-top  { border-top: 4px solid var(--rac-primary) !important; }
+.border-red-left { border-left: 4px solid var(--rac-primary) !important; }
+
+// ══════════════════════════════════════════
+// WELCOME HERO — glass card with ambient glow
+// ══════════════════════════════════════════
+.welcome-hero {
+  position: relative;
+  overflow: hidden;
+}
+.hero-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(161, 11, 19, 0.09) 0%, transparent 70%);
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+// ══════════════════════════════════════════
+// CORPORATE FORM SYSTEM
+// ══════════════════════════════════════════
+
+// Universal field label — monospaced, uppercase, subtle
+.campo-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+// Section divider inside a form (groups of fields)
+.form-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 20px;
+  margin-top: 20px;
+  &:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+}
+
+// Section title with a decorative line
+.form-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--rac-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(161, 11, 19, 0.2);
+  }
+}
+
+// Required asterisk helper
+.campo-label.required::after {
+  content: ' *';
+  color: var(--rac-primary);
+}
+
+// ══════════════════════════════════════════
+// BUTTON-TOGGLE — corporate variant
+// ══════════════════════════════════════════
+.corporate-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02) !important;
+
+  .q-btn {
+    border-radius: 0 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.5px !important;
+    padding: 6px 14px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 600 !important;
+  }
+
+  @media (max-width: $xs) {
+    width: 100% !important;
+    .q-btn { flex: 1 !important; }
+  }
+}
+
+// ══════════════════════════════════════════
+// STATS GRID — extra-small phone fallback
+// ══════════════════════════════════════════
+.stats-responsive-grid {
+  @media (max-width: 360px) { grid-template-columns: 1fr 1fr; }
+}
+
+// ══════════════════════════════════════════
+// HIDE HELPERS
+// ══════════════════════════════════════════
+.hide-mobile  { @media (max-width: $xs)  { display: none !important; } }
+.hide-desktop { @media (min-width: 600px) { display: none !important; } }

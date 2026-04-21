@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="trending_up" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">RAC 61 · MI EXPEDIENTE DE VUELO</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Mi Progreso Académico</h1>
+          <div class="rac-page-subtitle">RAC 61 · MI EXPEDIENTE DE VUELO</div>
+          <h1 class="rac-page-title">Mi Progreso Académico</h1>
         </div>
       </div>
       <q-btn flat color="red-9" icon="verified" label="Autoverificar para Examen" class="premium-btn text-weight-bolder" @click="verificarExamen" :loading="verificando" />

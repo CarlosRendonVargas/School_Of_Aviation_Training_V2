@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Read(//c/Users/GAMER CARLOS RENDON/.claude/projects/c--xampp-htdocs-SchoolOfAviationT/memory/**)",
+      "Bash(xargs sed *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\GAMER CARLOS RENDON\\.claude\\projects\\c--xampp-htdocs-SchoolOfAviationT\\memory"
+    ]
+  }
+}

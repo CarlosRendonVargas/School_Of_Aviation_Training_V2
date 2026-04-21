@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="settings_suggest" size="48px" color="red-9" class="q-mr-md glow-primary spin-slow" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">ADMINISTRACIÓN DE PARÁMETROS · PLATFORM CONTROL</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Centro de Configuración</h1>
+          <div class="rac-page-subtitle">ADMINISTRACIÓN DE PARÁMETROS · PLATFORM CONTROL</div>
+          <h1 class="rac-page-title">Centro de Configuración</h1>
         </div>
       </div>
       <q-btn unelevated color="red-10" label="Guardar Parámetros del Sistema" icon="save_as"

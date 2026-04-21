@@ -1,121 +1,120 @@
 <template>
   <q-form ref="formRef" @submit.prevent="handleSubmit" greedy>
 
+    <!-- ── SECCIÓN 1: Fecha y Horario ── -->
+    <div class="form-section-title">Fecha y Horario</div>
     <div class="row q-col-gutter-md">
-
-      <!-- Fecha y horario -->
-      <div class="col-12">
-        <div class="row q-col-gutter-sm">
-          <div class="col-12 col-sm-4">
-            <div class="campo-label">Fecha *</div>
-            <q-input v-model="formData.fecha" type="date" outlined dense dark bg-color="grey-10"
-              :min="hoy" :rules="[v => !!v || 'Requerido']" lazy-rules
-              @update:model-value="onFechaHoraCambia" />
-          </div>
-          <div class="col-6 col-sm-4">
-            <div class="campo-label">Hora inicio *</div>
-            <q-input v-model="formData.hora_inicio" type="time" outlined dense dark bg-color="grey-10"
-              :rules="[v => !!v || 'Requerido']" lazy-rules
-              @update:model-value="onFechaHoraCambia" />
-          </div>
-          <div class="col-6 col-sm-4">
-            <div class="campo-label">Hora fin *</div>
-            <q-input v-model="formData.hora_fin" type="time" outlined dense dark bg-color="grey-10"
-              :rules="[v => !!v || 'Requerido', v => v > formData.hora_inicio || 'Debe ser después']"
-              lazy-rules @update:model-value="onFechaHoraCambia" />
-          </div>
-        </div>
+      <div class="col-12 col-sm-4">
+        <label class="campo-label required">Fecha</label>
+        <q-input v-model="formData.fecha" type="date" outlined dense dark
+          :min="hoy" :rules="[v => !!v || 'Requerido']" lazy-rules
+          @update:model-value="onFechaHoraCambia" />
       </div>
+      <div class="col-6 col-sm-4">
+        <label class="campo-label required">Hora inicio</label>
+        <q-input v-model="formData.hora_inicio" type="time" outlined dense dark
+          :rules="[v => !!v || 'Requerido']" lazy-rules
+          @update:model-value="onFechaHoraCambia" />
+      </div>
+      <div class="col-6 col-sm-4">
+        <label class="campo-label required">Hora fin</label>
+        <q-input v-model="formData.hora_fin" type="time" outlined dense dark
+          :rules="[v => !!v || 'Requerido', v => v > formData.hora_inicio || 'Debe ser después de inicio']"
+          lazy-rules @update:model-value="onFechaHoraCambia" />
+      </div>
+    </div>
 
-      <!-- Tipo de reserva -->
-      <div class="col-12">
-        <div class="campo-label">Tipo de instrucción *</div>
-        <div class="row q-gutter-sm">
+    <!-- ── SECCIÓN 2: Tipo y Recursos ── -->
+    <div class="form-section">
+      <div class="form-section-title">Tipo de Vuelo y Recursos</div>
+      <div class="row q-col-gutter-md">
+
+        <!-- Tipo de reserva -->
+        <div class="col-12">
+          <label class="campo-label required">Tipo de instrucción</label>
           <q-btn-toggle
             v-model="formData.tipo"
             :options="tiposReserva"
             no-caps unelevated dense
-            toggle-color="primary" color="grey-9" text-color="grey-4"
-            style="border-radius:8px"
+            toggle-color="red-9" color="grey-9" text-color="grey-4"
+            class="corporate-toggle"
           />
         </div>
-      </div>
 
-      <!-- Aeronave: actualiza automáticamente según disponibilidad -->
-      <div class="col-12">
-        <div class="campo-label q-mb-xs">
-          Aeronave *
-          <span v-if="verificando" class="q-ml-xs">
-            <q-spinner size="12px" color="primary" />
-            <span style="font-size:10px;color:#64748b;margin-left:4px">Verificando disponibilidad…</span>
-          </span>
-          <span v-else-if="aeronavesDispo.length" style="font-size:10px;color:#22c55e;margin-left:8px">
-            {{ aeronavesDispo.length }} disponibles
-          </span>
-          <span v-else-if="buscoBispo && !aeronavesDispo.length" style="font-size:10px;color:#ef4444;margin-left:8px">
-            Sin aeronaves disponibles en ese horario
-          </span>
+        <!-- Aeronave -->
+        <div class="col-12">
+          <label class="campo-label required">
+            Aeronave
+            <span v-if="verificando" class="q-ml-xs text-grey-6" style="font-size:9px; letter-spacing:0">
+              <q-spinner size="10px" /> verificando…
+            </span>
+            <span v-else-if="aeronavesDispo.length" class="q-ml-xs text-emerald" style="font-size:9px; letter-spacing:0">
+              {{ aeronavesDispo.length }} disponibles
+            </span>
+            <span v-else-if="buscoBispo && !aeronavesDispo.length" class="q-ml-xs" style="font-size:9px; color:#ef4444; letter-spacing:0">
+              Sin disponibilidad en ese horario
+            </span>
+          </label>
+          <q-select
+            v-model="formData.aeronave_id"
+            :options="aeronavesDispo.length ? aeronavesDispo : todasAeronaves"
+            option-value="id"
+            :option-label="av => `${av.matricula} · ${av.modelo}`"
+            emit-value map-options outlined dense dark
+            :rules="[v => !!v || 'Seleccione una aeronave']"
+            lazy-rules
+            :loading="verificando"
+          >
+            <template #prepend><q-icon name="flight" color="grey-6" size="18px" /></template>
+            <template #option="{ itemProps, opt }">
+              <q-item v-bind="itemProps">
+                <q-item-section>
+                  <q-item-label class="font-mono text-white">{{ opt.matricula }}</q-item-label>
+                  <q-item-label caption>{{ opt.modelo }} · {{ opt.clase }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-chip dense color="positive" text-color="white" label="Disponible" style="font-size:9px" />
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
         </div>
 
-        <q-select
-          v-model="formData.aeronave_id"
-          :options="aeronavesDispo.length ? aeronavesDispo : todasAeronaves"
-          option-value="id"
-          :option-label="av => `${av.matricula} · ${av.modelo}`"
-          emit-value map-options outlined dense dark bg-color="grey-10"
-          :rules="[v => !!v || 'Seleccione aeronave']"
-          lazy-rules
-          :loading="verificando"
-        >
-          <template #prepend><q-icon name="flight" color="grey-6" size="18px" /></template>
-          <template #option="{ itemProps, opt }">
-            <q-item v-bind="itemProps">
-              <q-item-section>
-                <q-item-label class="font-mono text-white">{{ opt.matricula }}</q-item-label>
-                <q-item-label caption>{{ opt.modelo }} · {{ opt.clase }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-chip dense color="positive" text-color="white" label="Disponible" style="font-size:9px" />
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-      </div>
-
-      <!-- Instructor (opcional para vuelo solo) -->
-      <div class="col-12">
-        <div class="campo-label">
-          Instructor
-          <span style="font-size:10px;color:#475569;margin-left:4px;font-family:var(--font-body)">
-            (obligatorio para instrucción)
-          </span>
+        <!-- Instructor -->
+        <div class="col-12">
+          <label class="campo-label" :class="formData.tipo === 'instruccion' ? 'required' : ''">
+            Instructor
+            <span v-if="formData.tipo !== 'instruccion'" style="font-size:9px; color:#475569; letter-spacing:0; text-transform:none; font-family:'Outfit',sans-serif">
+              — opcional para vuelo solo / simulador
+            </span>
+          </label>
+          <q-select
+            v-model="formData.instructor_id"
+            :options="instructores"
+            option-value="id"
+            :option-label="i => `${i.persona?.nombres || ''} ${i.persona?.apellidos || ''} · ${i.num_licencia}`"
+            emit-value map-options outlined dense dark
+            clearable
+            :rules="[v => formData.tipo !== 'instruccion' || !!v || 'Obligatorio para instrucción']"
+            lazy-rules
+          >
+            <template #prepend><q-icon name="badge" color="grey-6" size="18px" /></template>
+            <template #option="{ itemProps, opt }">
+              <q-item v-bind="itemProps">
+                <q-item-section>
+                  <q-item-label class="text-white">{{ opt.persona?.nombres }} {{ opt.persona?.apellidos }}</q-item-label>
+                  <q-item-label caption class="font-mono">{{ opt.num_licencia }} · {{ opt.tipo_licencia }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-chip dense :color="instOk(opt) ? 'positive' : 'negative'" text-color="white"
+                    :label="instOk(opt) ? 'Vigente' : 'Vencida'" style="font-size:9px" />
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
         </div>
-        <q-select
-          v-model="formData.instructor_id"
-          :options="instructores"
-          option-value="id"
-          :option-label="i => `${i.persona?.nombres || ''} ${i.persona?.apellidos || ''} · ${i.num_licencia}`"
-          emit-value map-options outlined dense dark bg-color="grey-10"
-          clearable
-          :rules="[v => formData.tipo !== 'instruccion' || !!v || 'Obligatorio para instrucción']"
-          lazy-rules
-        >
-          <template #prepend><q-icon name="badge" color="grey-6" size="18px" /></template>
-          <template #option="{ itemProps, opt }">
-            <q-item v-bind="itemProps">
-              <q-item-section>
-                <q-item-label class="text-white">{{ opt.persona?.nombres }} {{ opt.persona?.apellidos }}</q-item-label>
-                <q-item-label caption class="font-mono">{{ opt.num_licencia }} · {{ opt.tipo_licencia }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-chip dense :color="instOk(opt) ? 'positive' : 'negative'" text-color="white"
-                  :label="instOk(opt) ? 'Vigente' : '⚠ Vencida'" style="font-size:9px" />
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-      </div>
 
+      </div>
     </div>
 
     <!-- Errores de validación RAC -->
@@ -168,9 +167,9 @@ const buscoBispo     = ref(false)
 const hoy            = dayjs().format('YYYY-MM-DD')
 
 const tiposReserva = [
-  { label: '🧑‍✈️ Instrucción', value: 'instruccion' },
-  { label: '👤 Solo',          value: 'solo'         },
-  { label: '🖥️ Simulador',     value: 'simulador'    },
+  { label: 'Instrucción', value: 'instruccion' },
+  { label: 'Solo',        value: 'solo'        },
+  { label: 'Simulador',   value: 'simulador'   },
 ]
 
 const formData = ref({
@@ -219,10 +218,5 @@ onMounted(cargar)
 </script>
 
 <style scoped>
-.campo-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: #64748b;
-  letter-spacing: 1px; text-transform: uppercase;
-  margin-bottom: 6px;
-}
+/* campo-label is defined globally in app.scss */
 </style>

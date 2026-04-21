@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="account_balance_wallet" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">GESTIÓN DE TESORERÍA Y CAJA · FACTURACIÓN ELECTRÓNICA DIAN</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Finanzas y Recaudos</h1>
+          <div class="rac-page-subtitle">GESTIÓN DE TESORERÍA Y CAJA · FACTURACIÓN ELECTRÓNICA DIAN</div>
+          <h1 class="rac-page-title">Finanzas y Recaudos</h1>
         </div>
       </div>
       <q-btn color="red-9" icon="add" label="Emitir Nueva Factura" class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder" @click="dialogNueva = true" />

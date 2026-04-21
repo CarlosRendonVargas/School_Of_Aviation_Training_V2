@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="group" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">REGISTRO DE PILOTOS EN FORMACIÓN · RAC 141.67</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Directorio de Estudiantes</h1>
+          <div class="rac-page-subtitle">REGISTRO DE PILOTOS EN FORMACIÓN · RAC 141.67</div>
+          <h1 class="rac-page-title">Directorio de Estudiantes</h1>
         </div>
       </div>
       <q-btn v-if="puedeCrear" color="red-9" icon="person_add" label="Alta Estudiante" 
@@ -130,16 +130,16 @@
 
     <q-dialog v-model="dialogHoras" backdrop-filter="blur(15px)">
       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(600px, 95vw);">
-        <div class="q-pa-xl border-bottom-border pb-md">
-           <div class="row items-center justify-between q-col-gutter-md">
+        <div class="rac-dialog-header">
+           <div class="row items-center justify-between">
               <div class="row items-center col">
-                 <q-icon name="analytics" color="red-9" size="32px" class="q-mr-md glow-primary" />
-                 <div class="text-h5 text-white font-head text-weight-bolder uppercase line-height-1">Progreso de Formación</div>
+                 <q-icon name="analytics" color="red-9" size="28px" class="q-mr-md glow-primary" />
+                 <div class="text-h6 text-white font-head text-weight-bolder uppercase line-height-1">Progreso de Formación</div>
               </div>
               <q-btn flat round dense icon="close" v-close-popup color="grey-6" class="bg-black-20 hover-red" />
            </div>
         </div>
-        <div class="q-pa-xl">
+        <div class="rac-dialog-scroll rac-dialog-body">
 
         <div class="text-subtitle1 text-grey-4 font-mono q-mb-xl">CADETE: {{ estudianteSeleccionado?.persona?.nombres }} {{ estudianteSeleccionado?.persona?.apellidos }}</div>
 
@@ -158,33 +158,61 @@
            <template #avatar><q-icon name="verified" color="white" /></template>
            <span class="font-head text-weight-bold">LISTO PARA EXAMEN DE COMPETENCIA UAEAC</span>
         </q-banner>
+        </div><!-- /rac-dialog-scroll -->
       </q-card>
     </q-dialog>
 
     <q-dialog v-model="dialogNuevo" persistent backdrop-filter="blur(15px)">
       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(900px, 95vw);">
-        <div class="q-pa-xl border-bottom-border pb-md">
-           <div class="row items-center justify-between q-col-gutter-md">
+        <div class="rac-dialog-header">
+           <div class="row items-center justify-between">
               <div class="row items-center col">
-                 <q-icon name="how_to_reg" color="red-9" size="32px" class="q-mr-md glow-primary" />
-                 <div class="text-h5 text-white font-head text-weight-bolder uppercase line-height-1">Inscripción RAC 141</div>
+                 <q-icon name="how_to_reg" color="red-9" size="28px" class="q-mr-md glow-primary" />
+                 <div class="text-h6 text-white font-head text-weight-bolder uppercase line-height-1">Inscripción RAC 141</div>
               </div>
               <q-btn flat round dense icon="close" v-close-popup color="grey-6" class="bg-black-20 hover-red" />
            </div>
         </div>
-        <div class="q-pa-xl">
+        <div class="rac-dialog-scroll rac-dialog-body">
 
         <q-form @submit.prevent="guardarNuevo" class="q-gutter-y-lg">
+          <div class="form-section-title">Datos del Cadete</div>
           <div class="row q-col-gutter-lg">
-            <div class="col-12 col-md-6"><q-input v-model="formNuevo.nombres" label="NOMBRES" filled dark class="premium-input-login" stack-label /></div>
-            <div class="col-12 col-md-6"><q-input v-model="formNuevo.apellidos" label="APELLIDOS" filled dark class="premium-input-login" stack-label /></div>
-            <div class="col-12 col-md-6"><q-select v-model="formNuevo.tipo_documento" :options="['CC', 'CE', 'PAS']" label="TIPO DOC" filled dark class="premium-input-login" stack-label /></div>
-            <div class="col-12 col-md-6"><q-input v-model="formNuevo.num_documento" label="IDENTIFICACIÓN" filled dark class="premium-input-login" stack-label /></div>
-            <div class="col-12 col-md-6"><q-select v-model="formNuevo.programa_id" :options="programas" option-value="id" option-label="nombre" label="PROGRAMA" filled dark class="premium-input-login" emit-value map-options stack-label /></div>
-            <div class="col-12 col-md-6"><q-input v-model="formNuevo.fecha_ingreso" type="date" label="ADMISIÓN" filled dark class="premium-input-login" stack-label /></div>
+            <div class="col-12 col-md-6">
+              <label class="campo-label required">Nombres</label>
+              <q-input v-model="formNuevo.nombres" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules placeholder="Nombres completos" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="campo-label required">Apellidos</label>
+              <q-input v-model="formNuevo.apellidos" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules placeholder="Apellidos completos" />
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="campo-label required">Tipo Documento</label>
+              <q-select v-model="formNuevo.tipo_documento" :options="['CC', 'CE', 'PAS']" outlined dense dark />
+            </div>
+            <div class="col-12 col-md-8">
+              <label class="campo-label required">Número de Identificación</label>
+              <q-input v-model="formNuevo.num_documento" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules placeholder="Número de documento" />
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Programa y Admisión</div>
+            <div class="row q-col-gutter-lg">
+              <div class="col-12 col-md-8">
+                <label class="campo-label required">Programa Académico</label>
+                <q-select v-model="formNuevo.programa_id" :options="programas" option-value="id" option-label="nombre" outlined dense dark emit-value map-options :rules="[v => !!v || 'Requerido']" lazy-rules>
+                  <template #prepend><q-icon name="school" color="grey-6" size="18px" /></template>
+                </q-select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="campo-label required">Fecha de Admisión</label>
+                <q-input v-model="formNuevo.fecha_ingreso" type="date" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules />
+              </div>
+            </div>
           </div>
           <q-btn type="submit" color="red-9" label="Completar Alta de Estudiante" icon="person_add" class="full-width premium-btn q-py-md shadow-24 q-mt-md" :loading="guardandoNuevo" />
         </q-form>
+        </div><!-- /rac-dialog-scroll -->
       </q-card>
     </q-dialog>
 

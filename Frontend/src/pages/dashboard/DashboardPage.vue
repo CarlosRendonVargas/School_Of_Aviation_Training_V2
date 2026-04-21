@@ -2,29 +2,29 @@
   <q-page class="q-pa-md animate-fade">
 
     <!-- ══ Briefing de Bienvenida ══ -->
-    <div class="dashboard-header q-mb-xl rac-page-header">
+    <div class="row items-center justify-between q-mb-xl rac-page-header flex-wrap" style="gap:16px">
       <div>
-        <div class="font-mono text-grey-6 uppercase tracking-widest q-mb-xs" style="font-size:10px">
-           {{ saludoHora }} · STATUS: <span class="text-emerald">OPERATIVO</span>
+        <div class="rac-page-subtitle q-mb-xs">
+          {{ saludoHora }} · STATUS: <span class="text-emerald">OPERATIVO</span>
         </div>
-        <h1 class="welcome-title text-weight-bolder text-white font-head q-my-none tracking-tighter">
+        <h1 class="rac-page-title tracking-tighter">
           {{ auth.nombre.split(' ')[0] }} <span class="text-red-9">.</span>
         </h1>
         <div class="row items-center q-mt-sm flex-wrap q-gutter-sm">
-           <q-badge color="red-9" class="font-mono text-weight-bold q-px-sm q-py-xs shadow-10" style="font-size:10px">
-             {{ rolLabel.toUpperCase() }}
-           </q-badge>
-           <div class="text-grey-5 font-mono" style="font-size:11px">
-             <q-icon name="event" size="14px" class="q-mr-xs" />{{ fechaHoy }}
-           </div>
+          <q-badge color="red-9" class="font-mono text-weight-bold q-px-sm q-py-xs" style="font-size:10px">
+            {{ rolLabel.toUpperCase() }}
+          </q-badge>
+          <div class="text-grey-5 font-mono" style="font-size:11px">
+            <q-icon name="event" size="14px" class="q-mr-xs" />{{ fechaHoy }}
+          </div>
         </div>
       </div>
-      
-      <q-btn 
+
+      <q-btn
         v-if="auth.esDirOps || auth.esAdmin"
         flat dense rounded
-        color="white" icon="sync" 
-        label="Sincronizar" 
+        color="white" icon="sync"
+        label="Sincronizar"
         class="premium-glass-card q-px-lg font-mono text-weight-bold sync-btn"
         style="font-size:10px"
         @click="sincronizar"
@@ -148,26 +148,9 @@ async function sincronizar() {
 </script>
 
 <style lang="scss" scoped>
-.animate-fade      { animation: fadeIn 0.8s ease-out; }
-.animate-slide-up  { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
-@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+// animate-fade, animate-slide-up, text-emerald — defined globally in app.scss
 
-.text-emerald { color: #10b981; }
-
-// Responsive dashboard header
-.dashboard-header {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
-}
-
-// Responsive welcome title
-.welcome-title {
-  font-size: 3rem;
-  @media (max-width: 599px) { font-size: 2rem !important; }
-}
-
-// Sync button on mobile
 .sync-btn {
-  @media (max-width: 599px) { width: 100%; justify-content: center; font-size: 10px; }
+  @media (max-width: 599px) { width: 100%; justify-content: center; }
 }
 </style>

@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-btn flat round icon="arrow_back" color="red-9" class="q-mr-md shadow-24" @click="$router.push('/vuelo')" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">REPORTE TÉCNICO DE MISIÓN · RAC 61 / 91.417 · UAEAC</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Nueva Bitácora de Vuelo</h1>
+          <div class="rac-page-subtitle">REPORTE TÉCNICO DE MISIÓN · RAC 61 / 91.417 · UAEAC</div>
+          <h1 class="rac-page-title">Nueva Bitácora de Vuelo</h1>
         </div>
       </div>
     </div>

@@ -39,11 +39,11 @@ export default configure(function () {
     framework: {
       config: {
         brand: {
-          primary:   '#3b82f6',
-          secondary: '#14b8a6',
-          accent:    '#f59e0b',
-          dark:      '#0f1218',
-          positive:  '#22c55e',
+          primary:   '#A10B13',
+          secondary: '#1a1a1a',
+          accent:    '#da291c',
+          dark:      '#121212',
+          positive:  '#10b981',
           negative:  '#ef4444',
           info:      '#60a5fa',
           warning:   '#f59e0b',

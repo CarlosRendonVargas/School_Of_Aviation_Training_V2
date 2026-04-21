@@ -6,8 +6,8 @@
       <div class="row items-center">
         <q-icon name="admin_panel_settings" size="48px" color="red-9" class="q-mr-md glow-primary" />
         <div>
-          <div class="font-mono text-grey-6 uppercase tracking-widest" style="font-size:10px">MÓDULO 01 · GESTIÓN DE ACCESOS & LOGS</div>
-          <h1 class="text-h4 text-weight-bolder text-white font-head q-my-none">Centro de Seguridad</h1>
+          <div class="rac-page-subtitle">MÓDULO 01 · GESTIÓN DE ACCESOS & LOGS</div>
+          <h1 class="rac-page-title">Centro de Seguridad</h1>
         </div>
       </div>
       <q-btn color="red-9" icon="person_add" label="Crear Nuevo Acceso" class="premium-btn shadow-10" @click="dialogUsuario = true" />
