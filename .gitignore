@@ -1,3 +1,4 @@
+# ── Backend Laravel ──────────────────────────────────────────
 /Backend/vendor/
 /Backend/storage/*.key
 /Backend/.env
@@ -8,10 +9,25 @@
 /Backend/storage/framework/views/*
 /Backend/storage/logs/*
 
+# Archivos temporales de desarrollo (NO van a producción)
+/Backend/patch*.php
+/Backend/seed_*.php
+/Backend/test_*.php
+/Backend/check_*.php
+/Backend/*.sql
+
+# ── Frontend Quasar/Vue ───────────────────────────────────────
 /Frontend/node_modules/
 /Frontend/.quasar/
 /Frontend/dist/
 /Frontend/.env
-/Frontend/.env.xampp
 /Frontend/.env.local
-/Frontend/node_modules/
+/Frontend/.env.xampp
+
+# ── Sistema operativo y editores ─────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json

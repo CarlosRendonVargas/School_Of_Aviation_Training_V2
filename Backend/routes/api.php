@@ -33,8 +33,9 @@ Route::prefix('v1')->group(function () {
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
-    Route::post('auth/logout',   [AuthController::class, 'logout']);
-    Route::get('auth/me',        [AuthController::class, 'me']);
+    Route::post('auth/logout',          [AuthController::class, 'logout']);
+    Route::get('auth/me',               [AuthController::class, 'me']);
+    Route::post('auth/change-password', [AuthController::class, 'changePassword']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
 
@@ -46,17 +47,20 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::prefix('aeronaves')->group(function () {
-        Route::get('/',                     [AeronaveController::class, 'index']);
-        Route::post('/',                    [AeronaveController::class, 'store']);
-        Route::get('{id}',                  [AeronaveController::class, 'show']);
-        Route::put('{id}',                  [AeronaveController::class, 'update']);
-        Route::get('{id}/mantenimientos',   [AeronaveController::class, 'mantenimientos']);
-        Route::post('{id}/mantenimientos',  [AeronaveController::class, 'storeMantenimiento']);
-        Route::get('{id}/mel',              [AeronaveController::class, 'mel']);
-        Route::post('{id}/mel',             [AeronaveController::class, 'storeMel']);
-        Route::get('{id}/ads',              [AeronaveController::class, 'ads']);
-        Route::post('{id}/ads',             [AeronaveController::class, 'storeAd']);
-        Route::get('{id}/bitacora-tecnica', [AeronaveController::class, 'bitacoraTecnica']); 
+        Route::get('/',                         [AeronaveController::class, 'index']);
+        Route::post('/',                        [AeronaveController::class, 'store']);
+        Route::get('{id}',                      [AeronaveController::class, 'show']);
+        Route::put('{id}',                      [AeronaveController::class, 'update']);
+        Route::get('{id}/mantenimientos',       [AeronaveController::class, 'mantenimientos']);
+        Route::post('{id}/mantenimientos',      [AeronaveController::class, 'storeMantenimiento']);
+        Route::get('{id}/mel',                  [AeronaveController::class, 'mel']);
+        Route::post('{id}/mel',                 [AeronaveController::class, 'storeMel']);
+        Route::put('{id}/mel/{mid}',            [AeronaveController::class, 'updateMel']);
+        Route::get('{id}/ads',                  [AeronaveController::class, 'ads']);
+        Route::post('{id}/ads',                 [AeronaveController::class, 'storeAd']);
+        Route::put('{id}/ads/{aid}',            [AeronaveController::class, 'updateAd']);
+        Route::get('{id}/bitacora-tecnica',     [AeronaveController::class, 'bitacoraTecnica']);
+        Route::get('{id}/horas-acumuladas',     [AeronaveController::class, 'horasAcumuladas']);
     });
 
     Route::prefix('instructores')->group(function () {
@@ -86,20 +90,20 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::get('auditoria', [UsuarioController::class, 'auditoria']);
 
     Route::prefix('estudiantes')->group(function () {
-        Route::get('/',              [EstudianteController::class, 'index']);
-        Route::post('/',             [EstudianteController::class, 'store']);
-        Route::get('{id}',           [EstudianteController::class, 'show']);
-        Route::put('{id}',           [EstudianteController::class, 'update']);
-        Route::get('{id}/expediente',[EstudianteController::class, 'expediente']);
-        Route::get('{id}/progreso-horas', [EstudianteController::class, 'progresoHoras']);
-        Route::get('{id}/historial-horas',[EstudianteController::class, 'historialHoras']);
-        Route::get('{id}/validar-examen', [EstudianteController::class, 'validarExamen']);
-        Route::get('{id}/notas',       [EstudianteController::class, 'notas']);
-        Route::post('{id}/notas',      [EstudianteController::class, 'storeNota']);
-        Route::get('{id}/cert-medicos',[EstudianteController::class, 'certMedicos']);
-        Route::post('{id}/cert-medicos',[EstudianteController::class, 'storeCertMedico']);
-        Route::get('{id}/reservas',    [EstudianteController::class, 'reservas']);
-        Route::get('{id}/bitacoras',   [EstudianteController::class, 'bitacoras']);
+        Route::get('/',               [EstudianteController::class, 'index']);
+        Route::post('/',              [EstudianteController::class, 'store']);
+        Route::get('{id}',            [EstudianteController::class, 'show']);
+        Route::put('{id}',            [EstudianteController::class, 'update']);
+        Route::get('{id}/expediente', [EstudianteController::class, 'expediente']);
+        Route::get('{id}/progreso-horas',  [EstudianteController::class, 'progresoHoras']);
+        Route::get('{id}/historial-horas', [EstudianteController::class, 'historialHoras']);
+        Route::get('{id}/validar-examen',  [EstudianteController::class, 'validarExamen']);
+        Route::get('{id}/notas',           [EstudianteController::class, 'notas']);
+        Route::post('{id}/notas',          [EstudianteController::class, 'storeNota']);
+        Route::get('{id}/cert-medicos',    [EstudianteController::class, 'certMedicos']);
+        Route::post('{id}/cert-medicos',   [EstudianteController::class, 'storeCertMedico']);
+        Route::get('{id}/reservas',        [EstudianteController::class, 'reservas']);
+        Route::get('{id}/bitacoras',       [EstudianteController::class, 'bitacoras']);
     });
 
     Route::prefix('bitacoras')->group(function () {
