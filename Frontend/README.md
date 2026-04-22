@@ -160,16 +160,6 @@ Frontend/
 
 ---
 
-## 👤 Credenciales de prueba
-
-```
-Email:    admin@escuela.com
-Password: Admin2025*
-Rol:      dir_ops (acceso total)
-```
-
----
-
 ## 🔧 Tecnologías
 
 | Paquete | Versión | Uso |
