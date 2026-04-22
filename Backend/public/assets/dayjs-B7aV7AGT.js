@@ -1,0 +1,1 @@
+import{d as t}from"./dayjs.min-A3-re3Pz.js";import{u as e,t as o}from"./timezone-DvQhRvJQ.js";import"./es-1GQ-GM3R.js";t.extend(e);t.extend(o);t.locale("es");t.tz.setDefault("America/Bogota");const i=({app:a})=>{a.config.globalProperties.$dayjs=t};export{t as dayjs,i as default};

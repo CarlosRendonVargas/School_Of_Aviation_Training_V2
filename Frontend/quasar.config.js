@@ -23,7 +23,7 @@ export default configure(function () {
       vueRouterMode: 'hash',
 
       env: {
-        API_URL: process.env.VITE_API_URL || 'http://localhost:8000/api/v1',
+        API_URL: 'https://schoolaviationtraining.com/api/v1',
       },
 
       extendViteConf (viteConf) {
