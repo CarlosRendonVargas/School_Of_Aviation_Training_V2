@@ -165,6 +165,10 @@
 
              <q-input v-model="formPago.referencia" filled dark label="REFERENCIA DE TRANSACCIÓN" class="premium-input-login" stack-label placeholder="Nº de aprobación, consignación..." />
              
+             <q-input v-model="formPago.comprobante_url" filled dark label="URL DEL COMPROBANTE BANCARIO" class="premium-input-login" stack-label>
+                <template #prepend><q-icon name="attachment" color="red-9" /></template>
+             </q-input>
+             
              <q-input v-model="formPago.fecha_pago" type="date" filled dark label="FECHA DE CAJA" class="premium-input-login" stack-label />
              
              <q-btn color="emerald" label="Confirmar y Sincronizar Pago" icon="verified" class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" @click="guardarPago" :loading="guardando" />
@@ -173,6 +177,37 @@
       </q-card>
     </q-dialog>
     
+    <!-- ══ DIÁLOGO: EMITIR NUEVA FACTURA ══ -->
+    <q-dialog v-model="dialogNueva" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(600px, 95vw);">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+           <div class="row items-center">
+              <q-icon name="add_circle" color="red-9" size="32px" class="q-mr-md glow-primary" />
+              <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Emitir Factura DIAN</div>
+           </div>
+           <q-btn flat round dense icon="close" v-close-popup color="grey-7" class="shadow-inner" />
+        </div>
+        <q-form class="q-gutter-y-lg" @submit.prevent="crearFactura">
+           <q-input v-model="formNueva.numero_factura" filled dark label="NÚMERO DE FACTURA" class="premium-input-login" stack-label />
+           <q-input v-model="formNueva.fecha_factura" type="date" filled dark label="FECHA DE EMISIÓN" class="premium-input-login" stack-label />
+           <q-input v-model="formNueva.concepto" filled dark label="CONCEPTO" class="premium-input-login" stack-label />
+           
+           <div class="row q-col-gutter-md">
+              <div class="col-6">
+                 <q-input v-model.number="formNueva.subtotal" type="number" filled dark label="SUBTOTAL" class="premium-input-login" stack-label />
+              </div>
+              <div class="col-6">
+                 <q-input v-model.number="formNueva.iva" type="number" filled dark label="IVA" class="premium-input-login" stack-label />
+              </div>
+           </div>
+           <q-input v-model.number="formNueva.total" type="number" filled dark label="TOTAL (COP)" class="premium-input-login" stack-label />
+           <q-input v-model="formNueva.cufe" filled dark label="CUFE DIAN" class="premium-input-login" stack-label />
+           
+           <q-btn type="submit" color="red-10" label="Emitir Factura" icon="send" class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" :loading="guardando" />
+        </q-form>
+      </q-card>
+    </q-dialog>
+
     <!-- ══ DIÁLOGO: VISOR DE FACTURA ELECTRÓNICA ══ -->
     <q-dialog v-model="dialogDetalleFactura" backdrop-filter="blur(15px)">
       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width: min(700px, 95vw);">
@@ -208,13 +243,17 @@
             </div>
 
             <div class="row q-col-gutter-xl q-mb-xl border-bottom-border pb-md">
-               <div class="col-6">
-                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">VALOR BRUTO (COP)</div>
-                  <div class="text-h5 text-white font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.total) }}</div>
+               <div class="col-4">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">SUBTOTAL</div>
+                  <div class="text-h6 text-white font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.subtotal) }}</div>
                </div>
-               <div class="col-6 text-right">
-                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">RECAUDO CERTIFICADO</div>
-                  <div class="text-h5 text-emerald font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.total_pagado || 0) }}</div>
+               <div class="col-4">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">IVA</div>
+                  <div class="text-h6 text-white font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.iva) }}</div>
+               </div>
+               <div class="col-4 text-right">
+                  <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">VALOR TOTAL (COP)</div>
+                  <div class="text-h5 text-emerald font-mono text-weight-bolder">{{ formatCOP(facturaSeleccionada?.total) }}</div>
                </div>
             </div>
 
@@ -257,7 +296,8 @@ const facturaSeleccionada = ref(null)
 const guardando         = ref(false)
 
 
-const formPago = ref({ valor: '', metodo: null, referencia: '', fecha_pago: new Date().toISOString().slice(0,10) })
+const formPago = ref({ valor: '', metodo: null, referencia: '', comprobante_url: '', fecha_pago: new Date().toISOString().slice(0,10) })
+const formNueva = ref({ numero_factura: '', fecha_factura: new Date().toISOString().slice(0,10), concepto: '', subtotal: 0, iva: 0, total: 0, cufe: '' })
 
 const estadoFiltro = computed(() => ({ todas: null, pend: 'pendiente', venc: 'vencida', pagadas: 'pagada', cartera: 'vencida' }[tab.value]))
 
@@ -313,6 +353,16 @@ function registrarPago(f) {
   facturaSeleccionada.value = f
   formPago.value = { valor: f.total, metodo: null, referencia: '', fecha_pago: new Date().toISOString().slice(0,10) }
   dialogPago.value = true
+}
+
+async function crearFactura() {
+  guardando.value = true
+  try {
+    await api.post('/facturas', formNueva.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Factura emitida exitosamente.' })
+    dialogNueva.value = false; cargar()
+  } catch { $q.notify({ color: 'negative', message: 'Error al crear la factura.' }) } 
+  finally { guardando.value = false }
 }
 
 async function guardarPago() {

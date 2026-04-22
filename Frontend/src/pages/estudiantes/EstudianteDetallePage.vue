@@ -10,7 +10,8 @@
         <div class="hero-glow"></div>
         <div class="row items-center q-gutter-lg relative-position flex-wrap">
           <div class="cadet-avatar-container shadow-24 flex-shrink-0">
-             <div class="font-head text-white text-weight-bolder cadet-initials">{{ iniciales }}</div>
+             <img v-if="expediente.estudiante.persona?.foto_url" :src="expediente.estudiante.persona.foto_url" style="width:100%;height:100%;object-fit:cover;border-radius:24px" />
+             <div v-else class="font-head text-white text-weight-bolder cadet-initials">{{ iniciales }}</div>
           </div>
           
           <div class="col min-w-0">
@@ -69,8 +70,11 @@
               <div class="col-12 col-md-8">
                  <div class="row items-center justify-between q-mb-lg">
                     <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest">Estatus de Formación UAEAC</div>
-                    <q-badge v-if="expediente.validacion_examen?.aprobado" color="emerald" label="LISTO PARA EXAMEN" class="font-mono text-weight-bold q-px-lg shadow-24" />
-                    <q-badge v-else color="red-9" label="EN ENTRENAMIENTO" class="font-mono text-weight-bold q-px-lg shadow-24" />
+                    <div class="row q-gutter-sm">
+                      <q-badge v-if="expediente.estudiante.etapa_actual" outline color="blue-9" :label="expediente.estudiante.etapa_actual.nombre" class="font-mono text-weight-bold q-px-md shadow-24" />
+                      <q-badge v-if="expediente.validacion_examen?.aprobado" color="emerald" label="LISTO PARA EXAMEN" class="font-mono text-weight-bold q-px-lg shadow-24" />
+                      <q-badge v-else color="red-9" label="EN ENTRENAMIENTO" class="font-mono text-weight-bold q-px-lg shadow-24" />
+                    </div>
                  </div>
 
                  <div class="row q-col-gutter-lg q-mb-xl">
@@ -86,7 +90,12 @@
                     <span class="text-grey-4 font-mono uppercase" style="font-size:11px">Cumplimiento Global del Syllabus</span>
                     <span class="font-mono text-h6 text-red-9 text-weight-bolder">{{ porcentajeGeneral }}%</span>
                  </div>
-                 <q-linear-progress :value="porcentajeGeneral/100" color="red-9" size="10px" rounded track-color="white-1" class="shadow-24" />
+                 <q-linear-progress :value="porcentajeGeneral/100" color="red-9" size="10px" rounded track-color="white-1" class="shadow-24 q-mb-xl" />
+
+                 <div v-if="expediente.estudiante.observaciones" class="premium-glass-card q-pa-md border-red-low shadow-inner">
+                    <div class="text-caption text-grey-6 font-mono uppercase q-mb-xs" style="font-size:9px">Observaciones y Anotaciones</div>
+                    <div class="text-white font-mono" style="font-size:12px">{{ expediente.estudiante.observaciones }}</div>
+                 </div>
               </div>
             </div>
           </q-tab-panel>
@@ -193,6 +202,22 @@
                             <div class="text-right font-mono text-weight-bold" :class="esMedicoVigente(cm)?'text-emerald':'text-red-9'">{{ dayjs(cm.fecha_vencimiento).format('DD/MM/YYYY') }}</div>
                          </div>
                       </div>
+                      <q-separator dark class="q-my-md opacity-5" />
+                      <div class="row q-col-gutter-md q-mb-sm">
+                         <div class="col-12">
+                            <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:9px">CENTRO AEROMÉDICO</div>
+                            <div class="text-white font-mono" style="font-size:12px">{{ cm.centro_aereomedico || 'No registrado' }}</div>
+                         </div>
+                         <div class="col-12">
+                            <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:9px">RESTRICCIONES</div>
+                            <div class="text-white font-mono" style="font-size:12px">{{ cm.restricciones || 'Ninguna' }}</div>
+                         </div>
+                      </div>
+                      <div class="q-mt-md" v-if="cm.archivo_url">
+                         <q-btn flat no-caps dense icon="picture_as_pdf" color="red-9"
+                            :href="cm.archivo_url" target="_blank"
+                            label="Ver Certificado Digital" class="font-mono" />
+                      </div>
                    </q-card>
                 </div>
                 <div v-if="!expediente.estudiante.cert_medicos?.length" class="col-12 text-center q-pa-xl premium-glass-card border-red-low">
@@ -279,7 +304,15 @@ const colorEstado = computed(() => ({ activo:'emerald', suspendido:'orange-9', g
 
 const datosPersonales = computed(() => {
   const p = expediente.value?.estudiante?.persona; if (!p) return []
-  return [ { label: 'Identificación', valor: `${p.tipo_documento} ${p.num_documento}` }, { label: 'F. Nacimiento', valor: p.fecha_nacimiento }, { label: 'Teléfono Fijo/Cel', valor: p.telefono || 'No reg.' }, { label: 'Ciudad Base', valor: p.ciudad }, { label: 'Fecha Admisión', valor: expediente.value?.estudiante?.fecha_ingreso } ]
+  return [ 
+    { label: 'Identificación', valor: `${p.tipo_documento} ${p.num_documento}` }, 
+    { label: 'F. Nacimiento', valor: p.fecha_nacimiento }, 
+    { label: 'Nacionalidad', valor: p.nacionalidad || 'No reg.' },
+    { label: 'Dirección', valor: p.direccion || 'No reg.' },
+    { label: 'Teléfono Fijo/Cel', valor: p.telefono || 'No reg.' }, 
+    { label: 'Ciudad Base', valor: p.ciudad }, 
+    { label: 'Fecha Admisión', valor: expediente.value?.estudiante?.fecha_ingreso } 
+  ]
 })
 
 const categoriasHoras = computed(() => {

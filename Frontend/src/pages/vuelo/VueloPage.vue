@@ -96,7 +96,10 @@
       :grid="$q.screen.lt.md"
     >
       <template #body-cell-fecha="props">
-         <q-td :props="props" class="font-mono text-grey-5">{{ props.value ? props.value.slice(0, 10) : '---' }}</q-td>
+         <q-td :props="props" class="font-mono text-grey-5 cursor-pointer hover-text-white" @click="$router.push(`/vuelo/${props.row.id}`)">
+           {{ props.value ? props.value.slice(0, 10) : '---' }}
+           <q-tooltip>Ver Detalle</q-tooltip>
+         </q-td>
       </template>
 
       <template #body-cell-aeronave="props">
@@ -106,17 +109,21 @@
       </template>
 
       <template #body-cell-tipo_vuelo="props">
-        <q-td :props="props" class="text-center">
+        <q-td :props="props" class="text-center cursor-pointer" @click="$router.push(`/vuelo/${props.row.id}`)">
           <q-badge :color="colorTipoVueloBadge(props.value)" class="text-weight-bold font-mono q-px-md">{{ props.value?.toUpperCase() }}</q-badge>
         </q-td>
       </template>
 
       <template #body-cell-horas_totales="props">
-        <q-td :props="props" class="text-right">
+        <q-td :props="props" class="text-right cursor-pointer" @click="$router.push(`/vuelo/${props.row.id}`)">
           <span class="font-mono text-weight-bolder text-red-9" style="font-size: 16px">
             {{ Number(props.value).toFixed(1) }}
           </span>
           <span class="text-grey-7 font-mono q-ml-xs uppercase" style="font-size:10px">H</span>
+          
+          <div class="text-grey-6 font-mono q-mt-xs" style="font-size: 9px">
+            D:{{ Number(props.row.horas_dual || 0).toFixed(1) }} S:{{ Number(props.row.horas_solo || 0).toFixed(1) }}
+          </div>
         </q-td>
       </template>
 
@@ -150,9 +157,10 @@
                </div>
 
                <div class="row items-center justify-between q-mt-lg">
-                 <div>
+                 <div class="cursor-pointer" @click="$router.push(`/vuelo/${props.row.id}`)">
                    <q-badge :color="colorTipoVueloBadge(props.row.tipo_vuelo)" class="text-weight-bold font-mono">{{ props.row.tipo_vuelo?.toUpperCase() }}</q-badge>
                    <span class="q-ml-md font-mono text-weight-bolder text-red-9" style="font-size: 18px">{{ Number(props.row.horas_totales).toFixed(1) }}H</span>
+                   <div class="text-grey-5 font-mono text-caption q-mt-sm">Dual: {{ Number(props.row.horas_dual||0).toFixed(1) }} | Solo: {{ Number(props.row.horas_solo||0).toFixed(1) }}</div>
                  </div>
                  <q-btn flat round dense
                   :icon="props.row.firma_instructor ? 'verified_user' : 'pending_actions'"

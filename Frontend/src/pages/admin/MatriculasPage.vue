@@ -113,6 +113,10 @@
               <template #prepend><q-icon name="payments" color="red-9" /></template>
            </q-input>
 
+           <q-input v-model.number="form.descuento" filled dark label="DESCUENTO APLICADO (COP)" class="premium-input-login" stack-label type="number" prefix="$">
+              <template #prepend><q-icon name="local_offer" color="emerald" /></template>
+           </q-input>
+
            <q-select 
               v-model="form.forma_pago" 
               :options="formasPago" 
@@ -122,6 +126,12 @@
            >
               <template #prepend><q-icon name="account_tree" color="red-9" /></template>
            </q-select>
+
+           <q-input v-if="form.forma_pago === 'cuotas'" v-model.number="form.num_cuotas" filled dark label="NÚMERO DE CUOTAS" class="premium-input-login" stack-label type="number" />
+
+           <q-input v-model="form.contrato_url" filled dark label="URL CONTRATO MATRÍCULA (PDF)" class="premium-input-login" stack-label>
+              <template #prepend><q-icon name="link" color="red-9" /></template>
+           </q-input>
 
            <q-btn type="submit" color="red-10" label="Autorizar y Legalizar Matrícula" icon="verified" class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" :loading="guardando" />
         </q-form>
@@ -145,7 +155,7 @@ const dialogNuevo = ref(false)
 const buscar      = ref('')
 const filtroEstado = ref(null)
 
-const form = ref({ estudiante_id: '', programa_id: null, fecha_matricula: '', valor_total: 0, forma_pago: 'cuotas' })
+const form = ref({ estudiante_id: '', programa_id: null, fecha_matricula: '', valor_total: 0, descuento: 0, forma_pago: 'cuotas', num_cuotas: 1, contrato_url: '' })
 
 const opcionesEstado = [
   { label: 'ACTIVA / EN CURSO', value: 'activa' }, { label: 'SUSPENDIDA TÉCNICAMENTE', value: 'suspendida' },

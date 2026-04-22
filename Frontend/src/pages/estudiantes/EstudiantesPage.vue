@@ -195,18 +195,36 @@
               <q-input v-model="formNuevo.num_documento" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules placeholder="Número de documento" />
             </div>
           </div>
-          <div class="form-section">
+          <div class="row q-col-gutter-lg q-mt-sm">
+            <div class="col-12 col-md-4">
+              <label class="campo-label">Nacionalidad</label>
+              <q-input v-model="formNuevo.nacionalidad" outlined dense dark placeholder="Ej: Colombiana" />
+            </div>
+            <div class="col-12 col-md-8">
+              <label class="campo-label">Dirección</label>
+              <q-input v-model="formNuevo.direccion" outlined dense dark placeholder="Dirección de residencia" />
+            </div>
+            <div class="col-12">
+              <label class="campo-label">URL Foto de Perfil</label>
+              <q-input v-model="formNuevo.foto_url" outlined dense dark placeholder="https://..." />
+            </div>
+          </div>
+          <div class="form-section q-mt-lg">
             <div class="form-section-title">Programa y Admisión</div>
             <div class="row q-col-gutter-lg">
-              <div class="col-12 col-md-8">
+              <div class="col-12 col-md-6">
                 <label class="campo-label required">Programa Académico</label>
                 <q-select v-model="formNuevo.programa_id" :options="programas" option-value="id" option-label="nombre" outlined dense dark emit-value map-options :rules="[v => !!v || 'Requerido']" lazy-rules>
                   <template #prepend><q-icon name="school" color="grey-6" size="18px" /></template>
                 </q-select>
               </div>
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <label class="campo-label required">Fecha de Admisión</label>
                 <q-input v-model="formNuevo.fecha_ingreso" type="date" outlined dense dark :rules="[v => !!v || 'Requerido']" lazy-rules />
+              </div>
+              <div class="col-12">
+                <label class="campo-label">Observaciones (Opcional)</label>
+                <q-input v-model="formNuevo.observaciones" type="textarea" rows="2" outlined dense dark placeholder="Anotaciones internas del cadete..." />
               </div>
             </div>
           </div>
@@ -239,7 +257,7 @@ const vista                = ref('lista')
 
 const dialogNuevo          = ref(false)
 const guardandoNuevo       = ref(false)
-const formNuevo            = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: '', observaciones: '' })
+const formNuevo            = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: '', observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null })
 
 const filtros = ref({ buscar: '', programa_id: null, estado: null })
 const paginacion = ref({ page: 1, rowsPerPage: 15, rowsNumber: 0 })
@@ -287,7 +305,7 @@ async function verHoras(estudiante) {
   try { const { data } = await api.get(`/estudiantes/${estudiante.id}/progreso-horas`); progresoHoras.value = data.data } finally { cargandoHoras.value = false }
 }
 
-function abrirFormNuevo() { dialogNuevo.value = true; formNuevo.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: new Date().toISOString().split('T')[0], observaciones: '' } }
+function abrirFormNuevo() { dialogNuevo.value = true; formNuevo.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: new Date().toISOString().split('T')[0], observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null } }
 
 async function guardarNuevo() {
   guardandoNuevo.value = true

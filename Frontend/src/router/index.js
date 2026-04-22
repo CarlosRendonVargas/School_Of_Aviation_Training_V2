@@ -37,9 +37,11 @@ const routes = [
       { path: 'vuelo', name: 'vuelo', component: () => import('pages/vuelo/VueloPage.vue') },
       { path: 'bitacoras', redirect: '/vuelo' }, // Redirección legado
       { path: 'vuelo/nueva-bitacora', name: 'nueva-bitacora', component: () => import('pages/bitacoras/BitacoraNuevaPage.vue') },
+      { path: 'vuelo/:id', name: 'vuelo-detalle', component: () => import('pages/vuelo/BitacoraDetallePage.vue') },
 
       // 04: Instructores
       { path: 'instructores', name: 'instructores', component: () => import('pages/instructores/InstructoresPage.vue'), meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
+      { path: 'instructores/:id', name: 'instructor-detalle', component: () => import('pages/instructores/InstructorDetallePage.vue'), meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
 
       // 05: Operaciones y Mantenimiento
       { path: 'mantenimiento', name: 'mantenimiento', component: () => import('pages/mantenimiento/MantenimientoPage.vue'), meta: { roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'] } },

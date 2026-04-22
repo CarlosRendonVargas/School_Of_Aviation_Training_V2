@@ -103,8 +103,16 @@
                 </q-badge>
               </q-td>
             </template>
-            <template #body-cell-tipo="{ value }">
-              <q-td><q-chip dense :color="colorTipo(value)" text-color="white" :label="value?.toUpperCase()" size="xs" class="font-mono text-weight-bold q-px-sm" /></q-td>
+            <template #body-cell-tipo="{ row }">
+              <q-td>
+                <q-chip dense :color="colorTipo(row.tipo)" text-color="white" :label="row.tipo?.toUpperCase()" size="xs" class="font-mono text-weight-bold q-px-sm" />
+                <q-chip dense v-if="row.anonimo" color="grey-8" text-color="white" label="ANÓNIMO" icon="visibility_off" size="xs" class="font-mono text-weight-bold q-ml-sm" />
+              </q-td>
+            </template>
+            <template #body-cell-notificado_uaeac="{ value }">
+               <q-td class="text-center">
+                  <q-icon :name="value ? 'check_circle' : 'cancel'" :color="value ? 'emerald' : 'grey-7'" size="20px" />
+               </q-td>
             </template>
             <template #body-cell-fecha_evento="{ value }">
                <q-td class="font-mono text-grey-5">{{ value ? value.slice(0, 10) : '---' }}</q-td>
@@ -127,7 +135,10 @@
                     </div>
 
                     <div class="row items-center justify-between q-mt-md">
-                      <q-chip dense :color="colorTipo(props.row.tipo)" text-color="white" :label="props.row.tipo?.toUpperCase()" size="xs" class="font-mono" />
+                      <div>
+                         <q-chip dense :color="colorTipo(props.row.tipo)" text-color="white" :label="props.row.tipo?.toUpperCase()" size="xs" class="font-mono" />
+                         <q-icon v-if="props.row.notificado_uaeac" name="assured_workload" color="emerald" class="q-ml-sm" size="18px"><q-tooltip>Notificado a la UAEAC</q-tooltip></q-icon>
+                      </div>
                       <q-badge outline :color="colorEstado(props.row.estado)" :label="props.row.estado?.toUpperCase()" class="font-mono" style="font-size:9px" />
                     </div>
                   </q-card-section>
@@ -266,6 +277,7 @@ const columnasReportes = [
   { name: 'tipo', label: 'TIPO EVENTO', field: 'tipo', align: 'left' },
   { name: 'descripcion', label: 'HALLAZGO / OBSERVACIÓN TÉCNICA', field: 'descripcion', align: 'left' },
   { name: 'fecha_evento', label: 'FECHA REG.', field: 'fecha_evento', align: 'center' },
+  { name: 'notificado_uaeac', label: 'UAEAC', field: 'notificado_uaeac', align: 'center' },
   { name: 'estado', label: 'ESTATUS', field: 'estado', align: 'center' }
 ]
 

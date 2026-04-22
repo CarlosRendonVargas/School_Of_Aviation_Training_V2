@@ -145,6 +145,17 @@
                       <template #prepend><q-icon name="flight_land" color="red-9" /></template>
                    </q-input>
                 </div>
+                <div class="col-4">
+                   <q-select v-model="form.tipo_vuelo" :options="['local','navegacion','noche','ifr']" filled dark class="premium-input-login" label="TIPO DE VUELO" stack-label />
+                </div>
+                <div class="col-4">
+                   <q-input v-model.number="form.aterrizajes" type="number" filled dark class="premium-input-login" label="ATERRIZAJES" stack-label>
+                      <template #prepend><q-icon name="flight_land" color="red-9" /></template>
+                   </q-input>
+                </div>
+                <div class="col-4 flex items-center">
+                   <q-toggle v-model="form.condiciones_vmc" color="red-9" label="CONDICIONES VMC" class="text-weight-bold font-mono" dark />
+                </div>
              </div>
           </q-card>
         </div>
@@ -171,7 +182,8 @@
                   { m: 'horas_dual', l: 'INSTRUCCIÓN DUAL', c: 'red-9', i: 'school' },
                   { m: 'horas_solo', l: 'SOLO / PIC', c: 'grey-2', i: 'person' },
                   { m: 'horas_noche', l: 'NOCTURNO', c: 'indigo-9', i: 'nights_stay' },
-                  { m: 'horas_ifr', l: 'INSTRUMENTOS', c: 'emerald', i: 'visibility_off' }
+                  { m: 'horas_ifr', l: 'INSTRUMENTOS', c: 'emerald', i: 'visibility_off' },
+                  { m: 'horas_simulador', l: 'SIMULADOR / FSTD', c: 'orange-9', i: 'computer' }
                 ]" :key="h.m">
                    <div class="text-caption text-grey-7 font-mono q-mb-sm uppercase tracking-widest" style="font-size:9px">{{ h.l }}</div>
                    <q-input v-model.number="form[h.m]" type="number" step="0.1" filled dark class="premium-input-login" placeholder="0.0">

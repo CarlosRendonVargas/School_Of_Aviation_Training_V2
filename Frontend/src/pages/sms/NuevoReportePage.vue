@@ -37,12 +37,21 @@
 
             <div class="q-gutter-y-lg col">
                 <!-- Toggle Anónimo de Lujo -->
-                <div class="flex items-center justify-between q-pa-md border-red-low shadow-inner rounded-12 bg-black-20">
+                <div class="flex items-center justify-between q-pa-md border-red-low shadow-inner rounded-12 bg-black-20 q-mb-md">
                   <div>
                     <div class="text-white font-mono text-weight-bolder uppercase" style="font-size:12px">Reporte Anónimo</div>
                     <div class="text-grey-6 font-mono uppercase" style="font-size:9px">Certificar sin registro de identidad</div>
                   </div>
                   <q-toggle v-model="form.anonimo" color="red-9" dark />
+                </div>
+
+                <!-- Toggle Notificado UAEAC -->
+                <div class="flex items-center justify-between q-pa-md border-red-low shadow-inner rounded-12 bg-black-20">
+                  <div>
+                    <div class="text-white font-mono text-weight-bolder uppercase" style="font-size:12px">Notificado a la UAEAC</div>
+                    <div class="text-grey-6 font-mono uppercase" style="font-size:9px">Reporte obligatorio a la autoridad (OACI)</div>
+                  </div>
+                  <q-toggle v-model="form.notificado_uaeac" color="red-9" dark />
                 </div>
 
                 <q-select v-model="form.tipo" filled dark class="premium-input-login"
@@ -158,7 +167,7 @@ const $q      = useQuasar()
 const enviando = ref(false)
 const aeronaves = ref([])
 
-const form = ref({ anonimo: false, tipo: null, fecha_evento: '', lugar: '', aeronave_id: null, descripcion: '', severidad: 0, probabilidad: 0 })
+const form = ref({ anonimo: false, notificado_uaeac: false, tipo: null, fecha_evento: '', lugar: '', aeronave_id: null, descripcion: '', severidad: 0, probabilidad: 0 })
 
 const opcionesTipo = [
   { label: '⚠️ PELIGRO IDENTIFICADO', value: 'peligro' },

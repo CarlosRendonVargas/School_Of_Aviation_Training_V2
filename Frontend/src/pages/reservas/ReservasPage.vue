@@ -89,7 +89,7 @@
 
     <!-- ════ DIÁLOGO: NUEVA PROGRAMACIÓN OPERATIVA ════ -->
     <q-dialog v-model="dialogNueva" persistent backdrop-filter="blur(15px)">
-      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(550px, 95vw);">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-top rounded-20" style="width:min(600px, 95vw);">
         <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
            <div class="row items-center">
               <q-icon name="add_task" color="red-9" size="32px" class="q-mr-md glow-primary" />
@@ -99,6 +99,24 @@
         </div>
 
         <q-form @submit.prevent="crearReserva" class="q-gutter-y-lg">
+           <div class="row q-col-gutter-lg">
+             <div class="col-12">
+               <q-select v-model="form.estudiante_id" :options="estudiantesOpc"
+                 label="ALUMNO PILOTO (PIC) *" filled dark class="premium-input-login"
+                 emit-value map-options use-input @filter="filtrarEstudiantes" stack-label
+                 :rules="[v=>!!v||'Requerido']">
+                 <template #prepend><q-icon name="person" color="red-9" /></template>
+               </q-select>
+             </div>
+             <div class="col-12">
+               <q-select v-model="form.instructor_id" :options="instructoresOpc"
+                 label="INSTRUCTOR AL MANDO" filled dark class="premium-input-login"
+                 emit-value map-options clearable stack-label>
+                 <template #prepend><q-icon name="badge" color="red-9" /></template>
+               </q-select>
+             </div>
+           </div>
+
            <q-input v-model="form.fecha" type="date" filled dark label="FECHA PROGRAMADA" class="premium-input-login" stack-label>
               <template #prepend><q-icon name="event" color="red-9" /></template>
            </q-input>
@@ -148,29 +166,159 @@
       </q-card>
     </q-dialog>
 
+    <!-- ════ DIÁLOGO: DETALLE DE RESERVA / BRIEFING ════ -->
+    <q-dialog v-model="dialogDetalle" backdrop-filter="blur(15px)">
+      <q-card v-if="reservaSel" class="premium-glass-card q-pa-md q-pa-sm-xl shadow-24 border-red-low rounded-20" style="width:min(800px, 95vw);">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+           <div class="row items-center">
+              <q-icon name="flight_takeoff" color="red-9" size="32px" class="q-mr-md" />
+              <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Manifiesto de Despacho</div>
+           </div>
+           <q-btn flat round dense icon="close" @click="dialogDetalle=false" color="grey-6" />
+        </div>
+
+        <div class="row q-col-gutter-xl">
+          <!-- Columna Izquierda: Detalles -->
+          <div class="col-12 col-md-6">
+            <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mb-md">Detalles Operativos</div>
+            
+            <q-card class="bg-black-20 q-pa-md rounded-12 border-red-low q-mb-md">
+              <div class="font-mono text-grey-6" style="font-size:10px">ALUMNO PIC</div>
+              <div class="text-white text-weight-bold font-head">{{ reservaSel.estudiante?.persona?.nombres }} {{ reservaSel.estudiante?.persona?.apellidos }}</div>
+              
+              <div class="q-mt-md font-mono text-grey-6" style="font-size:10px">CAPITÁN INSTRUCTOR</div>
+              <div class="text-white text-weight-bold font-head">{{ reservaSel.instructor?.persona?.nombres || 'SOLO' }} {{ reservaSel.instructor?.persona?.apellidos || '' }}</div>
+
+              <div class="q-mt-md font-mono text-grey-6" style="font-size:10px">AERONAVE / FECHA / HORA</div>
+              <div class="text-white text-weight-bold font-mono">
+                <q-badge color="red-9" class="q-mr-sm">{{ reservaSel.aeronave?.matricula }}</q-badge>
+                {{ reservaSel.fecha }} ({{ reservaSel.hora_inicio }} - {{ reservaSel.hora_fin }} UTC)
+              </div>
+            </q-card>
+
+            <!-- Cambiar Estado -->
+            <div class="q-mt-lg">
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mb-sm">Actualizar Estado</div>
+              <div class="row q-col-gutter-sm">
+                <div class="col-8">
+                  <q-select v-model="estadoTemp" :options="opcionesEstado" emit-value map-options
+                    filled dark class="premium-input-login" dense />
+                </div>
+                <div class="col-4">
+                  <q-btn color="red-9" icon="update" class="full-width full-height premium-btn" @click="cambiarEstado" :loading="guardando" />
+                </div>
+              </div>
+              <q-input v-if="estadoTemp === 'cancelada'" v-model="motivoCancelacion"
+                type="textarea" rows="2" filled dark class="premium-input-login q-mt-md"
+                label="MOTIVO DE CANCELACIÓN" />
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Flujo Briefing -> Bitácora -->
+          <div class="col-12 col-md-6 flex column">
+            <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mb-md">Ciclo de Vuelo</div>
+
+            <!-- Briefing Pre-vuelo -->
+            <q-card class="bg-black-20 q-pa-md rounded-12 border-red-low q-mb-md text-center cursor-pointer hover-row"
+              @click="abrirBriefing(reservaSel, 'pre_vuelo')">
+              <q-icon name="co_present" size="48px" :color="tieneBriefing ? 'emerald' : 'orange-9'" class="q-mb-sm" />
+              <div class="text-white text-weight-bolder font-head">BRIEFING PRE-VUELO</div>
+              <div class="text-caption text-grey-5 font-mono">{{ tieneBriefing ? 'Realizado' : 'Pendiente' }}</div>
+            </q-card>
+
+            <!-- Bitácora -->
+            <q-card class="bg-black-20 q-pa-md rounded-12 border-red-low q-mb-md text-center cursor-pointer hover-row"
+              @click="irABitacora(reservaSel)">
+              <q-icon name="flight_takeoff" size="48px" color="blue-9" class="q-mb-sm" />
+              <div class="text-white text-weight-bolder font-head">REGISTRAR BITÁCORA</div>
+              <div class="text-caption text-grey-5 font-mono">Ir al formato RAC 91.417</div>
+            </q-card>
+
+            <!-- Debriefing Post-vuelo -->
+            <q-card class="bg-black-20 q-pa-md rounded-12 border-red-low text-center cursor-pointer hover-row"
+              @click="abrirBriefing(reservaSel, 'post_vuelo')">
+              <q-icon name="rate_review" size="48px" :color="tieneDebriefing ? 'emerald' : 'grey-7'" class="q-mb-sm" />
+              <div class="text-white text-weight-bolder font-head">DEBRIEFING POST-VUELO</div>
+              <div class="text-caption text-grey-5 font-mono">{{ tieneDebriefing ? 'Realizado' : 'Pendiente vuelo' }}</div>
+            </q-card>
+
+          </div>
+        </div>
+      </q-card>
+    </q-dialog>
+
+    <!-- ════ DIÁLOGO: BRIEFING / DEBRIEFING ════ -->
+    <q-dialog v-model="dialogBriefing" backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low rounded-20" style="width:min(600px, 95vw);">
+        <div class="row items-center justify-between q-mb-lg border-bottom-border pb-md">
+           <div class="row items-center">
+              <q-icon :name="tipoBriefing === 'pre_vuelo' ? 'co_present' : 'rate_review'" color="red-9" size="32px" class="q-mr-md" />
+              <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">
+                {{ tipoBriefing === 'pre_vuelo' ? 'Briefing Pre-vuelo' : 'Debriefing Post-vuelo' }}
+              </div>
+           </div>
+           <q-btn flat round dense icon="close" @click="dialogBriefing=false" color="grey-6" />
+        </div>
+        
+        <q-form @submit.prevent="guardarBriefing" class="q-gutter-y-lg">
+          <q-select v-model="formBriefing.tipo" :options="['general','maniobras','seguridad','evaluacion']"
+            label="TIPO DE ENFOQUE" filled dark class="premium-input-login" stack-label />
+          
+          <q-input v-model="formBriefing.contenido" type="textarea" rows="4"
+            :label="tipoBriefing === 'pre_vuelo' ? 'ÁREAS A DISCUTIR / OBJETIVOS' : 'EVALUACIÓN Y COMENTARIOS'"
+            filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']" />
+            
+          <q-input v-model="formBriefing.areas_debiles" type="textarea" rows="2"
+            label="ÁREAS DÉBILES / POR MEJORAR"
+            filled dark class="premium-input-login" stack-label />
+            
+          <q-toggle v-model="formBriefing.firma_instructor" label="FIRMAR CONFORME RAC"
+            color="emerald" dark class="font-mono text-weight-bolder" />
+            
+          <q-btn type="submit" color="red-10" icon="save" label="Guardar Registro"
+            class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" :loading="guardando" />
+        </q-form>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
 
+const router    = useRouter()
 const $q        = useQuasar()
 const authStore = useAuthStore()
 
 const reservas    = ref([])
 const aeronaves   = ref([])
+const estudiantesOpc = ref([])
+const instructoresOpc = ref([])
+const briefings   = ref([]) // De la reserva actual
+
 const cargando    = ref(false)
 const dialogNueva = ref(false)
+const dialogDetalle = ref(false)
+const dialogBriefing = ref(false)
 const creando     = ref(false)
+const guardando   = ref(false)
 const erroresRac  = ref([])
+
+const reservaSel  = ref(null)
+const estadoTemp  = ref('')
+const motivoCancelacion = ref('')
+const tipoBriefing = ref('pre_vuelo') // 'pre_vuelo' o 'post_vuelo'
 
 const hoy = dayjs().format('YYYY-MM-DD')
 const filtros = ref({ fecha: hoy, estado: null, tipo: null })
-const form = ref({ fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion' })
+const form = ref({ fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null })
+const formBriefing = ref({ reserva_id: null, pos_vuelo: 'pre_vuelo', tipo: 'general', contenido: '', areas_debiles: '', firma_instructor: true })
 
 const opcionesEstado = [
   { label: 'PENDIENTE',  value: 'pendiente' },
@@ -187,11 +335,106 @@ const opcionesTipo = [
 const opcionesAeronaves = computed(() => aeronaves.value.filter(a => a.estado === 'disponible').map(a => ({ value: a.id, label: `${a.matricula} · ${a.modelo}` })))
 const colorEstadoReserva = (e) => ({ pendiente:'warning', confirmada:'emerald', completada:'blue-10', cancelada:'red-10' }[e]||'grey-8')
 
-function verDetalle(r) { /* Detalle Dialog placeholder */ }
+const tieneBriefing   = computed(() => briefings.value.some(b => b.pos_vuelo === 'pre_vuelo'))
+const tieneDebriefing = computed(() => briefings.value.some(b => b.pos_vuelo === 'post_vuelo'))
+
+async function verDetalle(r) {
+  reservaSel.value = r
+  estadoTemp.value = r.estado
+  motivoCancelacion.value = r.motivo_cancelacion || ''
+  dialogDetalle.value = true
+  // Cargar briefings de esta reserva
+  try {
+    const { data } = await api.get(`/briefings?reserva_id=${r.id}`)
+    briefings.value = data.data || []
+  } catch { briefings.value = [] }
+}
+
+async function cambiarEstado() {
+  guardando.value = true
+  try {
+    const payload = { estado: estadoTemp.value }
+    if (estadoTemp.value === 'cancelada') payload.motivo_cancelacion = motivoCancelacion.value
+    await api.put(`/reservas/${reservaSel.value.id}`, payload)
+    $q.notify({ color: 'emerald', message: 'Estado de reserva actualizado.' })
+    cargar()
+    reservaSel.value.estado = estadoTemp.value
+  } catch (e) { $q.notify({ color: 'negative', message: 'Error al actualizar.' }) }
+  finally { guardando.value = false }
+}
+
+function abrirBriefing(reserva, pos) {
+  tipoBriefing.value = pos
+  // Buscar si ya existe para precargar
+  const existente = briefings.value.find(b => b.pos_vuelo === pos)
+  if (existente) {
+    formBriefing.value = { ...existente }
+  } else {
+    formBriefing.value = { reserva_id: reserva.id, pos_vuelo: pos, tipo: 'general', contenido: '', areas_debiles: '', firma_instructor: true }
+  }
+  dialogBriefing.value = true
+}
+
+async function guardarBriefing() {
+  guardando.value = true
+  try {
+    if (formBriefing.value.id) {
+      await api.put(`/briefings/${formBriefing.value.id}`, formBriefing.value)
+    } else {
+      await api.post('/briefings', formBriefing.value)
+    }
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Briefing registrado.' })
+    dialogBriefing.value = false
+    // Recargar briefings
+    const { data } = await api.get(`/briefings?reserva_id=${reservaSel.value.id}`)
+    briefings.value = data.data || []
+  } catch (e) { $q.notify({ color: 'negative', message: 'Error al guardar briefing.' }) }
+  finally { guardando.value = false }
+}
+
+function irABitacora(reserva) {
+  // Guardamos en store o pasamos query params a la vista de BitácoraNueva
+  // Por ahora lo más simple es usar query params
+  router.push({
+    path: '/vuelo/nueva-bitacora',
+    query: {
+      reserva_id: reserva.id,
+      estudiante_id: reserva.estudiante_id,
+      instructor_id: reserva.instructor_id,
+      aeronave_id: reserva.aeronave_id,
+      fecha: reserva.fecha
+    }
+  })
+}
 
 function limpiarFiltros() { filtros.value = { fecha: '', estado: null, tipo: null }; cargar() }
 
-function cerrarDialog() { dialogNueva.value = false; erroresRac.value = []; form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion' } }
+function cerrarDialog() { dialogNueva.value = false; erroresRac.value = []; form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null } }
+
+async function filtrarEstudiantes(val, update) {
+  try {
+    const { data } = await api.get('/estudiantes', { params: { buscar: val, estado: 'activo', per_page: 20 } })
+    const lista = data.data?.data || data.data || []
+    update(() => {
+      estudiantesOpc.value = lista.map(e => ({
+        label: `${e.persona?.nombres} ${e.persona?.apellidos} - ${e.num_expediente}`, value: e.id,
+      }))
+    })
+  } catch { update(() => { estudiantesOpc.value = [] }) }
+}
+
+async function cargarCatalogos() {
+  try {
+    const [aer, inst] = await Promise.all([
+      api.get('/aeronaves', { params: { estado: 'disponible' } }),
+      api.get('/instructores', { params: { activo: 1 } })
+    ])
+    aeronaves.value = aer.data.data || []
+    instructoresOpc.value = (inst.data.data?.data || inst.data.data || []).map(i => ({
+      label: `${i.persona?.nombres} ${i.persona?.apellidos}`, value: i.id
+    }))
+  } catch {}
+}
 
 async function cargar() {
   cargando.value = true
@@ -202,16 +445,12 @@ async function cargar() {
   } catch { /**/ } finally { cargando.value = false }
 }
 
-async function cargarAeronaves() {
-  const { data } = await api.get('/aeronaves', { params: { estado: 'disponible' } })
-  aeronaves.value = data.data || []
-}
-
 async function crearReserva() {
   erroresRac.value = []
   creando.value = true
   try {
-    const payload = { ...form.value, estudiante_id: authStore.esEstudiante ? null : form.value.estudiante_id }
+    const payload = { ...form.value }
+    if (authStore.esEstudiante) payload.estudiante_id = null // Override si es estudiante
     await api.post('/reservas', payload)
     $q.notify({ color: 'emerald', icon: 'verified', message: 'Misión agendada exitosamente en el despacho operativo.' })
     cerrarDialog(); cargar()
@@ -220,7 +459,7 @@ async function crearReserva() {
   } finally { creando.value = false }
 }
 
-onMounted(() => { cargar(); cargarAeronaves() })
+onMounted(() => { cargar(); cargarCatalogos() })
 </script>
 
 <style lang="scss" scoped>

@@ -28,6 +28,7 @@
         <q-tab name="estudiantes" icon="groups"         :label="$q.screen.gt.xs ? 'Archivo Digital' : ''" />
         <q-tab name="vuelo"       icon="flight_takeoff" :label="$q.screen.gt.xs ? 'Fase de Vuelo' : ''" />
         <q-tab name="tesoreria"   icon="payments"       :label="$q.screen.gt.xs ? 'Habilitaciones' : ''" />
+        <q-tab name="planes"      icon="fact_check"     :label="$q.screen.gt.xs ? 'Planes de Clase' : ''" />
       </q-tabs>
 
       <q-tab-panels v-model="tab" animated class="bg-transparent text-white" style="min-height:600px">
@@ -369,6 +370,63 @@
                 </div>
               </div>
             </div>
+          </div>
+        </q-tab-panel>
+
+        <!-- ════ SECCIÓN: PLANES DE CLASE ════ -->
+        <q-tab-panel name="planes" class="q-pa-xl">
+          <div class="row justify-between items-center q-mb-xl">
+            <div>
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Syllabus & Planes de Clase</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">Planificación Diaria de Instructores</div>
+            </div>
+            <q-btn color="red-9" icon="add" label="Crear Plan de Clase"
+              class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder"
+              @click="abrirNuevoPlanClase" />
+          </div>
+
+          <div v-if="loadingPlanes" class="row justify-center q-pa-xl">
+             <q-spinner-dots color="red-9" size="48px" />
+          </div>
+
+          <div v-else-if="!planesClase.length" class="text-center q-pa-xl text-grey-7 font-mono uppercase tracking-widest">
+             <q-icon name="fact_check" size="80px" class="opacity-10 q-mb-md" />
+             <div>No hay planes de clase registrados.</div>
+          </div>
+
+          <div v-else class="row q-col-gutter-lg">
+             <div v-for="plan in planesClase" :key="plan.id" class="col-12 col-md-6 col-lg-4">
+                <q-card class="premium-glass-card hover-card border-red-low shadow-24 h-full flex column rounded-20">
+                   <q-card-section class="q-pa-lg col">
+                      <div class="row items-center justify-between q-mb-md">
+                         <div class="text-caption text-grey-6 font-mono">{{ plan.fecha }}</div>
+                         <q-badge outline :color="plan.estado === 'realizada' ? 'emerald' : (plan.estado === 'cancelada' ? 'red-9' : 'blue-9')" :label="plan.estado?.toUpperCase() || 'PLANIFICADA'" class="font-mono" />
+                      </div>
+                      <div class="text-h6 text-white font-head text-weight-bolder ellipsis line-height-1">{{ plan.materia?.nombre || 'Clase sin materia' }}</div>
+                      <div class="text-subtitle2 text-red-9 font-mono q-mt-xs q-mb-lg ellipsis">Instructor: {{ plan.instructor?.persona?.apellidos || 'No Asignado' }}</div>
+
+                      <div class="text-caption text-grey-5 ellipsis-2-lines q-mb-md" style="min-height: 35px">{{ plan.objetivos || plan.contenido || 'Sin descripción técnica.' }}</div>
+
+                      <div class="row q-col-gutter-sm bg-black-20 rounded-12 q-pa-sm border-red-low">
+                         <div class="col-6 text-center">
+                            <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:8px">DURACIÓN</div>
+                            <div class="text-subtitle1 text-white text-weight-bolder font-mono">{{ plan.duracion_min }}<span class="text-caption text-grey-6">M</span></div>
+                         </div>
+                         <div class="col-6 text-center border-left-border">
+                            <div class="text-caption text-grey-7 font-mono uppercase" style="font-size:8px">RECURSOS</div>
+                            <q-icon name="devices" color="grey-5" size="18px" class="q-mt-xs">
+                               <q-tooltip>{{ plan.recursos || 'Ninguno' }}</q-tooltip>
+                            </q-icon>
+                         </div>
+                      </div>
+                   </q-card-section>
+                   <q-separator dark class="opacity-5" />
+                   <q-card-actions align="between" class="q-px-lg q-py-md">
+                      <q-btn flat round color="red-9" icon="delete" size="sm" @click="eliminarPlanClase(plan.id)" />
+                      <q-btn flat round color="white" icon="edit" size="sm" @click="editarPlanClase(plan)" />
+                   </q-card-actions>
+                </q-card>
+             </div>
           </div>
         </q-tab-panel>
 
@@ -1055,6 +1113,80 @@
       </q-card>
     </q-dialog>
 
+    <!-- DIÁLOGO: PLAN DE CLASE -->
+    <q-dialog v-model="dialogPlan" persistent backdrop-filter="blur(15px)">
+       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(700px, 95vw)">
+          <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+             <div class="row items-center">
+                <q-icon name="fact_check" color="red-9" size="32px" class="q-mr-md glow-primary" />
+                <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Plan de Clase</div>
+             </div>
+             <q-btn flat round dense icon="close" @click="dialogPlan = false" color="grey-6" class="bg-black-20 hover-red" />
+          </div>
+          <q-form @submit.prevent="guardarPlanClase" class="q-gutter-y-md" :class="$q.screen.lt.md ? 'q-px-lg q-pb-lg' : 'q-px-xl q-pb-xl'">
+             <div class="row q-col-gutter-md">
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.instructor_id" :options="instructoresOptions" label="INSTRUCTOR" filled dark class="premium-input-login" map-options emit-value stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.materia_id" :options="materiasTodasOptions" label="MATERIA / MÓDULO" filled dark class="premium-input-login" map-options emit-value stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-input v-model="planForm.fecha" type="date" label="FECHA PLANIFICADA" filled dark class="premium-input-login" stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-input v-model.number="planForm.duracion_min" type="number" label="DURACIÓN (MINUTOS)" filled dark class="premium-input-login" stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.estado" :options="['planificada', 'realizada', 'cancelada']" label="ESTADO" filled dark class="premium-input-login" stack-label uppercase />
+                </div>
+             </div>
+             <q-input v-model="planForm.objetivos" type="textarea" label="OBJETIVOS DE LA CLASE" filled dark class="premium-input-login" rows="2" stack-label />
+             <q-input v-model="planForm.contenido" type="textarea" label="CONTENIDO TÉCNICO" filled dark class="premium-input-login" rows="2" stack-label />
+             <q-input v-model="planForm.recursos" type="textarea" label="RECURSOS (MATERIALES / EQUIPO)" filled dark class="premium-input-login" rows="1" stack-label />
+
+             <q-btn type="submit" color="red-10" label="Guardar Plan de Clase" class="full-width premium-btn q-py-lg q-mt-md shadow-24 text-weight-bolder" :loading="guardandoPlan" />
+          </q-form>
+       </q-card>
+    </q-dialog>
+
+    <!-- DIÁLOGO: PLAN DE CLASE -->
+    <q-dialog v-model="dialogPlan" persistent backdrop-filter="blur(15px)">
+       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(700px, 95vw)">
+          <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+             <div class="row items-center">
+                <q-icon name="fact_check" color="red-9" size="32px" class="q-mr-md glow-primary" />
+                <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Plan de Clase</div>
+             </div>
+             <q-btn flat round dense icon="close" @click="dialogPlan = false" color="grey-6" class="bg-black-20 hover-red" />
+          </div>
+          <q-form @submit.prevent="guardarPlanClase" class="q-gutter-y-md" :class="$q.screen.lt.md ? 'q-px-lg q-pb-lg' : 'q-px-xl q-pb-xl'">
+             <div class="row q-col-gutter-md">
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.instructor_id" :options="instructoresOptions" label="INSTRUCTOR" filled dark class="premium-input-login" map-options emit-value stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.materia_id" :options="materiasTodasOptions" label="MATERIA / MÓDULO" filled dark class="premium-input-login" map-options emit-value stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-input v-model="planForm.fecha" type="date" label="FECHA PLANIFICADA" filled dark class="premium-input-login" stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-input v-model.number="planForm.duracion_min" type="number" label="DURACIÓN (MINUTOS)" filled dark class="premium-input-login" stack-label />
+                </div>
+                <div class="col-12 col-md-6">
+                   <q-select v-model="planForm.estado" :options="['planificada', 'realizada', 'cancelada']" label="ESTADO" filled dark class="premium-input-login" stack-label uppercase />
+                </div>
+             </div>
+             <q-input v-model="planForm.objetivos" type="textarea" label="OBJETIVOS DE LA CLASE" filled dark class="premium-input-login" rows="2" stack-label />
+             <q-input v-model="planForm.contenido" type="textarea" label="CONTENIDO TÉCNICO" filled dark class="premium-input-login" rows="2" stack-label />
+             <q-input v-model="planForm.recursos" type="textarea" label="RECURSOS (MATERIALES / EQUIPO)" filled dark class="premium-input-login" rows="1" stack-label />
+
+             <q-btn type="submit" color="red-10" label="Guardar Plan de Clase" class="full-width premium-btn q-py-lg q-mt-md shadow-24 text-weight-bolder" :loading="guardandoPlan" />
+          </q-form>
+       </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -1155,6 +1287,13 @@ const estudiantesOptions  = ref([])
 const aeronavesOptions    = ref([])
 const instructoresOptions = ref([])
 
+const planesClase = ref([])
+const loadingPlanes = ref(false)
+const dialogPlan = ref(false)
+const guardandoPlan = ref(false)
+const planForm = ref({ id: null, instructor_id: null, materia_id: null, fecha: dayjs().format('YYYY-MM-DD'), duracion_min: 60, estado: 'planificada', objetivos: '', contenido: '', recursos: '' })
+const materiasTodasOptions = ref([])
+
 const columnsEstudiantes = [
   { name: 'nombre',   label: 'NOMBRE DEL CADETE', align: 'left' },
   { name: 'estado',   label: 'STATUS UAEAC',       align: 'center' },
@@ -1173,23 +1312,32 @@ const getEstadoColor = (e) => ({ 'activo': 'emerald', 'volando': 'blue-9', 'grad
 
 // ── Carga de datos ──
 async function cargarDatos() {
-  loadingProgramas.value = true; loadingEstudiantes.value = true; loadingVuelo.value = true
+  loadingProgramas.value = true; loadingEstudiantes.value = true; loadingVuelo.value = true; loadingPlanes.value = true
   try {
-    const [ps, es, vs, as, ins] = await Promise.all([
+    const [ps, es, vs, as, ins, pl] = await Promise.all([
       api.get('/programas'),
       api.get('/estudiantes', { params: { q: filtroBusqueda.value } }),
       api.get('/vuelos'),
       api.get('/aeronaves'),
-      api.get('/instructores')
+      api.get('/instructores'),
+      api.get('/planes-clase')
     ])
 
     programas.value     = ps.data.data || ps.data || []
     programasOptions.value = programas.value.map(p => ({ label: p.nombre, value: p.id }))
     
-    // El controlador de estudiantes usa paginación (data.data.data) o directo (data.data)
+    materiasTodasOptions.value = []
+    programas.value.forEach(p => {
+       p.etapas?.forEach(et => {
+          et.materias?.forEach(m => {
+             materiasTodasOptions.value.push({ label: `${m.codigo} - ${m.nombre} (${p.codigo})`, value: m.id })
+          })
+       })
+    })
+
     estudiantes.value   = es.data.data?.data || es.data.data || es.data || []
-    
     misionesVuelo.value = vs.data.data || vs.data || []
+    planesClase.value   = pl.data.data || pl.data || []
 
     estudiantesOptions.value  = estudiantes.value.map(e => ({ label: `${e.persona?.nombres} ${e.persona?.apellidos}`, value: e.id }))
     
@@ -1203,7 +1351,7 @@ async function cargarDatos() {
     console.error("Error al cargar datos:", e)
     $q.notify({ color: 'negative', message: 'Fallo al sincronizar con el centro de datos.' })
   } finally {
-    loadingProgramas.value = false; loadingEstudiantes.value = false; loadingVuelo.value = false
+    loadingProgramas.value = false; loadingEstudiantes.value = false; loadingVuelo.value = false; loadingPlanes.value = false
   }
 }
 
@@ -1456,6 +1604,42 @@ async function guardarVuelo() {
     $q.notify({ color: 'negative', message: 'Error al certificar la misión de vuelo.' })
   } finally { guardandoVuelo.value = false }
 }
+
+// ── Gestión Planes de Clase ──
+function abrirNuevoPlanClase() {
+  planForm.value = { id: null, instructor_id: null, materia_id: null, fecha: dayjs().format('YYYY-MM-DD'), duracion_min: 60, estado: 'planificada', objetivos: '', contenido: '', recursos: '' }
+  dialogPlan.value = true
+}
+
+function editarPlanClase(plan) {
+  planForm.value = { ...plan }
+  dialogPlan.value = true
+}
+
+async function guardarPlanClase() {
+  guardandoPlan.value = true
+  try {
+    if (planForm.value.id) await api.put(`/planes-clase/${planForm.value.id}`, planForm.value)
+    else await api.post('/planes-clase', planForm.value)
+    $q.notify({ color: 'emerald', message: 'Plan de clase guardado.' })
+    dialogPlan.value = false
+    cargarDatos()
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al guardar el plan de clase.' })
+  } finally { guardandoPlan.value = false }
+}
+
+function eliminarPlanClase(id) {
+  $q.dialog({ title: 'Confirmar', message: '¿Eliminar este plan de clase?', dark: true, ok: { color: 'red-9', label: 'Eliminar' }, cancel: true }).onOk(async () => {
+    try {
+      await api.delete(`/planes-clase/${id}`)
+      $q.notify({ color: 'emerald', message: 'Plan de clase eliminado.' })
+      cargarDatos()
+    } catch { $q.notify({ color: 'negative', message: 'Fallo al eliminar.' }) }
+  })
+}
+
+
 
 onMounted(cargarDatos)
 // ── Acciones Estudiante ──

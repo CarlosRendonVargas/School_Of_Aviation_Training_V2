@@ -151,8 +151,11 @@
                      <div class="text-white text-weight-bold q-mt-md">{{ props.row.descripcion }}</div>
                      <q-separator dark class="opacity-5 q-my-sm" />
                      <div class="row justify-between">
-                       <div class="text-caption text-grey-4">Téc: {{ props.row.realizado_por }}</div>
+                       <div class="text-caption text-grey-4">Téc: {{ props.row.realizado_por }} (Lic: {{ props.row.licencia_tecnico || 'N/A' }})</div>
                        <div class="font-mono text-grey-6" style="font-size:10px">TTAE: {{ props.row.horas_aeronave }}h</div>
+                     </div>
+                     <div v-if="props.row.archivo_url" class="q-mt-sm">
+                       <q-btn flat no-caps dense icon="picture_as_pdf" color="red-9" :href="props.row.archivo_url" target="_blank" label="Ver Certificado RAC 43" class="font-mono" style="font-size:10px" />
                      </div>
                   </q-card-section>
                </q-card>
@@ -230,11 +233,23 @@
           <div class="col-12 col-md-6">
             <q-input v-model="formMant.costo" type="number" label="COSTO OPERACIÓN (COP)" filled dark class="premium-input-login" stack-label />
           </div>
-          <div class="col-12">
+          <div class="col-12 col-md-6">
             <q-input v-model="formMant.realizado_por" label="PERSONAL TÉCNICO / TALLER AUTORIZADO" filled dark class="premium-input-login" stack-label />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-input v-model="formMant.licencia_tecnico" label="LICENCIA TÉCNICO (RAC 65)" filled dark class="premium-input-login" stack-label />
           </div>
           <div class="col-12">
             <q-input v-model="formMant.descripcion" label="DESCRIPCIÓN TÉCNICA DEL TRABAJO" type="textarea" rows="3" filled dark class="premium-input-login" stack-label />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-input v-model="formMant.proxima_fecha" type="date" label="FECHA PRÓXIMO MANTENIMIENTO" filled dark class="premium-input-login" stack-label />
+          </div>
+          <div class="col-12 col-md-6">
+             <q-input v-model="formMant.proximas_horas" type="number" step="0.1" label="TTAE PRÓXIMO MANTENIMIENTO" filled dark class="premium-input-login" stack-label />
+          </div>
+          <div class="col-12">
+            <q-input v-model="formMant.archivo_url" label="URL CERTIFICADO RAC 43 (PDF)" filled dark class="premium-input-login" stack-label />
           </div>
           
           <div class="col-12 row justify-end q-mt-xl">
@@ -316,7 +331,7 @@ const dialogMant = ref(false)
 const dialogMel  = ref(false)
 const guardando  = ref(false)
 
-const formMant = ref({ aeronave_id: null, tipo: null, descripcion: '', fecha_realizado: '', horas_aeronave: '', realizado_por: '', licencia_tecnico: '', proxima_fecha: '', proximas_horas: '', costo: '' })
+const formMant = ref({ aeronave_id: null, tipo: null, descripcion: '', fecha_realizado: '', horas_aeronave: '', realizado_por: '', licencia_tecnico: '', proxima_fecha: '', proximas_horas: '', costo: '', archivo_url: '' })
 const formMel  = ref({ aeronave_id: null, item_ata: '', descripcion: '', categoria: null, fecha_apertura: '', procedimiento_o: '' })
 
 const puedeRegistrar = computed(() =>
@@ -348,8 +363,10 @@ const colsRegistros = [
   { name: 'tipo', label: 'TIPO', field: 'tipo', align: 'left' },
   { name: 'fecha_realizado', label: 'FECHA', field: 'fecha_realizado', align: 'left' },
   { name: 'realizado_por', label: 'TÉCNICO', field: 'realizado_por', align: 'left' },
-  { name: 'horas_aeronave', label: 'HORAS', field: 'horas_aeronave', align: 'center' },
+  { name: 'licencia_tecnico', label: 'LICENCIA', field: 'licencia_tecnico', align: 'center' },
+  { name: 'horas_aeronave', label: 'TTAE', field: 'horas_aeronave', align: 'center' },
   { name: 'descripcion', label: 'DESCRIPCIÓN', field: 'descripcion', align: 'left' },
+  { name: 'costo', label: 'COSTO ($)', field: 'costo', align: 'right' },
 ]
 
 const colsMel = [
