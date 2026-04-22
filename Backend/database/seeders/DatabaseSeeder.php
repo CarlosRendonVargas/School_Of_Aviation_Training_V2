@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             InstructoresSeeder::class,
             EstudiantesSeeder::class,
             DocumentosRacSeeder::class,
+            FullDemoSeeder::class,
+            AulaVirtualSeeder::class,
         ]);
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }

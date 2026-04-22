@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('reintentos_autorizados', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('estudiante_id')->constrained('estudiantes')->cascadeOnDelete();
-            $table->foreignId('materia_id')->constrained('materias')->cascadeOnDelete();
-            $table->foreignId('autorizado_por')->nullable()->constrained('usuarios');
+            $table->unsignedBigInteger('estudiante_id');
+            $table->unsignedBigInteger('materia_id');
+            $table->unsignedBigInteger('autorizado_por')->nullable();
             $table->string('num_recibo')->nullable();
             $table->boolean('usado')->default(false);
             $table->timestamps();
+
+            // $table->foreign('estudiante_id')->references('id')->on('estudiantes')->onDelete('cascade');
+            // $table->foreign('materia_id')->references('id')->on('materias')->onDelete('cascade');
+            // $table->foreign('autorizado_por')->references('id')->on('usuarios')->onDelete('set null');
         });
     }
 

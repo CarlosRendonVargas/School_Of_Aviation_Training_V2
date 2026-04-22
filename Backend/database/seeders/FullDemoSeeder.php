@@ -33,6 +33,13 @@ class FullDemoSeeder extends Seeder
         $this->seedReportesSMS();
         $this->seedFacturasExtra();
         $this->seedCertInstructores();
+        $this->seedBriefings();
+        $this->seedPlanesClase();
+        $this->seedMisiones();
+        $this->seedNotasLecciones();
+        $this->seedReintentos();
+        $this->seedJobs();
+        $this->seedAuditLogs();
         $this->sincronizarVencimientos();
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
@@ -53,6 +60,163 @@ class FullDemoSeeder extends Seeder
                 ['Auditor UAEAC',   'uaeac@aerocivil.gov.co'],
             ]
         );
+    }
+
+    private function seedMisiones(): void
+    {
+        $this->command->info('  → Misiones de Vuelo...');
+        $estudiantes = DB::table('estudiantes')->pluck('id');
+        $instructores = DB::table('instructores')->pluck('id');
+        $programas = DB::table('programas')->pluck('id');
+        $matriculas = ['HK-4521', 'HK-4892', 'HK-5103'];
+
+        foreach ($estudiantes as $estId) {
+            for ($i = 0; $i < 5; $i++) {
+                DB::table('mision_vuelos')->insert([
+                    'estudiante_id' => $estId,
+                    'instructor_id' => $instructores->random(),
+                    'programa_id' => $programas->random(),
+                    'fecha' => now()->subDays(rand(1, 30))->toDateString(),
+                    'matricula' => $matriculas[array_rand($matriculas)],
+                    'tipo_vuelo' => 'dual',
+                    'horas' => 1.5,
+                    'despegues' => 3,
+                    'aterrizajes' => 3,
+                    'calificacion' => 'S',
+                    'observaciones' => 'Misión de entrenamiento completada satisfactoriamente.',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function seedNotasLecciones(): void
+    {
+        $this->command->info('  → Notas de Lecciones Virtuales...');
+        $estudiantes = DB::table('estudiantes')->pluck('id');
+        $lecciones = DB::table('lecciones_materia')->pluck('id');
+
+        if ($lecciones->isEmpty()) return;
+
+        foreach ($estudiantes as $estId) {
+            foreach ($lecciones as $lecId) {
+                DB::table('notas_lecciones')->insert([
+                    'estudiante_id' => $estId,
+                    'leccion_id' => $lecId,
+                    'nota' => rand(70, 100),
+                    'aciertos' => 4,
+                    'total' => 5,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function seedReintentos(): void
+    {
+        $this->command->info('  → Reintentos Autorizados...');
+        $estudiantes = DB::table('estudiantes')->pluck('id');
+        $materias = DB::table('materias')->pluck('id');
+
+        foreach ($estudiantes->take(2) as $estId) {
+            DB::table('reintentos_autorizados')->insert([
+                'estudiante_id' => $estId,
+                'materia_id' => $materias->random(),
+                'autorizado_por' => DB::table('usuarios')->where('rol_id', 1)->value('id'),
+                'num_recibo' => 'REC-' . rand(1000, 9999),
+                'usado' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function seedJobs(): void
+    {
+        $this->command->info('  → Tareas de Sistema (Jobs)...');
+        DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => json_encode(['job' => 'SendWelcomeEmail', 'data' => []]),
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => now()->timestamp,
+            'created_at' => now()->timestamp,
+        ]);
+    }
+
+    private function seedAuditLogs(): void
+    {
+        $this->command->info('  → Registros de Auditoría (RAC 141.77)...');
+        $usuarios = DB::table('usuarios')->pluck('id');
+        $tablas = ['usuarios', 'reservas', 'notas_academicas', 'bitacoras_vuelo'];
+        $acciones = ['INSERT', 'UPDATE', 'DELETE'];
+
+        for ($i = 0; $i < 20; $i++) {
+            DB::table('audit_log')->insert([
+                'usuario_id' => $usuarios->random(),
+                'tabla' => $tablas[array_rand($tablas)],
+                'accion' => $acciones[array_rand($acciones)],
+                'registro_id' => rand(1, 100),
+                'datos_antes' => json_encode(['estado' => 'previo']),
+                'datos_despues' => json_encode(['estado' => 'nuevo']),
+                'ip_address' => '192.168.1.' . rand(1, 254),
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+                'created_at' => now()->subHours(rand(1, 500)),
+            ]);
+        }
+    }
+
+    private function seedBriefings(): void
+    {
+        $this->command->info('  → Briefings y Debriefings...');
+        $reservas = DB::table('reservas')->take(10)->get();
+        foreach ($reservas as $res) {
+            DB::table('briefings_debriefings')->insert([
+                'reserva_id' => $res->id,
+                'instructor_id' => $res->instructor_id ?? DB::table('instructores')->value('id'),
+                'tipo' => 'pre_vuelo',
+                'fecha_hora' => $res->fecha . ' ' . $res->hora_inicio,
+                'contenido' => 'Revisión de NOTAMs, meteorología y plan de vuelo.',
+                'firma_instructor' => 'FirmaDigital_Ins_' . $res->instructor_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('briefings_debriefings')->insert([
+                'reserva_id' => $res->id,
+                'instructor_id' => $res->instructor_id ?? DB::table('instructores')->value('id'),
+                'tipo' => 'post_vuelo',
+                'fecha_hora' => $res->fecha . ' ' . $res->hora_fin,
+                'contenido' => 'Debriefing: maniobras realizadas con éxito. Mantener altitud en virajes.',
+                'areas_debiles' => 'Control de altitud en virajes de 45 grados.',
+                'firma_instructor' => 'FirmaDigital_Ins_' . $res->instructor_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function seedPlanesClase(): void
+    {
+        $this->command->info('  → Planes de Clase...');
+        $instructores = DB::table('instructores')->pluck('id');
+        $materias = DB::table('materias')->pluck('id');
+
+        for ($i = 0; $i < 10; $i++) {
+            DB::table('planes_clase')->insert([
+                'instructor_id' => $instructores->random(),
+                'materia_id' => $materias->random(),
+                'fecha' => now()->addDays(rand(1, 15))->toDateString(),
+                'duracion_min' => 120,
+                'objetivos' => 'Objetivos de la lección teórica ' . ($i + 1),
+                'contenido' => 'Contenido detallado de la clase según el manual MOE.',
+                'estado' => 'planificada',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 
     // ══════════════════════════════════════════════════════════════
