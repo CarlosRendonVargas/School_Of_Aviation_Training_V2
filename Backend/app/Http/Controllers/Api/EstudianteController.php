@@ -95,22 +95,49 @@ class EstudianteController extends Controller
             if (!empty($data['persona_id'])) {
                 $persona = \App\Models\Persona::findOrFail($data['persona_id']);
             } else {
-                // Crear usuario básico para el estudiante
-                $usuario = \App\Models\Usuario::create([
-                    'email'    => strtolower($data['nombres'].'.'.$data['apellidos'].'@aviation.com'), // Email temporal
-                    'password' => \Illuminate\Support\Facades\Hash::make($data['num_documento']),
-                    'rol_id'   => \App\Models\Rol::where('nombre', 'estudiante')->first()?->id ?? 3,
-                    'activo'   => true
-                ]);
+                // Intentar encontrar la persona por documento antes de crear una nueva
+                $personaExistente = \App\Models\Persona::where('num_documento', $data['num_documento'])->first();
+                
+                if ($personaExistente) {
+                    $persona = $personaExistente;
+                } else {
+                    // Limpiar espacios en nombres para el email
+                    $emailLimpiado = str_replace(' ', '', strtolower($data['nombres'].'.'.$data['apellidos']));
+                    
+                    // Asegurar que el email sea único
+                    $emailBase = $emailLimpiado . '@aviation.com';
+                    $email = $emailBase;
+                    $cont = 1;
+                    while (\App\Models\Usuario::where('email', $email)->exists()) {
+                        $email = $emailLimpiado . $cont . '@aviation.com';
+                        $cont++;
+                    }
 
-                $persona = \App\Models\Persona::create([
-                    'usuario_id'       => $usuario->id,
-                    'nombres'          => $data['nombres'],
-                    'apellidos'        => $data['apellidos'],
-                    'tipo_documento'   => $data['tipo_documento'],
-                    'num_documento'    => $data['num_documento'],
-                    'fecha_nacimiento' => $data['fecha_nacimiento'],
-                ]);
+                    // Crear usuario básico para el estudiante
+                    $usuario = \App\Models\Usuario::create([
+                        'email'         => $email,
+                        'password_hash' => \Illuminate\Support\Facades\Hash::make($data['num_documento']),
+                        'rol_id'        => \App\Models\Rol::where('nombre', 'estudiante')->first()?->id ?? 1, // El rol suele ser 1 en el seeder
+                        'activo'        => true
+                    ]);
+
+                    $persona = \App\Models\Persona::create([
+                        'usuario_id'       => $usuario->id,
+                        'nombres'          => $data['nombres'],
+                        'apellidos'        => $data['apellidos'],
+                        'tipo_documento'   => $data['tipo_documento'],
+                        'num_documento'    => $data['num_documento'],
+                        'fecha_nacimiento' => $data['fecha_nacimiento'],
+                    ]);
+                }
+            }
+
+            // Verificar si la persona ya es un estudiante
+            if (Estudiante::where('persona_id', $persona->id)->exists()) {
+                return response()->json([
+                    'ok'      => false,
+                    'mensaje' => 'Esta persona ya se encuentra matriculada como estudiante.',
+                ], 422);
             }
 
             $estudiante = Estudiante::create([
@@ -121,18 +148,25 @@ class EstudianteController extends Controller
                 'estado'         => 'activo',
                 'observaciones'  => $data['observaciones'] ?? null,
             ]);
-            
+
             \Illuminate\Support\Facades\DB::commit();
 
             return response()->json([
-                'ok'      => true,
-                'mensaje' => 'Estudiante registrado. Expediente: ' . $estudiante->num_expediente,
-                'data'    => $estudiante->load(['persona', 'programa']),
+                'ok'       => true,
+                'mensaje'  => 'Estudiante matriculado con éxito.',
+                'data'     => $estudiante->load('persona'),
             ], 201);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\DB::rollBack();
-            throw $e;
+            \Illuminate\Support\Facades\Log::error('Error al registrar estudiante: ' . $e->getMessage(), [
+                'exception' => $e,
+                'data'      => $data
+            ]);
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Error al procesar la matrícula: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

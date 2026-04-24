@@ -214,8 +214,14 @@
             <div class="row q-col-gutter-lg">
               <div class="col-12 col-md-6">
                 <label class="campo-label required">Programa Académico</label>
-                <q-select v-model="formNuevo.programa_id" :options="programas" option-value="id" option-label="nombre" outlined dense dark emit-value map-options :rules="[v => !!v || 'Requerido']" lazy-rules>
+                <q-select v-model="formNuevo.programa_id" :options="programasFiltered" 
+                  option-value="id" option-label="nombre" outlined dense dark emit-value map-options 
+                  :rules="[v => !!v || 'Requerido']" lazy-rules use-input fill-input hide-selected
+                  @filter="filterProgramas">
                   <template #prepend><q-icon name="school" color="grey-6" size="18px" /></template>
+                  <template v-slot:no-option>
+                    <q-item><q-item-section class="text-grey">No se encontraron resultados</q-item-section></q-item>
+                  </template>
                 </q-select>
               </div>
               <div class="col-12 col-md-6">
@@ -257,7 +263,8 @@ const vista                = ref('lista')
 
 const dialogNuevo          = ref(false)
 const guardandoNuevo       = ref(false)
-const formNuevo            = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: '', observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null })
+const formNuevo            = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '2000-01-01', programa_id: null, fecha_ingreso: '', observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null })
+const programasFiltered    = ref([])
 
 const filtros = ref({ buscar: '', programa_id: null, estado: null })
 const paginacion = ref({ page: 1, rowsPerPage: 15, rowsNumber: 0 })
@@ -298,14 +305,29 @@ async function cargar(pag = 1) {
   } finally { cargando.value = false }
 }
 
-async function cargarProgramas() { const { data } = await api.get('/programas?activos=1'); programas.value = data.data || [] }
+async function cargarProgramas() { 
+  const { data } = await api.get('/programas?activos=1')
+  programas.value = data.data || []
+  programasFiltered.value = programas.value
+}
+
+function filterProgramas(val, update) {
+  if (val === '') {
+    update(() => { programasFiltered.value = programas.value })
+    return
+  }
+  update(() => {
+    const needle = val.toLowerCase()
+    programasFiltered.value = programas.value.filter(v => v.nombre.toLowerCase().indexOf(needle) > -1)
+  })
+}
 
 async function verHoras(estudiante) {
   estudianteSeleccionado.value = estudiante; dialogHoras.value = true; cargandoHoras.value = true; progresoHoras.value = null
   try { const { data } = await api.get(`/estudiantes/${estudiante.id}/progreso-horas`); progresoHoras.value = data.data } finally { cargandoHoras.value = false }
 }
 
-function abrirFormNuevo() { dialogNuevo.value = true; formNuevo.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', programa_id: null, fecha_ingreso: new Date().toISOString().split('T')[0], observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null } }
+function abrirFormNuevo() { dialogNuevo.value = true; formNuevo.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '2000-01-01', programa_id: null, fecha_ingreso: new Date().toISOString().split('T')[0], observaciones: '', nacionalidad: '', direccion: '', foto_url: '', etapa_actual_id: null } }
 
 async function guardarNuevo() {
   guardandoNuevo.value = true

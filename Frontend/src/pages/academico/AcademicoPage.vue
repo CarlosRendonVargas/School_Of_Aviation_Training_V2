@@ -1046,8 +1046,15 @@
                   <q-input v-model="estForm.fecha_ingreso" type="date" label="FECHA DE INGRESO" filled dark class="premium-input-login" stack-label />
                </div>
                <div class="col-12">
-                  <q-select v-model="estForm.programa_id" :options="programasOptions" label="PROGRAMA ACADÉMICO ASIGNADO (PIA)" filled dark class="premium-input-login" map-options emit-value stack-label />
-               </div>
+                   <q-select v-model="estForm.programa_id" :options="programasFilteredOptions" 
+                      label="PROGRAMA ACADÉMICO ASIGNADO (PIA)" filled dark class="premium-input-login" 
+                      map-options emit-value stack-label use-input fill-input hide-selected
+                      @filter="filterProgramas">
+                      <template v-slot:no-option>
+                        <q-item><q-item-section class="text-grey">No se encontraron programas</q-item-section></q-item>
+                      </template>
+                   </q-select>
+                </div>
                <div class="col-12">
                   <q-input v-model="estForm.observaciones" type="textarea" label="OBSERVACIONES DE MATRÍCULA" filled dark class="premium-input-login" rows="2" />
                </div>
@@ -1258,6 +1265,7 @@ const preguntaForm = ref({ pregunta: '', opciones: ['', '', '', ''], respuesta_c
 const dialogNuevoEstudiante = ref(false)
 const guardandoNuevoEst     = ref(false)
 const programasOptions      = ref([])
+const programasFilteredOptions = ref([])
 const estForm = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' })
 
 const dialogNota       = ref(false)
@@ -1643,8 +1651,19 @@ function eliminarPlanClase(id) {
 
 onMounted(cargarDatos)
 // ── Acciones Estudiante ──
+function filterProgramas(val, update) {
+  if (val === '') {
+    update(() => { programasFilteredOptions.value = programasOptions.value })
+    return
+  }
+  update(() => {
+    const needle = val.toLowerCase()
+    programasFilteredOptions.value = programasOptions.value.filter(v => v.label.toLowerCase().indexOf(needle) > -1)
+  })
+}
+
 function abrirNuevoEstudiante() {
-  estForm.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' }
+  estForm.value = { nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '2000-01-01', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' }
   dialogNuevoEstudiante.value = true
 }
 
@@ -1656,6 +1675,7 @@ async function guardarNuevoEstudiante() {
     dialogNuevoEstudiante.value = false
     cargarDatos()
   } catch (e) {
+    console.error('Error en POST /estudiantes:', e)
     const msg = e.response?.data?.mensaje || 'Error al matricular estudiante.'
     $q.notify({ color: 'negative', message: msg })
   } finally { guardandoNuevoEst.value = false }
