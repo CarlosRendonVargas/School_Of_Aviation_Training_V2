@@ -226,7 +226,19 @@ const menuCompleto = computed(() => {
     { to: '/academico',     label: 'Académico',      icono: 'auto_stories',    roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] },
     { to: '/aula-virtual',  label: 'Aula Virtual',   icono: 'school',          roles: ['estudiante'] },
     { to: '/certificados',  label: 'Certificados',   icono: 'workspace_premium', roles: ['all'], sublabel: 'Constancias RAC 141.77' },
-    { to: '/sms',           label: 'Segur. SMS',     icono: 'local_hospital',  roles: ['all'], sublabel: 'Seguridad Operacional' },
+    { to: '/endorsements',  label: 'Endorsements',   icono: 'flight_takeoff',  roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Primer vuelo solo' },
+    { to: '/evaluaciones-instructor', label: 'Eval. Instructores', icono: 'rate_review', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'RAC 65 — Competencias' },
+
+    { separador: true, sectionLabel: 'Seguridad Operacional' },
+    { to: '/sms',                label: 'Reportes SMS',      icono: 'warning_amber',    roles: ['all'], sublabel: 'OACI Anexo 19' },
+    { to: '/sms/erg',            label: 'Plan ERG',          icono: 'local_fire_department', roles: ['all'], sublabel: 'Respuesta emergencias' },
+    { to: '/sms/capacitaciones', label: 'Capacitaciones SMS',icono: 'cast_for_education', roles: ['all'], sublabel: 'Cultura de seguridad' },
+
+    { separador: true, sectionLabel: 'Cumplimiento UAEAC' },
+    { to: '/cumplimiento',              label: 'Cumplimiento RAC', icono: 'gavel',        roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Documentos RAC 141' },
+    { to: '/cumplimiento/enmiendas',    label: 'Enmiendas MOE/PIA',icono: 'edit_document', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Control de cambios' },
+    { to: '/cumplimiento/correspondencia', label: 'Correspondencia',icono: 'mark_email_read', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Comunicaciones UAEAC' },
+    { to: '/cumplimiento/reportes',     label: 'Reportes UAEAC',  icono: 'bar_chart',    roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Estadísticas regulatorias' },
 
     { separador: true, sectionLabel: 'Administración' },
     { to: '/financiero',    label: 'Financiero',     icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'] },

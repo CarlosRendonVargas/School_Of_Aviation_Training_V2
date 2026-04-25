@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\ErgController;
 use App\Http\Controllers\Api\EnmiendaController;
 use App\Http\Controllers\Api\NominaController;
 use App\Http\Controllers\Api\GastoOperativoController;
+use App\Http\Controllers\Api\CorrespondenciaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +148,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         
         Route::get('dashboard',             [SmsController::class, 'dashboard']);
         Route::get('matriz-riesgo',         [SmsController::class, 'matrizRiesgo']);
+        Route::get('exportar-griaa',        [SmsController::class, 'exportarGriaa']);
+        Route::get('kpis-aaer',             [SmsController::class, 'kpisAaer']);
     });
 
     Route::prefix('facturas')->group(function () {
@@ -306,5 +309,14 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('resumen', [GastoOperativoController::class, 'resumen']);
         Route::get('/',       [GastoOperativoController::class, 'index']);
         Route::post('/',      [GastoOperativoController::class, 'store']);
+    });
+
+    // --- Correspondencia UAEAC ---
+    Route::prefix('correspondencia')->group(function () {
+        Route::get('estadisticas', [CorrespondenciaController::class, 'estadisticas']);
+        Route::get('/',            [CorrespondenciaController::class, 'index']);
+        Route::post('/',           [CorrespondenciaController::class, 'store']);
+        Route::get('{id}',         [CorrespondenciaController::class, 'show']);
+        Route::put('{id}',         [CorrespondenciaController::class, 'update']);
     });
 });

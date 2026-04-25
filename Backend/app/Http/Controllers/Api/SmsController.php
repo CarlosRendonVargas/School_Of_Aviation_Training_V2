@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ReporteSms;
 use App\Models\AccionCorrectiva;
+use App\Models\CapacitacionSms;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class SmsController extends Controller
 {
@@ -152,5 +154,72 @@ class SmsController extends Controller
             }
         }
         return response()->json(['ok' => true, 'data' => $matriz]);
+    }
+
+    public function exportarGriaa(Request $request): JsonResponse
+    {
+        $anio = $request->get('anio', date('Y'));
+
+        $reportes = ReporteSms::selectRaw('
+                id, tipo, descripcion, fecha_evento, lugar,
+                severidad, probabilidad, nivel_riesgo, estado,
+                notificado_uaeac, created_at
+            ')
+            ->whereYear('fecha_evento', $anio)
+            ->orderBy('fecha_evento')
+            ->get();
+
+        $resumen = [
+            'total'             => $reportes->count(),
+            'por_tipo'          => $reportes->groupBy('tipo')->map->count(),
+            'por_nivel_riesgo'  => $reportes->groupBy('nivel_riesgo')->map->count(),
+            'notificados_uaeac' => $reportes->where('notificado_uaeac', true)->count(),
+            'cerrados'          => $reportes->where('estado', 'cerrado')->count(),
+        ];
+
+        return response()->json([
+            'ok'      => true,
+            'anio'    => $anio,
+            'resumen' => $resumen,
+            'data'    => $reportes,
+        ]);
+    }
+
+    public function kpisAaer(Request $request): JsonResponse
+    {
+        $meses = (int) $request->get('meses', 12);
+        $desde = now()->subMonths($meses);
+
+        $total          = ReporteSms::where('created_at', '>=', $desde)->count();
+        $accidentes     = ReporteSms::where('tipo', 'accidente')->where('created_at', '>=', $desde)->count();
+        $incidentes     = ReporteSms::where('tipo', 'incidente')->where('created_at', '>=', $desde)->count();
+        $nearMiss       = ReporteSms::where('tipo', 'near_miss')->where('created_at', '>=', $desde)->count();
+        $altoRiesgo     = ReporteSms::where('nivel_riesgo', 'alto')->where('created_at', '>=', $desde)->count();
+        $tasaCierre     = $total > 0
+            ? round(ReporteSms::where('estado', 'cerrado')->where('created_at', '>=', $desde)->count() / $total * 100, 1)
+            : 0;
+
+        $capacitaciones = CapacitacionSms::where('created_at', '>=', $desde)->count();
+        $participantes  = DB::table('registros_capacitacion')
+            ->whereHas = null; // compute via join
+        $participantes  = DB::table('registros_capacitacion as rc')
+            ->join('capacitaciones_sms as c', 'rc.capacitacion_id', '=', 'c.id')
+            ->where('c.created_at', '>=', $desde)
+            ->count();
+
+        return response()->json([
+            'ok'   => true,
+            'data' => [
+                'periodo_meses'        => $meses,
+                'total_reportes'       => $total,
+                'accidentes'           => $accidentes,
+                'incidentes'           => $incidentes,
+                'near_miss'            => $nearMiss,
+                'alto_riesgo'          => $altoRiesgo,
+                'tasa_cierre_pct'      => $tasaCierre,
+                'capacitaciones_sms'   => $capacitaciones,
+                'participantes_total'  => $participantes,
+            ],
+        ]);
     }
 }

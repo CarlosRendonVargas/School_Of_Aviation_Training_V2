@@ -95,6 +95,19 @@ const routes = [
 
       // 18: Gastos Operativos / Caja Menor
       { path: 'gastos',         name: 'gastos',         component: () => import('pages/admin/GastosPage.vue'),        meta: { roles: ['admin', 'dir_ops'] } },
+
+      // 19: SMS — ERG y Capacitaciones
+      { path: 'sms/erg',              name: 'sms-erg',              component: () => import('pages/sms/ErgPage.vue') },
+      { path: 'sms/capacitaciones',   name: 'sms-capacitaciones',   component: () => import('pages/sms/CapacitacionesSmsPage.vue') },
+
+      // 20: Cumplimiento — Enmiendas, Correspondencia, Reportes UAEAC
+      { path: 'cumplimiento/enmiendas',      name: 'enmiendas',      component: () => import('pages/cumplimiento/EnmiendasPage.vue'),      meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
+      { path: 'cumplimiento/correspondencia',name: 'correspondencia', component: () => import('pages/cumplimiento/CorrespondenciaPage.vue'), meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
+      { path: 'cumplimiento/reportes',       name: 'reportes-uaeac', component: () => import('pages/cumplimiento/ReportesUaeacPage.vue'),   meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
+
+      // 21: Académico — Endorsements y Evaluaciones Instructor
+      { path: 'endorsements',          name: 'endorsements',          component: () => import('pages/academico/EndorsementsPage.vue'),           meta: { roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] } },
+      { path: 'evaluaciones-instructor',name: 'evaluaciones-instructor',component: () => import('pages/admin/EvaluacionesInstructorPage.vue'),   meta: { roles: ['admin', 'dir_ops', 'auditor_uaeac'] } },
     ],
   },
   { path: '/:catchAll(.*)*', component: () => import('pages/ErrorNotFound.vue') },
