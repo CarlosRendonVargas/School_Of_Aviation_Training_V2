@@ -92,18 +92,37 @@ class InstructorController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $instructor = \App\Models\Instructor::findOrFail($id);
-        
-        $data = $request->validate([
-            'num_licencia'      => 'sometimes|string',
-            'tipo_licencia'     => 'sometimes|in:CPL,ATPL,CFI',
-            'venc_licencia'     => 'sometimes|date',
-            'horas_totales_pic' => 'sometimes|numeric',
+        $instructor = \App\Models\Instructor::with('persona')->findOrFail($id);
+
+        $dataInstructor = $request->validate([
+            'num_licencia'      => 'sometimes|string|max:50',
+            'tipo_licencia'     => 'sometimes|in:PPL,CPL,ATPL,CFI,CFII,MEI',
+            'venc_licencia'     => 'sometimes|nullable|date',
+            'horas_totales_pic' => 'sometimes|numeric|min:0',
+            'horas_instruccion' => 'sometimes|numeric|min:0',
             'activo'            => 'sometimes|boolean',
         ]);
 
-        $instructor->update($data);
+        $dataPersona = $request->validate([
+            'nombres'          => 'sometimes|string|max:100',
+            'apellidos'        => 'sometimes|string|max:100',
+            'tipo_documento'   => 'sometimes|in:CC,CE,PA,PEP',
+            'num_documento'    => 'sometimes|string|max:20',
+            'telefono'         => 'sometimes|nullable|string|max:20',
+            'ciudad'           => 'sometimes|nullable|string|max:80',
+            'fecha_nacimiento' => 'sometimes|nullable|date',
+            'nacionalidad'     => 'sometimes|nullable|string|max:60',
+        ]);
 
-        return response()->json(['ok' => true, 'data' => $instructor]);
+        $instructor->update($dataInstructor);
+
+        if ($instructor->persona && count($dataPersona)) {
+            $instructor->persona->update($dataPersona);
+        }
+
+        return response()->json([
+            'ok'   => true,
+            'data' => $instructor->fresh(['persona']),
+        ]);
     }
 }

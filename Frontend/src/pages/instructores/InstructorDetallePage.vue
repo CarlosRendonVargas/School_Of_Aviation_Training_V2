@@ -237,6 +237,88 @@
       </q-card>
     </template>
 
+    <!-- ════ DIALOG: EDITAR INSTRUCTOR ════ -->
+    <q-dialog v-model="dialogEditar" backdrop-filter="blur(15px)" persistent>
+      <q-card class="premium-glass-card shadow-24 border-red-low rounded-20" style="width:min(680px,95vw)">
+        <div class="rac-dialog-header">
+          <div class="row items-center justify-between">
+            <div class="row items-center">
+              <q-icon name="edit" color="red-9" size="28px" class="q-mr-md" />
+              <div class="text-h6 text-white font-head text-weight-bolder uppercase">Editar Instructor</div>
+            </div>
+            <q-btn flat round dense icon="close" @click="dialogEditar=false" color="grey-6" />
+          </div>
+        </div>
+        <div class="rac-dialog-body">
+          <q-form @submit.prevent="guardarEditar" class="q-gutter-y-md">
+
+            <div class="text-caption text-grey-6 font-mono uppercase q-mb-sm">Datos Personales</div>
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="formEditar.nombres" label="NOMBRES *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']" />
+              </div>
+              <div class="col-6">
+                <q-input v-model="formEditar.apellidos" label="APELLIDOS *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']" />
+              </div>
+            </div>
+            <div class="row q-col-gutter-md">
+              <div class="col-5">
+                <q-select v-model="formEditar.tipo_documento" :options="['CC','CE','PA','PEP']"
+                  label="TIPO DOC." filled dark class="premium-input-login" stack-label />
+              </div>
+              <div class="col-7">
+                <q-input v-model="formEditar.num_documento" label="NÚMERO DOCUMENTO" filled dark class="premium-input-login" stack-label />
+              </div>
+            </div>
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="formEditar.telefono" label="TELÉFONO" filled dark class="premium-input-login" stack-label />
+              </div>
+              <div class="col-6">
+                <q-input v-model="formEditar.ciudad" label="CIUDAD" filled dark class="premium-input-login" stack-label />
+              </div>
+            </div>
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="formEditar.fecha_nacimiento" type="date" label="FECHA NACIMIENTO" filled dark class="premium-input-login" stack-label />
+              </div>
+              <div class="col-6">
+                <q-input v-model="formEditar.nacionalidad" label="NACIONALIDAD" filled dark class="premium-input-login" stack-label />
+              </div>
+            </div>
+
+            <q-separator dark class="q-my-sm" />
+            <div class="text-caption text-grey-6 font-mono uppercase q-mb-sm">Datos de Licencia</div>
+
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="formEditar.num_licencia" label="N° LICENCIA *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']" />
+              </div>
+              <div class="col-6">
+                <q-select v-model="formEditar.tipo_licencia"
+                  :options="['PPL','CPL','ATPL','CFI','CFII','MEI']"
+                  label="TIPO LICENCIA *" filled dark class="premium-input-login" stack-label />
+              </div>
+            </div>
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="formEditar.venc_licencia" type="date" label="VENCIMIENTO LICENCIA" filled dark class="premium-input-login" stack-label />
+              </div>
+              <div class="col-6">
+                <q-toggle v-model="formEditar.activo" label="Instructor Activo" color="red-9" class="q-mt-md" />
+              </div>
+            </div>
+
+            <div class="row justify-end q-gutter-sm q-pt-sm">
+              <q-btn flat label="Cancelar" color="grey-6" @click="dialogEditar=false" />
+              <q-btn type="submit" unelevated color="red-9" icon="save" label="Guardar Cambios"
+                class="premium-btn" :loading="guardando" />
+            </div>
+          </q-form>
+        </div>
+      </q-card>
+    </q-dialog>
+
     <!-- ════ DIALOG: AGREGAR CERTIFICACIÓN ════ -->
     <q-dialog v-model="dialogCert" backdrop-filter="blur(15px)">
       <q-card class="premium-glass-card shadow-24 border-red-low rounded-20" style="width:min(550px,95vw)">
@@ -344,14 +426,16 @@ const planesClase = ref([])
 const bitacoras  = ref([])
 const materias   = ref([])
 const tab        = ref('perfil')
-const dialogCert = ref(false)
-const dialogPlan = ref(false)
+const dialogCert    = ref(false)
+const dialogPlan    = ref(false)
+const dialogEditar  = ref(false)
 const guardando     = ref(false)
 const evaluaciones  = ref([])
 const loadingEval   = ref(false)
 
-const formCert = ref({ tipo: null, descripcion: '', numero: '', fecha_emision: '', fecha_vencimiento: '', archivo_url: '' })
-const formPlan = ref({ materia_id: null, fecha: '', duracion_min: 60, objetivos: '', contenido: '', recursos: '', estado: 'planificada' })
+const formCert   = ref({ tipo: null, descripcion: '', numero: '', fecha_emision: '', fecha_vencimiento: '', archivo_url: '' })
+const formPlan   = ref({ materia_id: null, fecha: '', duracion_min: 60, objetivos: '', contenido: '', recursos: '', estado: 'planificada' })
+const formEditar = ref({})
 
 const puedeEditar  = ['admin', 'dir_ops'].includes(authStore.rol)
 
@@ -409,7 +493,37 @@ const colsBitacoras = [
 const colorEstadoPlan = (e) => ({ planificada: 'blue-9', realizada: 'emerald', cancelada: 'grey-7' }[e] || 'grey-8')
 
 function abrirEditar() {
-  $q.notify({ color: 'info', message: 'Funcionalidad de edición disponible próximamente.' })
+  const p = instructor.value?.persona ?? {}
+  const i = instructor.value ?? {}
+  formEditar.value = {
+    nombres:          p.nombres ?? '',
+    apellidos:        p.apellidos ?? '',
+    tipo_documento:   p.tipo_documento ?? 'CC',
+    num_documento:    p.num_documento ?? '',
+    telefono:         p.telefono ?? '',
+    ciudad:           p.ciudad ?? '',
+    fecha_nacimiento: p.fecha_nacimiento?.slice(0, 10) ?? '',
+    nacionalidad:     p.nacionalidad ?? '',
+    num_licencia:     i.num_licencia ?? '',
+    tipo_licencia:    i.tipo_licencia ?? '',
+    venc_licencia:    i.venc_licencia?.slice(0, 10) ?? '',
+    activo:           !!i.activo,
+  }
+  dialogEditar.value = true
+}
+
+async function guardarEditar() {
+  guardando.value = true
+  try {
+    await api.put(`/instructores/${id}`, formEditar.value)
+    $q.notify({ color: 'emerald', icon: 'verified', message: 'Instructor actualizado correctamente.' })
+    dialogEditar.value = false
+    await cargarInstructor()
+  } catch (e) {
+    $q.notify({ color: 'negative', message: e.response?.data?.mensaje || 'Error al guardar.' })
+  } finally {
+    guardando.value = false
+  }
 }
 
 async function guardarCert() {
