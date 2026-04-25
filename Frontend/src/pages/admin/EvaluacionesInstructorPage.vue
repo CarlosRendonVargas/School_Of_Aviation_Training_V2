@@ -193,7 +193,7 @@ async function cargar() {
     if (filtros.value.instructor_id) params.instructor_id = filtros.value.instructor_id
     if (filtros.value.tipo) params.tipo = filtros.value.tipo
     const res = await api.get('/evaluaciones-instructor', { params })
-    rows.value = res.data
+    rows.value = res.data?.data ?? res.data ?? []
   } finally {
     loading.value = false
   }
@@ -201,9 +201,10 @@ async function cargar() {
 
 async function cargarInstructores() {
   const res = await api.get('/instructores')
-  todosInstructores.value = (res.data.data ?? res.data).map(i => ({
+  const lista = res.data?.data?.data ?? res.data?.data ?? res.data ?? []
+  todosInstructores.value = (Array.isArray(lista) ? lista : []).map(i => ({
     ...i,
-    nombre_completo: `${i.nombres} ${i.apellidos}`,
+    nombre_completo: `${i.persona?.nombres ?? ''} ${i.persona?.apellidos ?? ''}`.trim(),
   }))
   instructores.value = todosInstructores.value
   instructoresFiltrados.value = todosInstructores.value
