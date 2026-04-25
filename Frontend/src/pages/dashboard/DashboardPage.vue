@@ -124,7 +124,7 @@ const rolLabel = computed(() => ({
   dir_ops:       'Director de Operaciones Aéreas',
   mantenimiento: 'Ingeniero de Mantenimiento',
   auditor_uaeac: 'Auditor Gubernamental UAEAC',
-}[auth.rol] || auth.rol))
+}[auth.rol] || auth.rol || ''))
 
 async function sincronizar() {
   sincronizando.value = true

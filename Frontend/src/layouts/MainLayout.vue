@@ -215,6 +215,7 @@ const rolStyle = computed(() => {
 const menuCompleto = computed(() => {
   const v = vencimientosStore.totalAlertas
   return [
+    { to: '/normatividad',  label: 'Normatividad',  icono: 'gavel', roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
     { to: '/dashboard',     label: 'Dashboard',    icono: 'dashboard', roles: ['all'] },
     { to: '/vencimientos',  label: 'Alertas RAC',  icono: 'shutter_speed', roles: ['all'], badge: v || null, badgeColor: 'red-5' },
     { to: '/calendario',    label: 'Calendario',   icono: 'event_available', roles: ['all'], sublabel: 'Planificación de Vuelos' },

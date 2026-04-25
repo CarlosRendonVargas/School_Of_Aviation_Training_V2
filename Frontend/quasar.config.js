@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export default configure(function () {
+export default configure(function (ctx) {
   return {
     // Boot files — orden importa: axios primero
     boot: ['axios', 'i18n', 'dayjs'],
@@ -23,7 +23,9 @@ export default configure(function () {
       vueRouterMode: 'hash',
 
       env: {
-        API_URL: 'https://schoolaviationtraining.com/api/v1',
+        API_URL: ctx.dev
+          ? 'http://127.0.0.1:8000/api/v1'
+          : 'https://schoolaviationtraining.com/api/v1',
       },
 
       extendViteConf (viteConf) {
