@@ -76,6 +76,22 @@ class MensajeController extends Controller
         return response()->json(['data' => $count]);
     }
 
+    public function destroy(int $id, Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $msg = Mensaje::where(function ($q) use ($userId) {
+            $q->where('remitente_id', $userId)
+              ->orWhere('destinatario_id', $userId);
+        })->findOrFail($id);
+
+        // Si tiene respuestas, eliminarlas también
+        Mensaje::where('respuesta_a', $id)->delete();
+        $msg->delete();
+
+        return response()->json(['mensaje' => 'Mensaje eliminado.']);
+    }
+
     public function usuarios(Request $request)
     {
         $lista = \App\Models\Usuario::with('persona')

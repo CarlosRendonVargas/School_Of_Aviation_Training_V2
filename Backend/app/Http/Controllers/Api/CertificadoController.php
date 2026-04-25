@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Certificado;
-use App\Models\Estudiante;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +17,7 @@ class CertificadoController extends Controller
             ->orderByDesc('fecha_emision');
 
         if ($user->rol?->nombre === 'estudiante') {
-            $est = Estudiante::where('usuario_id', $user->id)->first();
+            $est = $user->persona?->estudiante;
             $query->where('estudiante_id', $est?->id);
         }
 

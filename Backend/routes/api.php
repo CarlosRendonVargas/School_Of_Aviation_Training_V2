@@ -253,6 +253,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('/',                [MensajeController::class, 'store']);
         Route::get('{id}/hilo',         [MensajeController::class, 'hilo']);
         Route::post('{id}/marcar-leido',[MensajeController::class, 'marcarLeido']);
+        Route::delete('{id}',           [MensajeController::class, 'destroy']);
     });
 
     // --- CRM Prospectos ---

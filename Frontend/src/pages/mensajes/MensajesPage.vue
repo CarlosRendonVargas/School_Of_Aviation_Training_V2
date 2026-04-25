@@ -36,7 +36,7 @@
                 :active="seleccionado?.id === msg.id"
                 active-class="bg-red-9"
                 @click="seleccionar(msg)"
-                class="q-py-md"
+                class="q-py-md msg-item"
               >
                 <q-item-section avatar>
                   <q-avatar size="36px" color="grey-8" text-color="white" style="font-size:14px">
@@ -52,9 +52,12 @@
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <div class="column items-end">
+                  <div class="column items-end q-gutter-y-xs">
                     <div class="font-mono text-grey-7" style="font-size:9px">{{ fechaCorta(msg.created_at) }}</div>
-                    <q-badge v-if="tab === 'recibidos' && !msg.leido" color="red-9" rounded style="margin-top:4px" />
+                    <q-badge v-if="tab === 'recibidos' && !msg.leido" color="red-9" rounded />
+                    <q-btn flat round dense icon="delete_outline" size="xs" color="grey-6"
+                      class="msg-delete-btn"
+                      @click.stop="confirmarEliminar(msg)" />
                   </div>
                 </q-item-section>
               </q-item>
@@ -79,19 +82,24 @@
 
           <template v-else>
             <!-- Cabecera del mensaje -->
-            <div class="q-pa-lg" style="border-bottom: 1px solid rgba(255,255,255,0.07)">
-              <div class="text-h6 text-white text-weight-bold">{{ hilo?.mensaje?.asunto }}</div>
-              <div class="row items-center q-mt-sm q-gutter-md">
-                <div class="font-mono text-grey-5" style="font-size:11px">
-                  De: <span class="text-grey-3">{{ nombreCompleto(hilo?.mensaje?.remitente) }}</span>
-                </div>
-                <div class="font-mono text-grey-5" style="font-size:11px">
-                  Para: <span class="text-grey-3">{{ nombreCompleto(hilo?.mensaje?.destinatario) }}</span>
-                </div>
-                <div class="font-mono text-grey-6" style="font-size:10px">
-                  {{ fechaLarga(hilo?.mensaje?.created_at) }}
+            <div class="q-pa-lg row items-start justify-between" style="border-bottom: 1px solid rgba(255,255,255,0.07)">
+              <div class="col">
+                <div class="text-h6 text-white text-weight-bold">{{ hilo?.mensaje?.asunto }}</div>
+                <div class="row items-center q-mt-sm q-gutter-md">
+                  <div class="font-mono text-grey-5" style="font-size:11px">
+                    De: <span class="text-grey-3">{{ nombreCompleto(hilo?.mensaje?.remitente) }}</span>
+                  </div>
+                  <div class="font-mono text-grey-5" style="font-size:11px">
+                    Para: <span class="text-grey-3">{{ nombreCompleto(hilo?.mensaje?.destinatario) }}</span>
+                  </div>
+                  <div class="font-mono text-grey-6" style="font-size:10px">
+                    {{ fechaLarga(hilo?.mensaje?.created_at) }}
+                  </div>
                 </div>
               </div>
+              <q-btn flat round icon="delete" color="grey-5" size="sm"
+                title="Eliminar conversación"
+                @click="confirmarEliminar(seleccionado)" />
             </div>
 
             <!-- Cuerpo del mensaje raíz -->
@@ -160,6 +168,11 @@
 
   </q-page>
 </template>
+
+<style scoped>
+.msg-item .msg-delete-btn { opacity: 0; transition: opacity 0.15s; }
+.msg-item:hover .msg-delete-btn { opacity: 1; }
+</style>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
@@ -297,6 +310,29 @@ async function enviarNuevo() {
   } finally {
     enviando.value = false
   }
+}
+
+function confirmarEliminar(msg) {
+  $q.dialog({
+    title: 'Eliminar mensaje',
+    message: `¿Eliminar la conversación "<strong>${msg.asunto}</strong>"? Esta acción no se puede deshacer.`,
+    html: true,
+    cancel: { flat: true, label: 'Cancelar', color: 'grey-6' },
+    ok: { unelevated: true, label: 'Eliminar', color: 'negative', icon: 'delete' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await api.delete(`/mensajes/${msg.id}`)
+      $q.notify({ type: 'positive', message: 'Mensaje eliminado.' })
+      if (seleccionado.value?.id === msg.id) {
+        seleccionado.value = null
+        hilo.value = null
+      }
+      await cargar()
+    } catch {
+      $q.notify({ type: 'negative', message: 'Error al eliminar el mensaje.' })
+    }
+  })
 }
 
 watch(tab, () => { seleccionado.value = null; hilo.value = null })

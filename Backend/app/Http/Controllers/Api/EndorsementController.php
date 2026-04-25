@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Endorsement;
-use App\Models\Estudiante;
 use Illuminate\Http\Request;
 
 class EndorsementController extends Controller
@@ -16,12 +15,12 @@ class EndorsementController extends Controller
             ->orderByDesc('fecha');
 
         if ($user->rol?->nombre === 'estudiante') {
-            $est = Estudiante::where('usuario_id', $user->id)->first();
+            $est = $user->persona?->estudiante;
             $query->where('estudiante_id', $est?->id);
         }
 
         if ($user->rol?->nombre === 'instructor') {
-            $inst = \App\Models\Instructor::where('usuario_id', $user->id)->first();
+            $inst = $user->persona?->instructor;
             $query->where('instructor_id', $inst?->id);
         }
 
