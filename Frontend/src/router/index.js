@@ -73,6 +73,7 @@ const routes = [
       // 11: Reservas y Calendario
       { path: 'reservas',       name: 'reservas',       component: () => import('pages/reservas/ReservasPage.vue') },
       { path: 'calendario',     name: 'calendario',     component: () => import('pages/reservas/CalendarioPage.vue') },
+      { path: 'cronograma',     name: 'cronograma',     component: () => import('pages/reservas/CronogramaPage.vue'), meta: { roles: ['estudiante', 'instructor', 'admin', 'dir_ops'] } },
 
       // 12: Admin Financiero (sub-módulos)
       { path: 'matriculas',     name: 'matriculas',     component: () => import('pages/admin/MatriculasPage.vue'),            meta: { roles: ['admin', 'dir_ops'] } },

@@ -176,6 +176,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { useVencimientosStore } from 'store/vencimientos'
+import { api } from 'boot/axios'
 
 const $q        = useQuasar()
 const router    = useRouter()
@@ -183,8 +184,9 @@ const route     = useRoute()
 const authStore = useAuthStore()
 const vencimientosStore = useVencimientosStore()
 
-const drawerAbierto = ref($q.screen.gt.sm)
-const miniDrawer    = ref(false)
+const drawerAbierto    = ref($q.screen.gt.sm)
+const miniDrawer       = ref(false)
+const vuelosPendientes = ref(0)
 
 const toggleDrawer = () => {
   if ($q.screen.lt.md) drawerAbierto.value = !drawerAbierto.value
@@ -213,12 +215,14 @@ const rolStyle = computed(() => {
 })
 
 const menuCompleto = computed(() => {
-  const v = vencimientosStore.totalAlertas
+  const v  = vencimientosStore.totalAlertas
+  const vp = vuelosPendientes.value
   return [
     { to: '/normatividad',  label: 'Normatividad',  icono: 'gavel',            roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
     { to: '/dashboard',     label: 'Dashboard',     icono: 'dashboard',        roles: ['all'] },
     { to: '/vencimientos',  label: 'Alertas RAC',   icono: 'shutter_speed',    roles: ['all'], badge: v || null, badgeColor: 'red-5' },
     { to: '/mensajes',      label: 'Mensajes',      icono: 'forum',            roles: ['all'], sublabel: 'Comunicaciones internas' },
+    { to: '/cronograma',    label: 'Mi Cronograma', icono: 'flight_takeoff',   roles: ['estudiante'], sublabel: 'Planes de vuelo', badge: vp || null, badgeColor: 'purple' },
     { to: '/calendario',    label: 'Calendario',    icono: 'event_available',  roles: ['all'], sublabel: 'Planificación de Vuelos' },
 
     { separador: true, sectionLabel: 'Formación' },
@@ -284,8 +288,20 @@ async function cerrarSesion() {
   })
 }
 
+async function cargarVuelosPendientes() {
+  if (authStore.rol !== 'estudiante') return
+  try {
+    const { data } = await api.get('/reservas/cronograma')
+    const reservas = data.data ?? []
+    vuelosPendientes.value = reservas.filter(
+      r => r.confirmacion_estudiante === 'pendiente' && r.estado === 'pendiente'
+    ).length
+  } catch { /* silencioso */ }
+}
+
 onMounted(() => {
   vencimientosStore.cargar()
+  cargarVuelosPendientes()
 })
 </script>
 

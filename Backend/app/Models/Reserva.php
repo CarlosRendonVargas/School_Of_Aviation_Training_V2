@@ -14,13 +14,16 @@ class Reserva extends Model
     protected $fillable = [
         'aeronave_id', 'estudiante_id', 'instructor_id',
         'fecha', 'hora_inicio', 'hora_fin',
-        'tipo', 'estado', 'motivo_cancelacion',
+        'tipo', 'objetivos', 'estado',
+        'confirmacion_estudiante', 'confirmacion_expira',
+        'motivo_cancelacion',
     ];
 
     protected $casts = [
-        'fecha'       => 'date',
-        'hora_inicio' => 'datetime:H:i',
-        'hora_fin'    => 'datetime:H:i',
+        'fecha'               => 'date',
+        'hora_inicio'         => 'datetime:H:i',
+        'hora_fin'            => 'datetime:H:i',
+        'confirmacion_expira' => 'datetime',
     ];
 
     /* ─── Relaciones ─── */

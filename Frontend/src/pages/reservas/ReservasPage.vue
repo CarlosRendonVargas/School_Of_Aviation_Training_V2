@@ -144,15 +144,28 @@
               <template #prepend><q-icon name="flight" color="red-9" /></template>
            </q-select>
 
-           <q-select 
-              v-model="form.tipo" 
-              :options="opcionesTipo" 
-              filled dark label="MODALIDAD DE ENTRENAMIENTO" 
-              class="premium-input-login" 
-              emit-value map-options stack-label 
+           <q-select
+              v-model="form.tipo"
+              :options="opcionesTipo"
+              filled dark label="MODALIDAD DE ENTRENAMIENTO"
+              class="premium-input-login"
+              emit-value map-options stack-label
            >
               <template #prepend><q-icon name="stars" color="red-9" /></template>
            </q-select>
+
+           <q-input
+              v-model="form.objetivos"
+              type="textarea"
+              rows="3"
+              filled dark
+              label="OBJETIVOS DE LA ACTIVIDAD (opcional)"
+              placeholder="Ej: El estudiante aprenderá procedimientos de despegue y aterrizaje..."
+              class="premium-input-login"
+              stack-label
+           >
+              <template #prepend><q-icon name="flag" color="red-9" /></template>
+           </q-input>
 
            <transition name="q-transition--scale">
              <div v-if="erroresRac.length" class="q-pa-xl bg-black-20 rounded-12 border-red-low shadow-inner">
@@ -317,7 +330,7 @@ const tipoBriefing = ref('pre_vuelo') // 'pre_vuelo' o 'post_vuelo'
 
 const hoy = dayjs().format('YYYY-MM-DD')
 const filtros = ref({ fecha: hoy, estado: null, tipo: null })
-const form = ref({ fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null })
+const form = ref({ fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null, objetivos: '' })
 const formBriefing = ref({ reserva_id: null, pos_vuelo: 'pre_vuelo', tipo: 'general', contenido: '', areas_debiles: '', firma_instructor: true })
 
 const opcionesEstado = [
@@ -409,7 +422,7 @@ function irABitacora(reserva) {
 
 function limpiarFiltros() { filtros.value = { fecha: '', estado: null, tipo: null }; cargar() }
 
-function cerrarDialog() { dialogNueva.value = false; erroresRac.value = []; form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null } }
+function cerrarDialog() { dialogNueva.value = false; erroresRac.value = []; form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null, objetivos: '' } }
 
 async function filtrarEstudiantes(val, update) {
   try {

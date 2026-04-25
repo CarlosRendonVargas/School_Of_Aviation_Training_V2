@@ -211,10 +211,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('/',             [ReservaController::class, 'store']);
         Route::get('calendario',     [ReservaController::class, 'calendario']);
         Route::get('disponibilidad', [ReservaController::class, 'disponibilidad']);
+        Route::get('cronograma',     [ReservaController::class, 'cronograma']);
         Route::get('{id}',           [ReservaController::class, 'show']);
         Route::put('{id}',           [ReservaController::class, 'update']);
         Route::post('{id}/confirmar', [ReservaController::class, 'confirmar']);
         Route::post('{id}/cancelar',  [ReservaController::class, 'cancelar']);
+        Route::post('{id}/aceptar',   [ReservaController::class, 'aceptarVuelo']);
+        Route::post('{id}/rechazar',  [ReservaController::class, 'rechazarVuelo']);
     });
 
     // --- Planes de Clase ---

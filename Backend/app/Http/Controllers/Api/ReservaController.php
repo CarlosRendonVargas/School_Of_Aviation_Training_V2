@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reserva;
+use App\Models\Mensaje;
 use App\Services\ReservaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -63,9 +64,15 @@ class ReservaController extends Controller
             'hora_inicio'   => 'required|date_format:H:i',
             'hora_fin'      => 'required|date_format:H:i|after:hora_inicio',
             'tipo'          => 'required|in:instruccion,solo,simulador',
+            'objetivos'     => 'nullable|string|max:1000',
         ]);
 
-        $resultado = $this->reservaService->crearReserva($request->all());
+        $resultado = $this->reservaService->crearReserva(
+            array_merge($request->all(), [
+                'confirmacion_estudiante' => 'pendiente',
+                'confirmacion_expira'     => now()->addHours(24),
+            ])
+        );
 
         if (! $resultado['ok']) {
             return response()->json([
@@ -74,14 +81,38 @@ class ReservaController extends Controller
             ], 422);
         }
 
+        $reserva = $resultado['reserva']->load([
+            'aeronave:id,matricula,modelo',
+            'estudiante.persona:id,nombres,apellidos',
+            'instructor.persona:id,nombres,apellidos',
+        ]);
+
+        // Notificar al estudiante vía mensaje interno
+        $usuarioEstudiante = $reserva->estudiante?->persona?->usuario;
+        if ($usuarioEstudiante) {
+            $fecha      = $reserva->fecha->format('d/m/Y');
+            $aeronave   = $reserva->aeronave->matricula . ' (' . $reserva->aeronave->modelo . ')';
+            $instructor = $request->user()->nombre_completo ?? $request->user()->email;
+
+            Mensaje::create([
+                'remitente_id'    => $request->user()->id,
+                'destinatario_id' => $usuarioEstudiante->id,
+                'asunto'          => "Plan de vuelo programado — {$fecha}",
+                'cuerpo'          =>
+                    "Tu instructor ha programado una actividad de vuelo:\n\n" .
+                    "📅 Fecha: {$fecha}\n" .
+                    "⏰ Hora: {$reserva->hora_inicio->format('H:i')} – {$reserva->hora_fin->format('H:i')}\n" .
+                    "✈ Aeronave: {$aeronave}\n" .
+                    "👨‍✈️ Instructor: {$instructor}\n" .
+                    ($reserva->objetivos ? "\n🎯 Objetivos: {$reserva->objetivos}\n" : '') .
+                    "\nTienes 24 horas para confirmar desde el sistema. Si no respondes, la reserva se cancelará automáticamente.",
+            ]);
+        }
+
         return response()->json([
             'ok'      => true,
-            'mensaje' => 'Reserva creada correctamente.',
-            'data'    => $resultado['reserva']->load([
-                'aeronave:id,matricula,modelo',
-                'estudiante.persona:id,nombres,apellidos',
-                'instructor.persona:id,nombres,apellidos',
-            ]),
+            'mensaje' => 'Reserva creada y estudiante notificado.',
+            'data'    => $reserva,
         ], 201);
     }
 
@@ -134,6 +165,117 @@ class ReservaController extends Controller
         ]);
 
         return response()->json(['ok' => true, 'mensaje' => 'Reserva cancelada.', 'data' => $reserva]);
+    }
+
+    /**
+     * GET /api/v1/reservas/cronograma
+     * Devuelve las reservas pendientes de confirmación del estudiante autenticado.
+     */
+    public function cronograma(Request $request): JsonResponse
+    {
+        $user       = $request->user();
+        $estudiante = $user->persona?->estudiante;
+
+        if (! $estudiante) {
+            return response()->json(['ok' => true, 'data' => []]);
+        }
+
+        // Auto-cancelar las expiradas antes de devolver
+        Reserva::where('estudiante_id', $estudiante->id)
+            ->where('confirmacion_estudiante', 'pendiente')
+            ->where('confirmacion_expira', '<', now())
+            ->update([
+                'estado'               => 'cancelada',
+                'confirmacion_estudiante' => 'rechazada',
+                'motivo_cancelacion'   => 'Sin confirmación del estudiante en 24 horas.',
+            ]);
+
+        $reservas = Reserva::with([
+            'aeronave:id,matricula,modelo',
+            'instructor.persona:id,nombres,apellidos',
+        ])
+            ->where('estudiante_id', $estudiante->id)
+            ->whereIn('estado', ['pendiente', 'confirmada'])
+            ->orderBy('fecha')
+            ->orderBy('hora_inicio')
+            ->get();
+
+        return response()->json(['ok' => true, 'data' => $reservas]);
+    }
+
+    /**
+     * POST /api/v1/reservas/{id}/aceptar
+     * El estudiante acepta el plan de vuelo.
+     */
+    public function aceptarVuelo(Request $request, int $id): JsonResponse
+    {
+        $user       = $request->user();
+        $estudiante = $user->persona?->estudiante;
+
+        $reserva = Reserva::where('estudiante_id', $estudiante?->id)
+            ->where('confirmacion_estudiante', 'pendiente')
+            ->where('confirmacion_expira', '>', now())
+            ->findOrFail($id);
+
+        $reserva->update([
+            'confirmacion_estudiante' => 'aceptada',
+            'estado'                  => 'confirmada',
+        ]);
+
+        // Notificar al instructor
+        $usuarioInstructor = $reserva->instructor?->persona?->usuario;
+        if ($usuarioInstructor) {
+            Mensaje::create([
+                'remitente_id'    => $user->id,
+                'destinatario_id' => $usuarioInstructor->id,
+                'asunto'          => '✅ Plan de vuelo aceptado — ' . $reserva->fecha->format('d/m/Y'),
+                'cuerpo'          =>
+                    $user->nombre_completo . " ha aceptado el plan de vuelo programado para el " .
+                    $reserva->fecha->format('d/m/Y') . ' a las ' . $reserva->hora_inicio->format('H:i') . '.',
+            ]);
+        }
+
+        return response()->json(['ok' => true, 'mensaje' => 'Plan de vuelo aceptado. ¡Hasta el vuelo!']);
+    }
+
+    /**
+     * POST /api/v1/reservas/{id}/rechazar
+     * El estudiante rechaza el plan de vuelo.
+     */
+    public function rechazarVuelo(Request $request, int $id): JsonResponse
+    {
+        $user       = $request->user();
+        $estudiante = $user->persona?->estudiante;
+
+        $request->validate(['motivo' => 'nullable|string|max:300']);
+
+        $reserva = Reserva::where('estudiante_id', $estudiante?->id)
+            ->where('confirmacion_estudiante', 'pendiente')
+            ->findOrFail($id);
+
+        $motivo = $request->motivo ?: 'El estudiante indicó que no puede asistir.';
+
+        $reserva->update([
+            'confirmacion_estudiante' => 'rechazada',
+            'estado'                  => 'cancelada',
+            'motivo_cancelacion'      => $motivo,
+        ]);
+
+        // Notificar al instructor
+        $usuarioInstructor = $reserva->instructor?->persona?->usuario;
+        if ($usuarioInstructor) {
+            Mensaje::create([
+                'remitente_id'    => $user->id,
+                'destinatario_id' => $usuarioInstructor->id,
+                'asunto'          => '❌ Plan de vuelo rechazado — ' . $reserva->fecha->format('d/m/Y'),
+                'cuerpo'          =>
+                    $user->nombre_completo . " no puede asistir al vuelo del " .
+                    $reserva->fecha->format('d/m/Y') . " a las " . $reserva->hora_inicio->format('H:i') . ".\n\n" .
+                    "Motivo: {$motivo}",
+            ]);
+        }
+
+        return response()->json(['ok' => true, 'mensaje' => 'Plan de vuelo rechazado. Se notificó al instructor.']);
     }
 
     /**
