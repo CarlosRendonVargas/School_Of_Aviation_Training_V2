@@ -252,7 +252,7 @@ function notificarProximamente() {
   $q.notify({ color: 'info', icon: 'info', message: 'Función en desarrollo para próxima versión.' })
 }
 
-async async function exportarSMS() {
+async function exportarSMS() {
   try {
     const anio = new Date().getFullYear()
     const res = await api.get(`/sms/exportar-griaa?anio=${anio}`)
@@ -272,8 +272,7 @@ async async function exportarSMS() {
       r.notificado_uaeac ? 'SI' : 'NO',
       '"' + (r.estado || '') + '"',
     ].join(','))
-    const csv = '﻿' + [cols.join(','), ...filas].join('
-')
+    const csv = '\ufeff' + [cols.join(','), ...filas].join('\r\n')
     const status = exportFile('GRIAA_' + anio + '_RAC141.csv', csv, 'text/csv;charset=utf-8;')
     if (status === true) {
       $q.notify({ color: 'positive', icon: 'download_done', message: 'GRIAA ' + anio + ' exportado: ' + data.length + ' eventos' })

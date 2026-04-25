@@ -102,7 +102,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
-import { useAuthStore } from 'stores/auth'
+import { useAuthStore } from 'store/auth'
 
 const $q = useQuasar()
 const auth = useAuthStore()
@@ -124,7 +124,7 @@ const tipoOpts = [
   { label: 'Examen Vuelo', value: 'examen_vuelo' },
 ]
 
-const puedeCrear = computed(() => ['admin', 'dir_ops', 'instructor'].includes(auth.user?.rol))
+const puedeCrear = computed(() => ['admin', 'dir_ops', 'instructor'].includes(auth.rol))
 
 const columnas = [
   { name: 'estudiante', label: 'Estudiante', field: r => r.estudiante?.nombres + ' ' + r.estudiante?.apellidos, align: 'left', sortable: true },

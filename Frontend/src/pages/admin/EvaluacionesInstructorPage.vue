@@ -122,7 +122,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
-import { useAuthStore } from 'stores/auth'
+import { useAuthStore } from 'store/auth'
 
 const $q = useQuasar()
 const auth = useAuthStore()
@@ -136,7 +136,7 @@ const instructoresFiltrados = ref([])
 
 const filtros = ref({ instructor_id: null, tipo: null })
 
-const puedeCrear = computed(() => ['admin', 'dir_ops'].includes(auth.user?.rol))
+const puedeCrear = computed(() => ['admin', 'dir_ops'].includes(auth.rol))
 
 const tipoOpts = [
   { label: 'Periódica', value: 'periodica' },

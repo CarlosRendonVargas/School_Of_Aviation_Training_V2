@@ -55,6 +55,7 @@
             :alert="certsVencidas > 0" alert-color="red-9" />
           <q-tab name="planes"       icon="event_note"       label="Planes de Clase" />
           <q-tab name="bitacoras"    icon="auto_stories"     label="Bitácoras" />
+          <q-tab name="evaluaciones" icon="rate_review"      label="Evaluaciones RAC 65" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated class="bg-transparent text-white">
@@ -183,6 +184,55 @@
             </q-table>
           </q-tab-panel>
 
+          <!-- ════ EVALUACIONES RAC 65 ════ -->
+          <q-tab-panel name="evaluaciones" class="q-pa-xl">
+            <div class="row items-center justify-between q-mb-xl">
+              <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest">Historial de Evaluaciones — RAC 65</div>
+              <q-btn v-if="puedeEditar" color="red-9" icon="add" label="Nueva Evaluación" no-caps
+                class="premium-btn shadow-24 q-px-xl" @click="$router.push('/evaluaciones-instructor')" />
+            </div>
+            <div v-if="loadingEval" class="text-center q-pa-xl">
+              <q-spinner-dots color="red-9" size="40px" />
+            </div>
+            <div v-else-if="!evaluaciones.length" class="text-center q-pa-xl text-grey-7 font-mono uppercase tracking-widest">
+              <q-icon name="rate_review" size="60px" class="opacity-10 q-mb-md" /><br>
+              Sin evaluaciones registradas.
+            </div>
+            <q-list v-else dark separator class="rounded-12 overflow-hidden border-red-low">
+              <q-item v-for="ev in evaluaciones" :key="ev.id" class="q-pa-lg hover-row">
+                <q-item-section avatar>
+                  <q-circular-progress
+                    :value="ev.puntaje"
+                    size="52px"
+                    :thickness="0.22"
+                    :color="ev.puntaje >= 80 ? 'emerald' : ev.puntaje >= 60 ? 'orange-9' : 'red-9'"
+                    track-color="grey-9"
+                    class="q-ma-xs"
+                  >
+                    <span class="font-mono text-weight-bold text-white" style="font-size:11px">{{ ev.puntaje }}%</span>
+                  </q-circular-progress>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-white text-weight-bold font-head">
+                    {{ tipoEvalLabel(ev.tipo) }}
+                  </q-item-label>
+                  <q-item-label caption class="font-mono text-grey-6 uppercase q-mt-xs" style="font-size:9px">
+                    {{ fmtFecha(ev.fecha) }} · Evaluado por: {{ ev.evaluador?.nombres }} {{ ev.evaluador?.apellidos }}
+                  </q-item-label>
+                  <q-item-label v-if="ev.observaciones" caption class="text-grey-5 q-mt-xs">
+                    {{ ev.observaciones }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-badge :color="resultadoColor(ev.resultado)" :label="ev.resultado?.replace('_', ' ').toUpperCase()" class="font-mono" />
+                  <div v-if="ev.proxima_evaluacion" class="text-caption text-grey-6 font-mono q-mt-xs text-right" style="font-size:9px">
+                    Próx: {{ fmtFecha(ev.proxima_evaluacion) }}
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-tab-panel>
+
         </q-tab-panels>
       </q-card>
     </template>
@@ -296,7 +346,9 @@ const materias   = ref([])
 const tab        = ref('perfil')
 const dialogCert = ref(false)
 const dialogPlan = ref(false)
-const guardando  = ref(false)
+const guardando     = ref(false)
+const evaluaciones  = ref([])
+const loadingEval   = ref(false)
 
 const formCert = ref({ tipo: null, descripcion: '', numero: '', fecha_emision: '', fecha_vencimiento: '', archivo_url: '' })
 const formPlan = ref({ materia_id: null, fecha: '', duracion_min: 60, objetivos: '', contenido: '', recursos: '', estado: 'planificada' })
@@ -408,12 +460,31 @@ async function cargarMaterias() {
   catch { materias.value = [] }
 }
 
+async function cargarEvaluaciones() {
+  loadingEval.value = true
+  try {
+    const { data } = await api.get(`/evaluaciones-instructor/instructor/${id}/historial`)
+    evaluaciones.value = data || []
+  } catch { evaluaciones.value = [] }
+  finally { loadingEval.value = false }
+}
+
+const tipoEvalLabel = (t) => ({
+  periodica: 'Evaluación Periódica', observacion_vuelo: 'Observación en Vuelo',
+  evaluacion_competencia: 'Evaluación de Competencia', desempeno: 'Desempeño', recurrente: 'Recurrente',
+})[t] || t
+
+const resultadoColor = (r) => ({
+  aprobado: 'positive', aprobado_observaciones: 'warning', reprobado: 'negative', en_proceso: 'blue',
+})[r] ?? 'grey'
+
 onMounted(() => {
   cargarInstructor()
   cargarCerts()
   cargarPlanes()
   cargarBitacoras()
   cargarMaterias()
+  cargarEvaluaciones()
 })
 </script>
 

@@ -28,7 +28,9 @@
         <q-tab name="estudiantes" icon="groups"         :label="$q.screen.gt.xs ? 'Archivo Digital' : ''" />
         <q-tab name="vuelo"       icon="flight_takeoff" :label="$q.screen.gt.xs ? 'Fase de Vuelo' : ''" />
         <q-tab name="tesoreria"   icon="payments"       :label="$q.screen.gt.xs ? 'Habilitaciones' : ''" />
-        <q-tab name="planes"      icon="fact_check"     :label="$q.screen.gt.xs ? 'Planes de Clase' : ''" />
+        <q-tab name="planes"        icon="fact_check"      :label="$q.screen.gt.xs ? 'Planes de Clase' : ''" />
+        <q-tab name="endorsements"  icon="flight_takeoff"  :label="$q.screen.gt.xs ? 'Endorsements' : ''" />
+        <q-tab name="certificados"  icon="workspace_premium" :label="$q.screen.gt.xs ? 'Certificados' : ''" />
       </q-tabs>
 
       <q-tab-panels v-model="tab" animated class="bg-transparent text-white" style="min-height:600px">
@@ -428,6 +430,65 @@
                 </q-card>
              </div>
           </div>
+        </q-tab-panel>
+
+        <!-- ════ ENDORSEMENTS ════ -->
+        <q-tab-panel name="endorsements" class="q-pa-xl">
+          <div class="row justify-between items-center q-mb-xl">
+            <div>
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Endorsements de Vuelo Solo</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">RAC 141 — Autorización de primer vuelo solo</div>
+            </div>
+            <q-btn color="red-9" icon="open_in_new" label="Ver Módulo Completo"
+              class="premium-btn shadow-24 q-px-xl" no-caps
+              @click="$router.push('/endorsements')" />
+          </div>
+          <div v-if="loadingEndorsements" class="text-center q-pa-xl">
+            <q-spinner-dots color="red-9" size="48px" />
+          </div>
+          <div v-else-if="!endorsements.length" class="text-center q-pa-xl text-grey-7 font-mono uppercase tracking-widest">
+            <q-icon name="flight_takeoff" size="80px" class="opacity-10 q-mb-md" /><br>
+            No hay endorsements registrados.
+          </div>
+          <q-table v-else
+            :rows="endorsements" :columns="colsEndorsements" row-key="id"
+            flat dark class="rac-table shadow-24"
+            :pagination="{ rowsPerPage: 10 }"
+          >
+            <template #body-cell-tipo="{ row }">
+              <q-td><q-badge color="primary" :label="endTipoLabel(row.tipo)" /></q-td>
+            </template>
+            <template #body-cell-firma="{ row }">
+              <q-td class="text-center">
+                <q-icon :name="row.firma_instructor ? 'verified' : 'pending'" :color="row.firma_instructor ? 'positive' : 'warning'" />
+              </q-td>
+            </template>
+          </q-table>
+        </q-tab-panel>
+
+        <!-- ════ CERTIFICADOS ════ -->
+        <q-tab-panel name="certificados" class="q-pa-xl">
+          <div class="row justify-between items-center q-mb-xl">
+            <div>
+              <div class="text-h5 font-head text-weight-bolder text-white uppercase tracking-tighter">Certificados y Constancias</div>
+              <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mt-xs" style="font-size:10px">RAC 141.77 — Documentos emitidos</div>
+            </div>
+            <q-btn color="red-9" icon="open_in_new" label="Ver Módulo Completo"
+              class="premium-btn shadow-24 q-px-xl" no-caps
+              @click="$router.push('/certificados')" />
+          </div>
+          <div v-if="loadingCerts" class="text-center q-pa-xl">
+            <q-spinner-dots color="red-9" size="48px" />
+          </div>
+          <div v-else-if="!certRecientes.length" class="text-center q-pa-xl text-grey-7 font-mono uppercase tracking-widest">
+            <q-icon name="workspace_premium" size="80px" class="opacity-10 q-mb-md" /><br>
+            No hay certificados emitidos.
+          </div>
+          <q-table v-else
+            :rows="certRecientes" :columns="colsCerts" row-key="id"
+            flat dark class="rac-table shadow-24"
+            :pagination="{ rowsPerPage: 10 }"
+          />
         </q-tab-panel>
 
       </q-tab-panels>
@@ -1297,6 +1358,33 @@ const instructoresOptions = ref([])
 
 const planesClase = ref([])
 const loadingPlanes = ref(false)
+
+// Endorsements + Certificados tabs
+const endorsements        = ref([])
+const loadingEndorsements = ref(false)
+const certRecientes       = ref([])
+const loadingCerts        = ref(false)
+
+const colsEndorsements = [
+  { name: 'estudiante', label: 'Estudiante', field: r => (r.estudiante?.nombres ?? '') + ' ' + (r.estudiante?.apellidos ?? ''), align: 'left' },
+  { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'center' },
+  { name: 'fecha', label: 'Fecha', field: r => r.fecha?.slice(0,10) ?? '—', align: 'center' },
+  { name: 'aeronave_matricula', label: 'Aeronave', field: 'aeronave_matricula', align: 'center' },
+  { name: 'instructor', label: 'Instructor', field: r => (r.instructor?.nombres ?? '') + ' ' + (r.instructor?.apellidos ?? ''), align: 'left' },
+  { name: 'firma', label: 'Firmado', field: 'firma_instructor', align: 'center' },
+]
+const colsCerts = [
+  { name: 'numero_certificado', label: 'N° Certificado', field: 'numero_certificado', align: 'left' },
+  { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'center' },
+  { name: 'estudiante', label: 'Estudiante', field: r => (r.estudiante?.nombres ?? '') + ' ' + (r.estudiante?.apellidos ?? ''), align: 'left' },
+  { name: 'fecha_emision', label: 'Fecha', field: r => r.fecha_emision?.slice(0,10) ?? '—', align: 'center' },
+  { name: 'anulado', label: 'Estado', field: r => r.anulado ? 'Anulado' : 'Vigente', align: 'center' },
+]
+const endTipoLabel = (t) => ({
+  primer_vuelo_solo: 'Primer Vuelo Solo', vuelo_solo_area: 'Vuelo Solo Área',
+  vuelo_solo_xc_corto: 'XC Corto', vuelo_solo_xc_largo: 'XC Largo',
+  vuelo_nocturno: 'Vuelo Nocturno', examen_vuelo: 'Examen Vuelo',
+})[t] ?? t
 const dialogPlan = ref(false)
 const guardandoPlan = ref(false)
 const planForm = ref({ id: null, instructor_id: null, materia_id: null, fecha: dayjs().format('YYYY-MM-DD'), duracion_min: 60, estado: 'planificada', objetivos: '', contenido: '', recursos: '' })
@@ -1649,7 +1737,29 @@ function eliminarPlanClase(id) {
 
 
 
-onMounted(cargarDatos)
+async function cargarEndorsements() {
+  loadingEndorsements.value = true
+  try {
+    const { data } = await api.get('/endorsements')
+    endorsements.value = data || []
+  } catch { endorsements.value = [] }
+  finally { loadingEndorsements.value = false }
+}
+
+async function cargarCertRecientes() {
+  loadingCerts.value = true
+  try {
+    const { data } = await api.get('/certificados?per_page=20')
+    certRecientes.value = data.data ?? data ?? []
+  } catch { certRecientes.value = [] }
+  finally { loadingCerts.value = false }
+}
+
+onMounted(() => {
+  cargarDatos()
+  cargarEndorsements()
+  cargarCertRecientes()
+})
 // ── Acciones Estudiante ──
 function filterProgramas(val, update) {
   if (val === '') {
