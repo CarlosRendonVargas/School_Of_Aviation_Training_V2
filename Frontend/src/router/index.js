@@ -57,6 +57,7 @@ const routes = [
       // 08: Administrativo y Financiero
       { path: 'financiero', name: 'financiero', component: () => import('pages/admin/AdministrativoPage.vue'), meta: { roles: ['admin', 'dir_ops'] } },
 
+      { path: 'normatividad', name: 'normatividad', component: () => import('pages/normatividad/NormatividadPage.vue') },
       { path: 'configuracion', name: 'configuracion', component: () => import('pages/admin/ConfiguracionPage.vue') },
       { path: 'perfil',         name: 'perfil',         component: () => import('pages/auth/PerfilPage.vue') },
 

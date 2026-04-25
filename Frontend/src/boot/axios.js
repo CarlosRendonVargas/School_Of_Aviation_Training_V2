@@ -4,7 +4,7 @@ import axios from 'axios'
 import { Notify } from 'quasar'
 
 const api = axios.create({
-  baseURL: 'https://schoolaviationtraining.com/api/v1',
+  baseURL: process.env.API_URL,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })

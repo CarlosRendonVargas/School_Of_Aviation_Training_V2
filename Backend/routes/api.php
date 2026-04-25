@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\AulaVirtualController;
 use App\Http\Controllers\Api\MateriaController;
 use App\Http\Controllers\Api\MisionVueloController;
 use App\Http\Controllers\PlanClaseController;
+use App\Http\Controllers\Api\NormatividadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -205,4 +206,12 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     // --- Planes de Clase ---
     Route::apiResource('planes-clase', PlanClaseController::class);
+
+    // --- Normatividad ---
+    Route::prefix('normatividad')->group(function () {
+        Route::get('/',       [NormatividadController::class, 'index']);
+        Route::post('/',      [NormatividadController::class, 'store']);
+        Route::put('{id}',    [NormatividadController::class, 'update']);
+        Route::delete('{id}', [NormatividadController::class, 'destroy']);
+    });
 });
