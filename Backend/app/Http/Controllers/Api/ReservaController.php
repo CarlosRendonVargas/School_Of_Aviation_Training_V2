@@ -169,36 +169,59 @@ class ReservaController extends Controller
 
     /**
      * GET /api/v1/reservas/cronograma
-     * Devuelve las reservas pendientes de confirmación del estudiante autenticado.
+     * Estudiante: sus propias reservas.
+     * Admin/instructor/dir_ops: todas las reservas pendientes de confirmación.
      */
     public function cronograma(Request $request): JsonResponse
     {
-        $user       = $request->user();
-        $estudiante = $user->persona?->estudiante;
+        $user = $request->user();
+        $rol  = $user->rol?->nombre;
 
-        if (! $estudiante) {
-            return response()->json(['ok' => true, 'data' => []]);
+        if ($rol === 'estudiante') {
+            $estudiante = $user->persona?->estudiante;
+
+            if (! $estudiante) {
+                return response()->json(['ok' => true, 'data' => []]);
+            }
+
+            // Auto-cancelar expiradas
+            Reserva::where('estudiante_id', $estudiante->id)
+                ->where('confirmacion_estudiante', 'pendiente')
+                ->where('confirmacion_expira', '<', now())
+                ->update([
+                    'estado'                  => 'cancelada',
+                    'confirmacion_estudiante' => 'rechazada',
+                    'motivo_cancelacion'      => 'Sin confirmación del estudiante en 24 horas.',
+                ]);
+
+            $reservas = Reserva::with([
+                'aeronave:id,matricula,modelo',
+                'instructor.persona:id,nombres,apellidos',
+            ])
+                ->where('estudiante_id', $estudiante->id)
+                ->whereIn('estado', ['pendiente', 'confirmada'])
+                ->orderBy('fecha')
+                ->orderBy('hora_inicio')
+                ->get();
+
+        } else {
+            // Admin / instructor / dir_ops: todas las reservas próximas
+            $query = Reserva::with([
+                'aeronave:id,matricula,modelo',
+                'estudiante.persona:id,nombres,apellidos',
+                'instructor.persona:id,nombres,apellidos',
+            ])->whereIn('estado', ['pendiente', 'confirmada'])
+              ->orderBy('fecha')
+              ->orderBy('hora_inicio');
+
+            // Instructor solo ve las suyas
+            if ($rol === 'instructor') {
+                $inst = $user->persona?->instructor;
+                if ($inst) $query->where('instructor_id', $inst->id);
+            }
+
+            $reservas = $query->get();
         }
-
-        // Auto-cancelar las expiradas antes de devolver
-        Reserva::where('estudiante_id', $estudiante->id)
-            ->where('confirmacion_estudiante', 'pendiente')
-            ->where('confirmacion_expira', '<', now())
-            ->update([
-                'estado'               => 'cancelada',
-                'confirmacion_estudiante' => 'rechazada',
-                'motivo_cancelacion'   => 'Sin confirmación del estudiante en 24 horas.',
-            ]);
-
-        $reservas = Reserva::with([
-            'aeronave:id,matricula,modelo',
-            'instructor.persona:id,nombres,apellidos',
-        ])
-            ->where('estudiante_id', $estudiante->id)
-            ->whereIn('estado', ['pendiente', 'confirmada'])
-            ->orderBy('fecha')
-            ->orderBy('hora_inicio')
-            ->get();
 
         return response()->json(['ok' => true, 'data' => $reservas]);
     }

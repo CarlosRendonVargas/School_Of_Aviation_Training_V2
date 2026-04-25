@@ -222,7 +222,7 @@ const menuCompleto = computed(() => {
     { to: '/dashboard',     label: 'Dashboard',     icono: 'dashboard',        roles: ['all'] },
     { to: '/vencimientos',  label: 'Alertas RAC',   icono: 'shutter_speed',    roles: ['all'], badge: v || null, badgeColor: 'red-5' },
     { to: '/mensajes',      label: 'Mensajes',      icono: 'forum',            roles: ['all'], sublabel: 'Comunicaciones internas' },
-    { to: '/cronograma',    label: 'Mi Cronograma', icono: 'flight_takeoff',   roles: ['estudiante'], sublabel: 'Planes de vuelo', badge: vp || null, badgeColor: 'purple' },
+    { to: '/cronograma',    label: 'Mi Cronograma', icono: 'assignment',       roles: ['all'], sublabel: 'Confirmar planes de vuelo', badge: vp || null, badgeColor: 'purple' },
     { to: '/calendario',    label: 'Calendario',    icono: 'event_available',  roles: ['all'], sublabel: 'Planificación de Vuelos' },
 
     { separador: true, sectionLabel: 'Formación' },

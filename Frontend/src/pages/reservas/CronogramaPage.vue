@@ -70,6 +70,18 @@
               </div>
             </div>
 
+            <!-- Estudiante (solo visible para admin/instructor) -->
+            <div v-if="!esEstudiante && r.estudiante" class="q-mb-md">
+              <div class="text-grey-5 font-mono q-mb-xs" style="font-size:10px">ESTUDIANTE</div>
+              <div class="text-white text-weight-medium" style="font-size:13px">
+                <q-icon name="school" size="14px" class="q-mr-xs" />
+                {{ nombrePersona(r.estudiante?.persona) }}
+              </div>
+              <q-badge :color="r.confirmacion_estudiante === 'aceptada' ? 'positive' : r.confirmacion_estudiante === 'rechazada' ? 'negative' : 'purple'"
+                :label="{ pendiente: 'Pendiente confirmación', aceptada: 'Confirmado', rechazada: 'Rechazado' }[r.confirmacion_estudiante]"
+                class="q-mt-xs" />
+            </div>
+
             <!-- Objetivos -->
             <div v-if="r.objetivos" class="q-mb-md">
               <div class="text-grey-5 font-mono q-mb-xs" style="font-size:10px">OBJETIVOS</div>
@@ -141,11 +153,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
+import { useAuthStore } from 'store/auth'
 
-const $q = useQuasar()
+const $q       = useQuasar()
+const auth     = useAuthStore()
+const esEstudiante = computed(() => auth.rol === 'estudiante')
 
 const cargando     = ref(false)
 const reservas     = ref([])
@@ -253,10 +268,13 @@ function headerStyle(r) {
   return 'background: linear-gradient(135deg,#7f1d1d,#A10B13)'
 }
 
-function nombreInstructor(r) {
-  const p = r.instructor?.persona
-  if (!p) return 'Sin asignar'
+function nombrePersona(p) {
+  if (!p) return '—'
   return `${p.nombres ?? ''} ${p.apellidos ?? ''}`.trim()
+}
+
+function nombreInstructor(r) {
+  return r.instructor?.persona ? nombrePersona(r.instructor.persona) : 'Sin asignar'
 }
 
 function fmtFecha(d) {
