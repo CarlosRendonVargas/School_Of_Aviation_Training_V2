@@ -215,24 +215,29 @@ const rolStyle = computed(() => {
 const menuCompleto = computed(() => {
   const v = vencimientosStore.totalAlertas
   return [
-    { to: '/normatividad',  label: 'Normatividad',  icono: 'gavel', roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
-    { to: '/dashboard',     label: 'Dashboard',    icono: 'dashboard', roles: ['all'] },
-    { to: '/vencimientos',  label: 'Alertas RAC',  icono: 'shutter_speed', roles: ['all'], badge: v || null, badgeColor: 'red-5' },
-    { to: '/calendario',    label: 'Calendario',   icono: 'event_available', roles: ['all'], sublabel: 'Planificación de Vuelos' },
-    
-    { separador: true, sectionLabel: 'Operatividad' },
-    { to: '/vuelo',         label: 'Vuelo y Diario',icono: 'flight_takeoff', roles: ['all'], sublabel: 'Bitácoras RAC 91.417' },
-    { to: '/academico',     label: 'Académico',    icono: 'auto_stories', roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] },
-    { to: '/aula-virtual',  label: 'Aula Virtual', icono: 'school', roles: ['estudiante'] },
-    { to: '/sms',           label: 'Segur. SMS',   icono: 'local_hospital', roles: ['all'], sublabel: 'Seguridad Operacional' },
-    
+    { to: '/normatividad',  label: 'Normatividad',  icono: 'gavel',            roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
+    { to: '/dashboard',     label: 'Dashboard',     icono: 'dashboard',        roles: ['all'] },
+    { to: '/vencimientos',  label: 'Alertas RAC',   icono: 'shutter_speed',    roles: ['all'], badge: v || null, badgeColor: 'red-5' },
+    { to: '/mensajes',      label: 'Mensajes',      icono: 'forum',            roles: ['all'], sublabel: 'Comunicaciones internas' },
+    { to: '/calendario',    label: 'Calendario',    icono: 'event_available',  roles: ['all'], sublabel: 'Planificación de Vuelos' },
+
+    { separador: true, sectionLabel: 'Formación' },
+    { to: '/vuelo',         label: 'Vuelo y Diario', icono: 'flight_takeoff',  roles: ['all'], sublabel: 'Bitácoras RAC 91.417' },
+    { to: '/academico',     label: 'Académico',      icono: 'auto_stories',    roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] },
+    { to: '/aula-virtual',  label: 'Aula Virtual',   icono: 'school',          roles: ['estudiante'] },
+    { to: '/certificados',  label: 'Certificados',   icono: 'workspace_premium', roles: ['all'], sublabel: 'Constancias RAC 141.77' },
+    { to: '/sms',           label: 'Segur. SMS',     icono: 'local_hospital',  roles: ['all'], sublabel: 'Seguridad Operacional' },
+
     { separador: true, sectionLabel: 'Administración' },
-    { to: '/financiero',    label: 'Financiero',   icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'] },
-    { to: '/mantenimiento', label: 'Flota MX',     icono: 'settings_suggest', roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'] },
-    { to: '/instructores',  label: 'Talento I/P',  icono: 'supervisor_account', roles: ['admin', 'dir_ops'] },
-    
+    { to: '/financiero',    label: 'Financiero',     icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'] },
+    { to: '/prospectos',    label: 'CRM Prospectos', icono: 'people_alt',      roles: ['admin', 'dir_ops'], sublabel: 'Leads e inscripciones' },
+    { to: '/nomina',        label: 'Nómina',         icono: 'payments',        roles: ['admin', 'dir_ops'], sublabel: 'Gestión de personal' },
+    { to: '/gastos',        label: 'Gastos / Caja',  icono: 'receipt_long',    roles: ['admin', 'dir_ops'], sublabel: 'Caja menor y presupuesto' },
+    { to: '/mantenimiento', label: 'Flota MX',       icono: 'settings_suggest', roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'] },
+    { to: '/instructores',  label: 'Talento I/P',    icono: 'supervisor_account', roles: ['admin', 'dir_ops'] },
+
     { separador: true, sectionLabel: 'Configuración' },
-    { to: '/seguridad',     label: 'Acceso y Logs', icono: 'vpn_key', roles: ['admin'] },
+    { to: '/seguridad',     label: 'Acceso y Logs',  icono: 'vpn_key',         roles: ['admin'] },
   ]
 })
 

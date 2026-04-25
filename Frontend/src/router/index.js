@@ -80,6 +80,21 @@ const routes = [
 
       // 13: SMS (form de reporte)
       { path: 'sms/reporte',    name: 'sms-reporte',    component: () => import('pages/sms/SmsReporteFormPage.vue') },
+
+      // 14: Certificados y Constancias
+      { path: 'certificados',   name: 'certificados',   component: () => import('pages/academico/CertificadosPage.vue'), meta: { roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac', 'estudiante'] } },
+
+      // 15: Mensajería interna
+      { path: 'mensajes',       name: 'mensajes',       component: () => import('pages/mensajes/MensajesPage.vue') },
+
+      // 16: CRM Prospectos
+      { path: 'prospectos',     name: 'prospectos',     component: () => import('pages/admin/ProspectosPage.vue'),    meta: { roles: ['admin', 'dir_ops'] } },
+
+      // 17: Nómina
+      { path: 'nomina',         name: 'nomina',         component: () => import('pages/admin/NominaPage.vue'),        meta: { roles: ['admin', 'dir_ops'] } },
+
+      // 18: Gastos Operativos / Caja Menor
+      { path: 'gastos',         name: 'gastos',         component: () => import('pages/admin/GastosPage.vue'),        meta: { roles: ['admin', 'dir_ops'] } },
     ],
   },
   { path: '/:catchAll(.*)*', component: () => import('pages/ErrorNotFound.vue') },

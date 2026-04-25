@@ -20,6 +20,16 @@ use App\Http\Controllers\Api\MateriaController;
 use App\Http\Controllers\Api\MisionVueloController;
 use App\Http\Controllers\PlanClaseController;
 use App\Http\Controllers\Api\NormatividadController;
+use App\Http\Controllers\Api\CertificadoController;
+use App\Http\Controllers\Api\EndorsementController;
+use App\Http\Controllers\Api\MensajeController;
+use App\Http\Controllers\Api\ProspectoController;
+use App\Http\Controllers\Api\EvaluacionInstructorController;
+use App\Http\Controllers\Api\CapacitacionSmsController;
+use App\Http\Controllers\Api\ErgController;
+use App\Http\Controllers\Api\EnmiendaController;
+use App\Http\Controllers\Api\NominaController;
+use App\Http\Controllers\Api\GastoOperativoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -213,5 +223,88 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('/',      [NormatividadController::class, 'store']);
         Route::put('{id}',    [NormatividadController::class, 'update']);
         Route::delete('{id}', [NormatividadController::class, 'destroy']);
+    });
+
+    // --- Certificados y Constancias ---
+    Route::prefix('certificados')->group(function () {
+        Route::get('/',            [CertificadoController::class, 'index']);
+        Route::post('/',           [CertificadoController::class, 'store']);
+        Route::get('{id}',         [CertificadoController::class, 'show']);
+        Route::get('{id}/pdf',     [CertificadoController::class, 'pdf']);
+        Route::post('{id}/anular', [CertificadoController::class, 'anular']);
+    });
+
+    // --- Endorsements (1er vuelo solo) ---
+    Route::prefix('endorsements')->group(function () {
+        Route::get('/',    [EndorsementController::class, 'index']);
+        Route::post('/',   [EndorsementController::class, 'store']);
+        Route::get('{id}', [EndorsementController::class, 'show']);
+    });
+
+    // --- Mensajería Interna ---
+    Route::prefix('mensajes')->group(function () {
+        Route::get('recibidos',         [MensajeController::class, 'recibidos']);
+        Route::get('enviados',          [MensajeController::class, 'enviados']);
+        Route::get('no-leidos',         [MensajeController::class, 'noLeidos']);
+        Route::get('usuarios',          [MensajeController::class, 'usuarios']);
+        Route::post('/',                [MensajeController::class, 'store']);
+        Route::get('{id}/hilo',         [MensajeController::class, 'hilo']);
+        Route::post('{id}/marcar-leido',[MensajeController::class, 'marcarLeido']);
+    });
+
+    // --- CRM Prospectos ---
+    Route::prefix('prospectos')->group(function () {
+        Route::get('estadisticas', [ProspectoController::class, 'estadisticas']);
+        Route::get('/',            [ProspectoController::class, 'index']);
+        Route::post('/',           [ProspectoController::class, 'store']);
+        Route::put('{id}',         [ProspectoController::class, 'update']);
+        Route::delete('{id}',      [ProspectoController::class, 'destroy']);
+    });
+
+    // --- Evaluaciones de Instructor ---
+    Route::prefix('evaluaciones-instructor')->group(function () {
+        Route::get('/',                          [EvaluacionInstructorController::class, 'index']);
+        Route::post('/',                         [EvaluacionInstructorController::class, 'store']);
+        Route::get('instructor/{id}/historial',  [EvaluacionInstructorController::class, 'historialInstructor']);
+    });
+
+    // --- Capacitaciones SMS ---
+    Route::prefix('capacitaciones-sms')->group(function () {
+        Route::get('/',                          [CapacitacionSmsController::class, 'index']);
+        Route::post('/',                         [CapacitacionSmsController::class, 'store']);
+        Route::put('{id}',                       [CapacitacionSmsController::class, 'update']);
+        Route::get('{id}/registros',             [CapacitacionSmsController::class, 'registros']);
+        Route::post('{id}/asistencia',           [CapacitacionSmsController::class, 'registrarAsistencia']);
+    });
+
+    // --- Plan de Respuesta a Emergencias (ERG) ---
+    Route::prefix('erg')->group(function () {
+        Route::get('/',       [ErgController::class, 'index']);
+        Route::post('/',      [ErgController::class, 'store']);
+        Route::put('{id}',    [ErgController::class, 'update']);
+        Route::delete('{id}', [ErgController::class, 'destroy']);
+    });
+
+    // --- Enmiendas MOE/PIA ---
+    Route::prefix('enmiendas')->group(function () {
+        Route::get('/',       [EnmiendaController::class, 'index']);
+        Route::post('/',      [EnmiendaController::class, 'store']);
+        Route::put('{id}',    [EnmiendaController::class, 'update']);
+    });
+
+    // --- Nómina ---
+    Route::prefix('nomina')->group(function () {
+        Route::get('periodos',              [NominaController::class, 'periodos']);
+        Route::post('periodos',             [NominaController::class, 'storePeriodo']);
+        Route::get('periodos/{id}/items',   [NominaController::class, 'itemsPeriodo']);
+        Route::post('periodos/{id}/items',  [NominaController::class, 'storeItem']);
+        Route::post('periodos/{id}/cerrar', [NominaController::class, 'cerrarPeriodo']);
+    });
+
+    // --- Gastos Operativos / Caja Menor ---
+    Route::prefix('gastos')->group(function () {
+        Route::get('resumen', [GastoOperativoController::class, 'resumen']);
+        Route::get('/',       [GastoOperativoController::class, 'index']);
+        Route::post('/',      [GastoOperativoController::class, 'store']);
     });
 });

@@ -3,7 +3,19 @@
     "allow": [
       "Bash(xargs grep *)",
       "Read(//c/Users/GAMER CARLOS RENDON/.claude/projects/c--xampp-htdocs-SchoolOfAviationT/memory/**)",
-      "Bash(xargs sed *)"
+      "Bash(xargs sed *)",
+      "Bash(php --version)",
+      "Bash(mysql --version)",
+      "Bash(php artisan *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3306\\\\|:3308\\\\|:3307\")",
+      "PowerShell(Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -in @\\(3306, 3307, 3308, 3309\\) } | Select-Object LocalAddress, LocalPort)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git push *)",
+      "Bash(git branch *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\GAMER CARLOS RENDON\\.claude\\projects\\c--xampp-htdocs-SchoolOfAviationT\\memory"
