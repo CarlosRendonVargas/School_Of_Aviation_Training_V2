@@ -135,7 +135,7 @@ const kpisAcademico = computed(() => [
 ])
 
 const kpisSms = computed(() => [
-  { label: 'Reportes Totales', value: smsDashboard.value.total ?? 0 },
+  { label: 'Reportes Totales', value: smsDashboard.value.total_reportes ?? 0 },
   { label: 'En Investigación', value: smsDashboard.value.en_investigacion ?? 0, alert: (smsDashboard.value.en_investigacion ?? 0) > 5 },
   { label: 'Acciones Pendientes', value: smsDashboard.value.acciones_pendientes ?? 0, alert: (smsDashboard.value.acciones_pendientes ?? 0) > 3 },
   { label: 'Índice de Cierre', value: smsDashboard.value.indice_cierre ? smsDashboard.value.indice_cierre + '%' : '—' },
@@ -174,12 +174,15 @@ async function cargarTodo() {
       api.get('/enmiendas'),
       api.get('/vencimientos'),
     ])
-    if (d.status === 'fulfilled') dashboard.value = d.value.data
-    if (sms.status === 'fulfilled') smsDashboard.value = sms.value.data
-    if (cs.status === 'fulfilled') corrStats.value = cs.value.data
+    if (d.status === 'fulfilled') dashboard.value = d.value.data?.data ?? d.value.data ?? {}
+    if (sms.status === 'fulfilled') smsDashboard.value = sms.value.data?.data ?? sms.value.data ?? {}
+    if (cs.status === 'fulfilled') corrStats.value = cs.value.data ?? {}
     if (corr.status === 'fulfilled') correspondencia.value = corr.value.data?.data ?? corr.value.data ?? []
     if (enm.status === 'fulfilled') enmiendas.value = enm.value.data?.data ?? enm.value.data ?? []
-    if (v.status === 'fulfilled') vencimientos.value = v.value.data
+    if (v.status === 'fulfilled') {
+      const vdata = v.value.data?.data ?? v.value.data ?? []
+      vencimientos.value = { criticos: Array.isArray(vdata) ? vdata.length : 0 }
+    }
   } finally {
     loading.value = false
   }

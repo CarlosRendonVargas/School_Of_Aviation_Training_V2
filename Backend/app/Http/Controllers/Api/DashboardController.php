@@ -11,6 +11,8 @@ use App\Models\Instructor;
 use App\Models\Aeronave;
 use App\Models\Reserva;
 use App\Models\ReporteSms;
+use App\Models\Certificado;
+use App\Models\BitacoraVuelo;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -129,12 +131,18 @@ class DashboardController extends Controller
         });
 
         return [
-            'estudiantes_activos'   => Estudiante::activos()->count(),
-            'ingresos_mes'          => \App\Models\Pago::whereMonth('fecha_pago', now()->month)->sum('valor'),
-            'facturas_pendientes'   => \App\Models\Factura::where('estado', 'pendiente')->count(),
-            'facturas_vencidas'     => \App\Models\Factura::where('estado', 'vencida')->count(),
-            'nuevas_matriculas_mes' => \App\Models\Matricula::whereMonth('fecha_matricula', now()->month)->count(),
-            'flujo_matriculas'      => $flujoMatriculas,
+            'estudiantes_activos'    => Estudiante::activos()->count(),
+            'aeronaves_activas'      => Aeronave::where('estado', 'activa')->count(),
+            'horas_vuelo_anio'       => round(BitacoraVuelo::whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'horas_vuelo_mes'        => round(BitacoraVuelo::whereMonth('fecha', now()->month)->whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'certificados_emitidos'  => Certificado::whereYear('fecha_emision', now()->year)->where('anulado', false)->count(),
+            'matriculas_activas'     => \App\Models\Matricula::where('estado', 'activa')->count(),
+            'documentos_vigentes'    => \App\Models\DocumentoRac::vigentes()->count(),
+            'ingresos_mes'           => \App\Models\Pago::whereMonth('fecha_pago', now()->month)->sum('valor'),
+            'facturas_pendientes'    => \App\Models\Factura::where('estado', 'pendiente')->count(),
+            'facturas_vencidas'      => \App\Models\Factura::where('estado', 'vencida')->count(),
+            'nuevas_matriculas_mes'  => \App\Models\Matricula::whereMonth('fecha_matricula', now()->month)->count(),
+            'flujo_matriculas'       => $flujoMatriculas,
         ];
     }
 
@@ -143,6 +151,13 @@ class DashboardController extends Controller
     private function dashboardDirOps(): array
     {
         return [
+            'estudiantes_activos'    => Estudiante::activos()->count(),
+            'aeronaves_activas'      => Aeronave::where('estado', 'activa')->count(),
+            'horas_vuelo_anio'       => round(BitacoraVuelo::whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'horas_vuelo_mes'        => round(BitacoraVuelo::whereMonth('fecha', now()->month)->whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'certificados_emitidos'  => Certificado::whereYear('fecha_emision', now()->year)->where('anulado', false)->count(),
+            'matriculas_activas'     => \App\Models\Matricula::where('estado', 'activa')->count(),
+            'documentos_vigentes'    => \App\Models\DocumentoRac::vigentes()->count(),
             'resumen_escuela' => [
                 'estudiantes_activos'  => Estudiante::activos()->count(),
                 'instructores_activos' => Instructor::activos()->count(),
@@ -180,6 +195,13 @@ class DashboardController extends Controller
     private function dashboardAuditor(): array
     {
         return [
+            'estudiantes_activos'    => Estudiante::activos()->count(),
+            'aeronaves_activas'      => Aeronave::where('estado', 'activa')->count(),
+            'horas_vuelo_anio'       => round(BitacoraVuelo::whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'horas_vuelo_mes'        => round(BitacoraVuelo::whereMonth('fecha', now()->month)->whereYear('fecha', now()->year)->sum('horas_totales'), 1),
+            'certificados_emitidos'  => Certificado::whereYear('fecha_emision', now()->year)->where('anulado', false)->count(),
+            'matriculas_activas'     => \App\Models\Matricula::where('estado', 'activa')->count(),
+            'documentos_vigentes'    => \App\Models\DocumentoRac::vigentes()->count(),
             'totales' => [
                 'estudiantes'   => Estudiante::count(),
                 'instructores'  => Instructor::count(),
@@ -187,7 +209,7 @@ class DashboardController extends Controller
                 'egresados'     => Estudiante::where('estado', 'graduado')->count(),
             ],
             'vencidos_criticos'  => $this->vencimientoService->vencidos(),
-            'documentos_vigentes'=> \App\Models\DocumentoRac::vigentes()->get(),
+            'documentos_rac'     => \App\Models\DocumentoRac::vigentes()->get(),
             'sms_resumen'        => $this->smsService->kpis(12),
             'instructores_vencidos' => Instructor::where('venc_licencia', '<', now()->toDateString())
                 ->with('persona:id,nombres,apellidos')

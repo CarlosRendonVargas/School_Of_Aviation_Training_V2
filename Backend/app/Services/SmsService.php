@@ -127,8 +127,13 @@ class SmsService
 
         $reportes = ReporteSms::where('created_at', '>=', $desde);
 
+        $total    = (clone $reportes)->count();
+        $cerrados = (clone $reportes)->where('estado', 'cerrado')->count();
+
         return [
-            'total_reportes'           => (clone $reportes)->count(),
+            'total_reportes'           => $total,
+            'abiertos'                 => (clone $reportes)->whereIn('estado', ['nuevo', 'en_analisis'])->count(),
+            'en_investigacion'         => (clone $reportes)->where('estado', 'en_analisis')->count(),
             'por_tipo'                 => (clone $reportes)->groupBy('tipo')
                                             ->selectRaw('tipo, COUNT(*) as total')
                                             ->pluck('total', 'tipo'),
@@ -139,6 +144,7 @@ class SmsService
                                             ->where('fecha_limite', '<', now()->toDateString())
                                             ->count(),
             'notificados_uaeac'        => (clone $reportes)->where('notificado_uaeac', true)->count(),
+            'indice_cierre'            => $total > 0 ? round($cerrados / $total * 100, 1) : 0,
             'periodo_meses'            => $meses,
         ];
     }
