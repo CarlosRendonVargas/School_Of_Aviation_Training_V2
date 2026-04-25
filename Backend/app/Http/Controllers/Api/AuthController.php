@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\AuditLog;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -138,12 +141,20 @@ class AuthController extends Controller
         if ($usuario) {
             $token = Str::random(64);
             $usuario->update([
-                'token_reset'         => Hash::make($token),
-                'token_reset_expira'  => Carbon::now()->addHour(),
+                'token_reset'        => Hash::make($token),
+                'token_reset_expira' => Carbon::now()->addHour(),
             ]);
 
-            // TODO: Enviar email con $token via Mail::to($usuario->email)
-            // Mail::to($usuario->email)->send(new ResetPasswordMail($token));
+            $nombre = $usuario->persona
+                ? trim($usuario->persona->nombres . ' ' . $usuario->persona->apellidos)
+                : $usuario->email;
+
+            try {
+                Mail::to($usuario->email)
+                    ->send(new ResetPasswordMail($token, $usuario->email, $nombre));
+            } catch (\Throwable $e) {
+                Log::error('Error enviando email reset-password: ' . $e->getMessage());
+            }
         }
 
         return response()->json([
