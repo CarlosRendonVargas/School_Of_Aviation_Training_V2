@@ -223,6 +223,7 @@ const menuCompleto = computed(() => {
     { to: '/vencimientos',  label: 'Alertas RAC',   icono: 'shutter_speed',    roles: ['all'], badge: v || null, badgeColor: 'red-5' },
     { to: '/mensajes',      label: 'Mensajes',      icono: 'forum',            roles: ['all'], sublabel: 'Comunicaciones internas' },
     { to: '/cronograma',    label: 'Mi Cronograma', icono: 'assignment',       roles: ['all'], sublabel: 'Confirmar planes de vuelo', badge: vp || null, badgeColor: 'purple' },
+    { to: '/reservas',      label: 'Programar Vuelo', icono: 'add_circle',     roles: ['admin', 'dir_ops', 'instructor'], sublabel: 'Agendar actividad de instrucción' },
     { to: '/calendario',    label: 'Calendario',    icono: 'event_available',  roles: ['all'], sublabel: 'Planificación de Vuelos' },
 
     { separador: true, sectionLabel: 'Formación' },

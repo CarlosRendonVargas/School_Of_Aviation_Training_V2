@@ -328,7 +328,8 @@ const estadoTemp  = ref('')
 const motivoCancelacion = ref('')
 const tipoBriefing = ref('pre_vuelo') // 'pre_vuelo' o 'post_vuelo'
 
-const hoy = dayjs().format('YYYY-MM-DD')
+const hoy          = dayjs().format('YYYY-MM-DD')
+const miInstructorId = ref(null)
 const filtros = ref({ fecha: hoy, estado: null, tipo: null })
 const form = ref({ fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null, objetivos: '' })
 const formBriefing = ref({ reserva_id: null, pos_vuelo: 'pre_vuelo', tipo: 'general', contenido: '', areas_debiles: '', firma_instructor: true })
@@ -422,7 +423,11 @@ function irABitacora(reserva) {
 
 function limpiarFiltros() { filtros.value = { fecha: '', estado: null, tipo: null }; cargar() }
 
-function cerrarDialog() { dialogNueva.value = false; erroresRac.value = []; form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: null, objetivos: '' } }
+function cerrarDialog() {
+  dialogNueva.value = false
+  erroresRac.value = []
+  form.value = { fecha: hoy, hora_inicio: '', hora_fin: '', aeronave_id: null, tipo: 'instruccion', estudiante_id: null, instructor_id: miInstructorId.value, objetivos: '' }
+}
 
 async function filtrarEstudiantes(val, update) {
   try {
@@ -443,9 +448,21 @@ async function cargarCatalogos() {
       api.get('/instructores', { params: { activo: 1 } })
     ])
     aeronaves.value = aer.data.data || []
-    instructoresOpc.value = (inst.data.data?.data || inst.data.data || []).map(i => ({
-      label: `${i.persona?.nombres} ${i.persona?.apellidos}`, value: i.id
+    const listaInst = inst.data.data?.data || inst.data.data || []
+    instructoresOpc.value = listaInst.map(i => ({
+      label: `${i.persona?.nombres} ${i.persona?.apellidos}`, value: i.id,
+      usuario_id: i.persona?.usuario_id
     }))
+    // Pre-seleccionar si el usuario es instructor
+    if (authStore.rol === 'instructor') {
+      const meRes = await api.get('/auth/me')
+      const userId = meRes.data?.data?.id
+      const match = instructoresOpc.value.find(i => i.usuario_id === userId)
+      if (match) {
+        miInstructorId.value    = match.value
+        form.value.instructor_id = match.value
+      }
+    }
   } catch {}
 }
 
