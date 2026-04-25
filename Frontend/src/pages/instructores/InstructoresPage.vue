@@ -10,9 +10,13 @@
           <h1 class="rac-page-title">Instructores de Vuelo</h1>
         </div>
       </div>
-      <q-btn v-if="puedeCrear" unelevated color="red-9" icon="person_add"
-        label="Registrar Instructor" @click="dialogNuevo = true"
-        class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder" />
+      <div class="row q-gutter-sm">
+        <q-btn outline color="blue-4" icon="rate_review" label="Evaluaciones RAC 65"
+          @click="$router.push('/evaluaciones-instructor')" class="font-mono" />
+        <q-btn v-if="puedeCrear" unelevated color="red-9" icon="person_add"
+          label="Registrar Instructor" @click="dialogNuevo = true"
+          class="premium-btn shadow-24 q-px-xl q-py-md text-weight-bolder" />
+      </div>
     </div>
 
     <!-- ══ Filtros ══ -->

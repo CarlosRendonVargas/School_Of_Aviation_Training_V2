@@ -18,6 +18,17 @@
       />
     </div>
 
+    <!-- ══ Acceso Rápido Sub-Módulos ══ -->
+    <div class="row q-col-gutter-md q-mb-lg">
+      <div class="col-6 col-sm-3" v-for="link in subModulos" :key="link.to">
+        <q-card flat bordered class="text-center q-pa-md cursor-pointer hover-card" @click="$router.push(link.to)">
+          <q-icon :name="link.icon" :color="link.color" size="32px" class="q-mb-sm" />
+          <div class="text-weight-bold text-white" style="font-size:13px">{{ link.label }}</div>
+          <div class="text-caption text-grey-6">{{ link.sub }}</div>
+        </q-card>
+      </div>
+    </div>
+
     <!-- ══ Navegación de Control de Calidad ══ -->
     <q-card class="premium-glass-card shadow-24 overflow-hidden q-mb-xl rounded-20">
       <q-tabs
@@ -137,6 +148,13 @@ const documentos  = ref([])
 const auditLogs   = ref([])
 const puedeEditar = ['dir_ops', 'admin'].includes(authStore.rol)
 
+const subModulos = [
+  { to: '/cumplimiento/enmiendas',      label: 'Enmiendas MOE/PIA', icon: 'edit_document',    color: 'orange',   sub: 'Control de cambios' },
+  { to: '/cumplimiento/correspondencia',label: 'Correspondencia',   icon: 'mark_email_read',  color: 'blue',     sub: 'Radicados UAEAC' },
+  { to: '/cumplimiento/reportes',       label: 'Reportes UAEAC',    icon: 'bar_chart',         color: 'positive', sub: 'Estadísticas RAC' },
+  { to: '/vencimientos',                label: 'Alertas Vencimiento',icon: 'timer',            color: 'red-9',    sub: 'Radar de vencimientos' },
+]
+
 import { useQuasar, exportFile } from 'quasar'
 const $q = useQuasar()
 
@@ -203,6 +221,7 @@ onMounted(cargar)
 
 <style lang="scss" scoped>
 
+.hover-card { transition: all 0.2s; &:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2) !important; } }
 .pulsate { animation: pulsate 2s infinite; }
 @keyframes pulsate { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 

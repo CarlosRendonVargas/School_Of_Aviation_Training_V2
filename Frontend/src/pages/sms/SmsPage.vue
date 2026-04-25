@@ -17,6 +17,17 @@
       />
     </div>
 
+    <!-- ══ Acceso Rápido Sub-Módulos SMS ══ -->
+    <div class="row q-col-gutter-md q-mb-lg">
+      <div class="col-6 col-sm-3" v-for="link in smsLinks" :key="link.to">
+        <q-card flat bordered class="text-center q-pa-md cursor-pointer sms-quick-card" @click="$router.push(link.to)">
+          <q-icon :name="link.icon" :color="link.color" size="32px" class="q-mb-sm" />
+          <div class="text-weight-bold text-white" style="font-size:13px">{{ link.label }}</div>
+          <div class="text-caption text-grey-6">{{ link.sub }}</div>
+        </q-card>
+      </div>
+    </div>
+
     <!-- ══ Pestañas de Gestión de Cristal ══ -->
     <q-card class="premium-glass-card overflow-hidden shadow-24 bonus-grid q-mb-xl">
       <q-tabs v-model="tabActivo" dense align="left" no-caps
@@ -230,38 +241,47 @@ const acciones = ref([])
 
 const $q = useQuasar()
 
+const smsLinks = [
+  { to: '/sms/erg',            label: 'Plan ERG',           icon: 'local_fire_department', color: 'red-9',    sub: 'Respuesta emergencias' },
+  { to: '/sms/capacitaciones', label: 'Capacitaciones SMS', icon: 'cast_for_education',    color: 'blue',     sub: 'Cultura de seguridad' },
+  { to: '/sms/nuevo-reporte',  label: 'Nuevo Reporte',      icon: 'add_alert',             color: 'orange',   sub: 'Registrar hallazgo' },
+  { to: '/vencimientos',       label: 'Alertas Vencimiento',icon: 'timer',                 color: 'positive', sub: 'Radar RAC' },
+]
+
 function notificarProximamente() {
   $q.notify({ color: 'info', icon: 'info', message: 'Función en desarrollo para próxima versión.' })
 }
 
-function exportarSMS() {
-  if (!reportes.value || reportes.value.length === 0) {
-    $q.notify({ color: 'warning', message: 'No hay datos para exportar.' })
-    return
-  }
-
-  const columnas = ['ID', 'Nivel Riesgo', 'Tipo', 'Descripción', 'Fecha Evento', 'Estado']
-  const filas = reportes.value.map(r => [
-    r.id,
-    r.nivel_riesgo,
-    `"${r.tipo || ''}"`,
-    `"${(r.descripcion || '').replace(/"/g, '""')}"`,
-    r.fecha_evento ? r.fecha_evento.slice(0, 10) : '',
-    `"${r.estado || ''}"`
-  ].join(','))
-
-  const contenidoCsv = [columnas.join(','), ...filas].join('\r\n')
-  
-  // Usar la misma técnica de CumplimientoPage (BOM UTF-8)
-  const blobData = "\ufeff" + contenidoCsv
-  const nombreArchivo = `Reporte_SMS_RAC141_${new Date().toISOString().slice(0,10)}.csv`
-
-  const status = exportFile(nombreArchivo, blobData, 'text/csv;charset=utf-8;')
-
-  if (status === true) {
-    $q.notify({ color: 'emerald', icon: 'download_done', message: 'Archivo de auditoría generado correctamente.' })
-  } else {
-    $q.notify({ color: 'negative', icon: 'warning', message: 'El navegador bloqueó la descarga.' })
+async async function exportarSMS() {
+  try {
+    const anio = new Date().getFullYear()
+    const res = await api.get(`/sms/exportar-griaa?anio=${anio}`)
+    const data = res.data.data || []
+    if (!data.length) {
+      $q.notify({ color: 'warning', message: 'No hay eventos GRIAA para exportar.' })
+      return
+    }
+    const cols = ['ID', 'Tipo', 'Nivel Riesgo', 'Descripcion', 'Fecha Evento', 'Lugar', 'Notificado UAEAC', 'Estado']
+    const filas = data.map(r => [
+      r.id,
+      '"' + (r.tipo || '') + '"',
+      r.nivel_riesgo,
+      '"' + (r.descripcion || '').replace(/"/g, '""') + '"',
+      r.fecha_evento ? r.fecha_evento.slice(0, 10) : '',
+      '"' + (r.lugar || '').replace(/"/g, '""') + '"',
+      r.notificado_uaeac ? 'SI' : 'NO',
+      '"' + (r.estado || '') + '"',
+    ].join(','))
+    const csv = '﻿' + [cols.join(','), ...filas].join('
+')
+    const status = exportFile('GRIAA_' + anio + '_RAC141.csv', csv, 'text/csv;charset=utf-8;')
+    if (status === true) {
+      $q.notify({ color: 'positive', icon: 'download_done', message: 'GRIAA ' + anio + ' exportado: ' + data.length + ' eventos' })
+    } else {
+      $q.notify({ color: 'negative', icon: 'warning', message: 'El navegador bloqueó la descarga.' })
+    }
+  } catch {
+    $q.notify({ color: 'negative', message: 'Error al exportar GRIAA.' })
   }
 }
 
@@ -324,6 +344,8 @@ onMounted(cargarDatos)
 
 <style lang="scss" scoped>
 
+.sms-quick-card { transition: all 0.2s; background: rgba(255,255,255,0.03); }
+.sms-quick-card:hover { transform: translateY(-4px); border-color: rgba(161,11,19,0.4) !important; }
 .shadow-inner { box-shadow: inset 0 2px 15px rgba(0,0,0,0.5); }
 .border-bottom { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .min-h-600 { min-height: 600px; }
