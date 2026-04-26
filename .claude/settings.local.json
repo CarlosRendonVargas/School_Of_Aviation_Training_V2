@@ -15,7 +15,20 @@
       "Bash(git checkout *)",
       "Bash(git merge *)",
       "Bash(git push *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(node fix.js)",
+      "Bash(node fix2.js)",
+      "Bash(rm fix2.js)",
+      "Bash(node fix3.js)",
+      "Bash(rm fix3.js)",
+      "Bash(grep -n 'class Certificado\\\\|protected $table\\\\|class BitacoraVuelo' /c/wamp64/www/School_Of_Aviation_Training_V2/Backend/app/Models/Certificado.php /c/wamp64/www/School_Of_Aviation_Training_V2/Backend/app/Models/BitacoraVuelo.php)",
+      "Bash(grep -v \"^$\")",
+      "Bash(read line *)",
+      "Bash(grep -h \"use App\\\\\\\\\\\\\\\\Models\\\\\\\\\\\\\\\\\" /c/wamp64/www/School_Of_Aviation_Training_V2/Backend/app/Http/Controllers/Api/*.php /c/wamp64/www/School_Of_Aviation_Training_V2/Backend/app/Http/Controllers/PlanClaseController.php)",
+      "PowerShell(cd \"c:\\\\wamp64\\\\www\\\\School_Of_Aviation_Training_V2\\\\Backend\"; php artisan tinker --execute=\"echo DB::select\\('DESCRIBE programas'\\)[0]->Field ?? 'no table'; echo '|'; foreach\\(DB::select\\('DESCRIBE programas'\\) as \\\\$c\\) echo \\\\$c->Field . ',' . \\\\$c->Null . '|';\" 2>&1)",
+      "Bash(php seed_questions.php)"
     ],
     "additionalDirectories": [
       "c:\\Users\\GAMER CARLOS RENDON\\.claude\\projects\\c--xampp-htdocs-SchoolOfAviationT\\memory"
