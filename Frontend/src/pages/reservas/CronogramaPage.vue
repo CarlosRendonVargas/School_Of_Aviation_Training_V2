@@ -88,8 +88,8 @@
               <div class="text-grey-3" style="font-size:13px; line-height:1.5">{{ r.objetivos }}</div>
             </div>
 
-            <!-- Countdown — solo si está pendiente de confirmación -->
-            <template v-if="r.confirmacion_estudiante === 'pendiente' && r.estado === 'pendiente'">
+            <!-- Countdown — solo si está pendiente de confirmación (únicamente el estudiante puede responder) -->
+            <template v-if="r.confirmacion_estudiante === 'pendiente' && r.estado === 'pendiente' && esEstudiante">
               <div class="countdown-box q-pa-md q-mb-md" style="border-radius:10px; text-align:center">
                 <div class="text-purple-3 font-mono q-mb-xs" style="font-size:10px; letter-spacing:2px">
                   <q-icon name="timer" size="12px" /> TIEMPO PARA CONFIRMAR
@@ -247,7 +247,12 @@ async function confirmarRechazo() {
 /* ─── Helpers de formato ─── */
 
 function tipoLabel(t) {
-  return { instruccion: 'Instrucción de Vuelo', solo: 'Vuelo Solo', simulador: 'Simulador' }[t] ?? t
+  const fijos = { instruccion: 'Instrucción de Vuelo', solo: 'Vuelo Solo', simulador: 'Simulador' }
+  if (fijos[t]) return fijos[t]
+  // Tipos personalizados guardados en localStorage
+  const personalizados = JSON.parse(localStorage.getItem('sat_tipos_entrenamiento') || '[]')
+  const encontrado = personalizados.find(o => o.value === t)
+  return encontrado ? encontrado.label : (t ?? '—').replace(/_/g, ' ').toUpperCase()
 }
 
 function estadoLabel(r) {
@@ -279,7 +284,8 @@ function nombreInstructor(r) {
 
 function fmtFecha(d) {
   if (!d) return '—'
-  return new Date(d + 'T00:00:00').toLocaleDateString('es-CO',
+  const soloFecha = String(d).substring(0, 10)
+  return new Date(soloFecha + 'T00:00:00').toLocaleDateString('es-CO',
     { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 }
 

@@ -170,6 +170,18 @@
                   <div class="text-red-9 font-mono text-weight-bolder uppercase" style="font-size:10px">CAPITÁN: {{ r.instructor?.persona?.nombres }}</div>
                 </div>
               </div>
+
+              <!-- Botón de navegación al módulo -->
+              <q-btn
+                unelevated
+                :color="r.tipo === 'virtual' || r.estado === 'virtual' ? 'purple-9' : 'red-9'"
+                :icon="r.tipo === 'virtual' || r.estado === 'virtual' ? 'laptop_chromebook' : 'flight'"
+                :label="r.tipo === 'virtual' || r.estado === 'virtual' ? 'Ir al Aula Virtual' : 'Ver Detalle de Vuelo'"
+                icon-right="chevron_right"
+                class="full-width premium-btn shadow-24 q-mt-md"
+                size="md"
+                @click.stop="irAlModulo(r)"
+              />
             </div>
           </q-card-section>
         </q-scroll-area>
@@ -182,12 +194,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 dayjs.locale('es')
 
-const $q = useQuasar()
+const $q     = useQuasar()
+const router = useRouter()
 const mesActual       = ref(dayjs())
 const reservasData    = ref([])
 const cargando        = ref(false)
@@ -220,7 +234,7 @@ const semanas = computed(() => {
         label: dia.format('dddd D [de] MMMM').toUpperCase(),
         esHoy: dia.isSame(dayjs(), 'day'),
         esMesActual: dia.month() === mesActual.value.month(),
-        reservas: reservasData.value.filter(r => r.fecha === fechaStr),
+        reservas: reservasData.value.filter(r => String(r.fecha || '').substring(0, 10) === fechaStr),
         fecha: dia.clone()
       })
       dia = dia.add(1, 'day')
@@ -246,6 +260,21 @@ const colorReserva = (e) => ({ pendiente: '#f59e0b', confirmada: '#10b981', comp
 const colorBadge   = (e) => ({ pendiente: 'orange-10', confirmada: 'emerald', completada: 'blue-10', cancelada: 'red-10', virtual: 'purple-9' }[e] || 'grey-8')
 
 function seleccionarDia(dia) { diaSeleccionado.value = dia; dialogDia.value = true }
+
+function irAlModulo(r) {
+  dialogDia.value = false
+  if (r.tipo === 'virtual' || r.estado === 'virtual') {
+    const idStr = String(r.id)
+    const materiaId = idStr.startsWith('vc-') ? idStr.replace('vc-', '') : null
+    router.push(materiaId
+      ? { path: '/aula-virtual', query: { materia: materiaId, tab: 'clase' } }
+      : '/aula-virtual'
+    )
+  } else {
+    router.push('/vuelo')
+  }
+}
+
 function mesAnterior()       { mesActual.value = mesActual.value.subtract(1, 'month'); cargar() }
 function mesSiguiente()      { mesActual.value = mesActual.value.add(1, 'month'); cargar() }
 function irHoy()             { mesActual.value = dayjs().startOf('month'); cargar() }

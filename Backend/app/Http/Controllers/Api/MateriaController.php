@@ -150,6 +150,12 @@ class MateriaController extends Controller
 
     /* ─── CRUD Básico de Materias ─── */
 
+    public function index(): JsonResponse
+    {
+        $materias = Materia::orderBy('nombre')->get();
+        return response()->json(['ok' => true, 'data' => $materias]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([

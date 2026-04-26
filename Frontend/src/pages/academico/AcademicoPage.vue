@@ -150,7 +150,7 @@
                     </div>
 
                     <div class="row justify-between items-center">
-                      <div class="text-caption text-grey-6 font-mono" style="font-size:10px">ING: {{ props.row.fecha_ingreso }}</div>
+                      <div class="text-caption text-grey-6 font-mono" style="font-size:10px">ING: {{ formatFechaCO(props.row.fecha_ingreso) }}</div>
                       <div class="row q-gutter-x-xs">
                         <q-btn flat round color="emerald" icon="history_edu" size="sm" @click="abrirNuevaNota(props.row)">
                            <q-tooltip>Nota</q-tooltip>
@@ -232,7 +232,7 @@
                 <q-card class="premium-glass-card shadow-24 border-red-low q-pa-md hover-card" style="border-radius:15px">
                   <div class="row items-center justify-between q-mb-md">
                     <div class="column">
-                      <div class="text-caption text-grey-6 font-mono" style="font-size:9px">{{ props.row.fecha }}</div>
+                      <div class="text-caption text-grey-6 font-mono" style="font-size:9px">{{ formatFechaCO(props.row.fecha) }}</div>
                       <div class="text-weight-bolder text-white font-head" style="font-size:16px">{{ props.row.estudiante?.persona?.nombres }}</div>
                     </div>
                     <q-badge outline color="red-9" :label="props.row.matricula" class="font-mono text-weight-bolder" />
@@ -266,7 +266,7 @@
               </div>
             </template>
             <template #body-cell-fecha="props">
-              <q-td :props="props" class="font-mono text-grey-3">{{ props.row.fecha }}</q-td>
+              <q-td :props="props" class="font-mono text-grey-3">{{ formatFechaCO(props.row.fecha) }}</q-td>
             </template>
             <template #body-cell-matricula="props">
               <q-td :props="props" class="text-center">
@@ -401,7 +401,7 @@
                 <q-card class="premium-glass-card hover-card border-red-low shadow-24 h-full flex column rounded-20">
                    <q-card-section class="q-pa-lg col">
                       <div class="row items-center justify-between q-mb-md">
-                         <div class="text-caption text-grey-6 font-mono">{{ plan.fecha }}</div>
+                         <div class="text-caption text-grey-6 font-mono">{{ formatFechaCO(plan.fecha) }}</div>
                          <q-badge outline :color="plan.estado === 'realizada' ? 'emerald' : (plan.estado === 'cancelada' ? 'red-9' : 'blue-9')" :label="plan.estado?.toUpperCase() || 'PLANIFICADA'" class="font-mono" />
                       </div>
                       <div class="text-h6 text-white font-head text-weight-bolder ellipsis line-height-1">{{ plan.materia?.nombre || 'Clase sin materia' }}</div>
@@ -1264,6 +1264,7 @@ import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import dayjs from 'dayjs'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const route = useRoute()
 const $q = useQuasar()

@@ -166,23 +166,24 @@ class AulaVirtualController extends Controller
 
     public function calificarQuizLeccion(Request $request, $id): JsonResponse
     {
-        $request->validate(['respuestas' => 'required|array']);
+        $request->validate(['respuestas' => 'nullable|array']);
         $leccion = LeccionMateria::findOrFail($id);
         $estudiante = $request->user()->persona?->estudiante;
 
         if (!$estudiante) return response()->json(['ok' => false], 403);
 
-        $total = count($request->respuestas);
+        $respuestas = $request->respuestas ?? [];
+        $total = count($respuestas);
         $aciertos = 0;
 
-        foreach ($request->respuestas as $pregId => $respU) {
+        foreach ($respuestas as $pregId => $respU) {
             $pregunta = BancoPregunta::find($pregId);
             if ($pregunta && $pregunta->respuesta_correcta == $respU) {
                 $aciertos++;
             }
         }
 
-        $notaFinal = ($aciertos / $total) * 100;
+        $notaFinal = $total > 0 ? ($aciertos / $total) * 100 : 0;
 
         // Buscar si ya tiene un registro
         $notaInstancia = NotaLeccion::where('estudiante_id', $estudiante->id)
@@ -286,7 +287,7 @@ class AulaVirtualController extends Controller
     {
         try {
             $request->validate([
-                'respuestas' => 'required|array', 
+                'respuestas' => 'nullable|array',
             ]);
 
             $materia = Materia::findOrFail($id);
@@ -296,11 +297,12 @@ class AulaVirtualController extends Controller
                  return response()->json(['ok' => false, 'mensaje' => 'No se encontró perfil de estudiante vinculado'], 403);
             }
 
-            $totalPreguntas = count($request->respuestas);
+            $respuestas = $request->respuestas ?? [];
+            $totalPreguntas = count($respuestas);
             $aciertos = 0;
 
             if ($totalPreguntas > 0) {
-                foreach ($request->respuestas as $pregId => $respU) {
+                foreach ($respuestas as $pregId => $respU) {
                     $pregunta = BancoPregunta::find($pregId);
                     if ($pregunta && $pregunta->respuesta_correcta == $respU) {
                         $aciertos++;
@@ -361,7 +363,7 @@ class AulaVirtualController extends Controller
                     'nota' => $notaFinalFinal,
                     'aprobado' => $aprobado,
                     'aciertos' => $aciertos,
-                    'total' => count($request->respuestas)
+                    'total' => $totalPreguntas
                 ]
             ]);
         } catch (\Throwable $e) {

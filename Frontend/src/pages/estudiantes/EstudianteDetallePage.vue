@@ -25,7 +25,12 @@
             </div>
           </div>
 
-          <q-btn flat round dense icon="arrow_back" color="grey-6" @click="$router.push('/academico?tab=estudiantes')" class="shadow-24 flex-shrink-0" />
+          <div class="row q-gutter-sm flex-shrink-0">
+            <q-btn v-if="puedeEditar" unelevated color="red-9" icon="edit" label="Editar" no-caps
+              class="premium-btn font-mono shadow-24" @click="abrirEditar" />
+            <q-btn flat round dense icon="arrow_back" color="grey-6"
+              @click="$router.push('/academico?tab=estudiantes')" class="shadow-24" />
+          </div>
         </div>
       </q-card>
 
@@ -279,6 +284,81 @@
       </q-card>
     </template>
 
+    <!-- ════ DIÁLOGO: EDITAR ESTUDIANTE ════ -->
+    <q-dialog v-model="dlgEditar" persistent>
+      <q-card style="width:min(700px,96vw)" class="premium-glass-card q-pa-xl border-red-low shadow-24 rounded-20">
+        <q-card-section class="row items-center bg-red-10 text-white q-pa-lg q-mb-lg" style="border-radius:12px 12px 0 0; margin:-32px -32px 0 -32px">
+          <q-icon name="edit" size="28px" class="q-mr-md" />
+          <span class="text-h6 font-head text-weight-bolder uppercase">Editar Estudiante</span>
+          <q-space />
+          <q-btn flat round icon="close" v-close-popup color="white" />
+        </q-card-section>
+
+        <q-form @submit.prevent="guardarEditar" class="q-gutter-y-md q-mt-md">
+
+          <div class="text-caption text-grey-5 font-mono uppercase q-mb-xs">Datos Personales</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.nombres" label="Nombres *" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.apellidos" label="Apellidos *" outlined dense dark />
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-select v-model="formEditar.tipo_documento"
+                :options="['CC','CE','PA','PEP','TI']"
+                label="Tipo Doc." outlined dense dark />
+            </div>
+            <div class="col-6 col-sm-4">
+              <q-input v-model="formEditar.num_documento" label="Nº Documento" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-5">
+              <q-input v-model="formEditar.fecha_nacimiento" type="date" label="F. Nacimiento" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.telefono" label="Teléfono" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.ciudad" label="Ciudad" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.nacionalidad" label="Nacionalidad" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="formEditar.direccion" label="Dirección" outlined dense dark />
+            </div>
+          </div>
+
+          <q-separator dark class="q-my-sm opacity-20" />
+          <div class="text-caption text-grey-5 font-mono uppercase q-mb-xs">Datos de Matrícula</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-4">
+              <q-select v-model="formEditar.estado"
+                :options="[{label:'Activo',value:'activo'},{label:'Suspendido',value:'suspendido'},{label:'Graduado',value:'graduado'},{label:'Retirado',value:'retirado'}]"
+                label="Estado" outlined dense dark emit-value map-options />
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-input v-model="formEditar.fecha_ingreso" type="date" label="F. Ingreso" outlined dense dark />
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-select v-model="formEditar.programa_id"
+                :options="programas" option-value="id" option-label="nombre"
+                label="Programa" outlined dense dark emit-value map-options clearable />
+            </div>
+            <div class="col-12">
+              <q-input v-model="formEditar.observaciones" label="Observaciones" type="textarea" rows="2" outlined dense dark />
+            </div>
+          </div>
+
+          <div class="row justify-end q-gutter-sm q-mt-md">
+            <q-btn flat label="Cancelar" v-close-popup />
+            <q-btn unelevated color="red-10" icon="save" label="Guardar Cambios"
+              type="submit" :loading="guardandoEditar" />
+          </div>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -286,14 +366,23 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q = useQuasar()
 const route = useRoute()
+const authStore = useAuthStore()
 const cargando  = ref(false)
 const expediente = ref(null)
-const tab       = ref('resumen')
+const tab        = ref('resumen')
+const dlgEditar  = ref(false)
+const guardandoEditar = ref(false)
+const formEditar = ref({})
+const programas  = ref([])
+
+const puedeEditar = computed(() => ['admin', 'dir_ops'].includes(authStore.rol))
 
 const iniciales = computed(() => {
   const e = expediente.value?.estudiante; if (!e) return '--'
@@ -306,12 +395,12 @@ const datosPersonales = computed(() => {
   const p = expediente.value?.estudiante?.persona; if (!p) return []
   return [ 
     { label: 'Identificación', valor: `${p.tipo_documento} ${p.num_documento}` }, 
-    { label: 'F. Nacimiento', valor: p.fecha_nacimiento }, 
+    { label: 'F. Nacimiento', valor: formatFechaCO(p.fecha_nacimiento) },
     { label: 'Nacionalidad', valor: p.nacionalidad || 'No reg.' },
     { label: 'Dirección', valor: p.direccion || 'No reg.' },
     { label: 'Teléfono Fijo/Cel', valor: p.telefono || 'No reg.' }, 
     { label: 'Ciudad Base', valor: p.ciudad }, 
-    { label: 'Fecha Admisión', valor: expediente.value?.estudiante?.fecha_ingreso } 
+    { label: 'Fecha Admisión', valor: formatFechaCO(expediente.value?.estudiante?.fecha_ingreso) }
   ]
 })
 
@@ -349,10 +438,52 @@ const columnasBitacora = [
 
 const esMedicoVigente = (cm) => dayjs(cm.fecha_vencimiento).isAfter(dayjs())
 
+function abrirEditar() {
+  const e = expediente.value?.estudiante
+  const p = e?.persona ?? {}
+  formEditar.value = {
+    nombres: p.nombres ?? '',
+    apellidos: p.apellidos ?? '',
+    tipo_documento: p.tipo_documento ?? 'CC',
+    num_documento: p.num_documento ?? '',
+    fecha_nacimiento: p.fecha_nacimiento ? String(p.fecha_nacimiento).substring(0, 10) : '',
+    telefono: p.telefono ?? '',
+    ciudad: p.ciudad ?? '',
+    nacionalidad: p.nacionalidad ?? '',
+    direccion: p.direccion ?? '',
+    estado: e?.estado ?? 'activo',
+    fecha_ingreso: e?.fecha_ingreso ? String(e.fecha_ingreso).substring(0, 10) : '',
+    programa_id: e?.programa_id ?? null,
+    observaciones: e?.observaciones ?? '',
+  }
+  dlgEditar.value = true
+}
+
+async function guardarEditar() {
+  guardandoEditar.value = true
+  try {
+    await api.put(`/estudiantes/${route.params.id}`, formEditar.value)
+    $q.notify({ type: 'positive', message: 'Datos del estudiante actualizados.' })
+    dlgEditar.value = false
+    cargar()
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.response?.data?.message ?? 'Error al guardar.' })
+  } finally { guardandoEditar.value = false }
+}
+
 async function cargar() {
   cargando.value = true
-  try { const { data } = await api.get(`/estudiantes/${route.params.id}/expediente`); expediente.value = data.data } 
-  finally { cargando.value = false }
+  try {
+    const [expRes, progRes] = await Promise.allSettled([
+      api.get(`/estudiantes/${route.params.id}/expediente`),
+      api.get('/programas'),
+    ])
+    if (expRes.status === 'fulfilled') expediente.value = expRes.value.data.data
+    if (progRes.status === 'fulfilled') {
+      const d = progRes.value.data
+      programas.value = d.data?.data ?? d.data ?? d ?? []
+    }
+  } finally { cargando.value = false }
 }
 
 onMounted(cargar)

@@ -15,7 +15,8 @@ class BriefingDebriefing extends Model
     ];
 
     protected $casts = [
-        'fecha_hora' => 'datetime',
+        'fecha_hora'    => 'datetime',
+        'instructor_id' => 'integer',
     ];
 
     /* ─── Relaciones ─── */

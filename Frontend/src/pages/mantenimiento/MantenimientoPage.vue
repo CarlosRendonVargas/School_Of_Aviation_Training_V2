@@ -146,7 +146,7 @@
                   <q-card-section>
                      <div class="row items-center justify-between">
                        <span class="text-red-9 font-mono text-weight-bolder uppercase">[{{ props.row.tipo }}]</span>
-                       <span class="font-mono text-grey-5">{{ props.row.fecha_realizado }}</span>
+                       <span class="font-mono text-grey-5">{{ formatFechaCO(props.row.fecha_realizado) }}</span>
                      </div>
                      <div class="text-white text-weight-bold q-mt-md">{{ props.row.descripcion }}</div>
                      <q-separator dark class="opacity-5 q-my-sm" />
@@ -172,7 +172,7 @@
                   <q-card-section>
                      <div class="row items-center justify-between">
                        <q-badge :color="props.row.estado === 'cerrado' ? 'emerald' : 'orange-9'" class="font-mono text-weight-bolder uppercase">{{ props.row.estado }}</q-badge>
-                       <span class="font-mono text-grey-5">{{ props.row.fecha_apertura }}</span>
+                       <span class="font-mono text-grey-5">{{ formatFechaCO(props.row.fecha_apertura) }}</span>
                      </div>
                      <div class="text-white font-head text-weight-bold q-mt-md" style="font-size: 16px;">ATA: {{ props.row.item_ata }} · CAT {{ props.row.categoria }}</div>
                      <div class="text-grey-3 q-mt-xs">{{ props.row.descripcion }}</div>
@@ -307,6 +307,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q        = useQuasar()
 const authStore = useAuthStore()

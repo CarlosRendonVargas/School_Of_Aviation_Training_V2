@@ -177,7 +177,7 @@
                     <q-card-section>
                       <div class="row items-center justify-between q-mb-sm">
                         <q-badge color="orange-10" :label="props.row.estado?.toUpperCase()" class="font-mono" />
-                        <div class="text-red-9 font-mono text-weight-bold" style="font-size:12px">LÍMITE: {{ props.row.fecha_limite }}</div>
+                        <div class="text-red-9 font-mono text-weight-bold" style="font-size:12px">LÍMITE: {{ formatFechaCO(props.row.fecha_limite) }}</div>
                       </div>
                       <div class="text-white q-mt-sm">{{ props.row.descripcion }}</div>
                     </q-card-section>
@@ -233,6 +233,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from 'boot/axios'
 import { exportFile, useQuasar } from 'quasar'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const tabActivo = ref('dashboard')
 const kpis = ref(null)

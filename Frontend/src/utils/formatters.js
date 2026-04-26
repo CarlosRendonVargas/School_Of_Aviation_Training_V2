@@ -18,9 +18,13 @@ dayjs.locale('es')
 export const formatFecha = (fecha) =>
   fecha ? dayjs(fecha).format('ddd. D MMM YYYY') : '—'
 
-/** '2025-06-15' → '15/06/2025' */
-export const formatFechaCO = (fecha) =>
-  fecha ? dayjs(fecha).format('DD/MM/YYYY') : '—'
+/** '2025-06-15' o '2025-06-15T00:00:00Z' → '15/06/2025' (zona Bogotá) */
+export const formatFechaCO = (fecha) => {
+  if (!fecha) return '—'
+  // Tomar solo la parte de fecha (YYYY-MM-DD) para evitar desplazamiento de zona horaria
+  const solo = typeof fecha === 'string' ? fecha.substring(0, 10) : fecha
+  return dayjs(solo).format('DD/MM/YYYY')
+}
 
 /** '2025-06-15T14:30:00' → '14:30' */
 export const formatHora = (dt) =>

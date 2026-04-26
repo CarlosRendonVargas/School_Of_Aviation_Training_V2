@@ -174,18 +174,39 @@ class EstudianteController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $estudiante = Estudiante::findOrFail($id);
+        $estudiante = Estudiante::with('persona')->findOrFail($id);
         $this->authorize('update', $estudiante);
 
-        $data = $request->validate([
-            'estado'         => 'sometimes|in:activo,suspendido,graduado,retirado',
-            'etapa_actual_id'=> 'sometimes|nullable|exists:etapas,id',
-            'observaciones'  => 'sometimes|nullable|string',
+        $dataEst = $request->validate([
+            'estado'          => 'sometimes|in:activo,suspendido,graduado,retirado',
+            'etapa_actual_id' => 'sometimes|nullable|exists:etapas,id',
+            'programa_id'     => 'sometimes|nullable|exists:programas,id',
+            'fecha_ingreso'   => 'sometimes|nullable|date',
+            'observaciones'   => 'sometimes|nullable|string',
         ]);
 
-        $estudiante->update($data);
+        $dataPersona = $request->validate([
+            'nombres'          => 'sometimes|string|max:100',
+            'apellidos'        => 'sometimes|string|max:100',
+            'tipo_documento'   => 'sometimes|in:CC,CE,PA,PEP,TI',
+            'num_documento'    => 'sometimes|string|max:20',
+            'fecha_nacimiento' => 'sometimes|nullable|date',
+            'telefono'         => 'sometimes|nullable|string|max:20',
+            'ciudad'           => 'sometimes|nullable|string|max:80',
+            'nacionalidad'     => 'sometimes|nullable|string|max:60',
+            'direccion'        => 'sometimes|nullable|string|max:150',
+        ]);
 
-        return response()->json(['ok' => true, 'data' => $estudiante]);
+        $estudiante->update($dataEst);
+
+        if ($estudiante->persona && count($dataPersona)) {
+            $estudiante->persona->update($dataPersona);
+        }
+
+        return response()->json([
+            'ok'   => true,
+            'data' => $estudiante->fresh(['persona', 'programa']),
+        ]);
     }
 
     /* ─── Expediente completo RAC 141.77 ─── */

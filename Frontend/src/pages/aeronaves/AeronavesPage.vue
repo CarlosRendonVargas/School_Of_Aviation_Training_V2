@@ -119,6 +119,13 @@
           <!-- Ícono de Mantenimiento Giratorio -->
           <q-icon v-if="av.estado === 'mantenimiento'" name="settings_suggest" color="orange-8"
             size="28px" class="absolute-top-right q-ma-md spin-slow" />
+
+          <!-- Botón Editar (admin/dir_ops) -->
+          <q-btn v-if="authStore.esDirOps || authStore.esAdmin"
+            flat round dense icon="edit" color="grey-5" size="sm"
+            class="absolute-bottom-right q-ma-md"
+            @click.stop="abrirEditar(av)"
+            title="Editar aeronave" />
         </q-card>
       </div>
 
@@ -130,6 +137,50 @@
         </div>
       </div>
     </div>
+
+    <!-- ════ DIÁLOGO: EDITAR AERONAVE ════ -->
+    <q-dialog v-model="dialogEditar" backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card q-pa-xl border-red-low shadow-24 rounded-20" style="width:min(700px, 95vw);">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+          <div class="row items-center">
+            <q-icon name="edit" color="red-9" size="32px" class="q-mr-md glow-primary" />
+            <div>
+              <div class="text-h5 text-white font-head text-weight-bolder uppercase tracking-tighter">Editar Aeronave</div>
+              <div class="text-caption text-grey-6 font-mono">{{ formEditar.matricula }}</div>
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" @click="dialogEditar = false" color="grey-6" class="bg-black-20 hover-red" />
+        </div>
+
+        <q-form @submit.prevent="guardarEditar" class="q-gutter-y-lg">
+          <div class="row q-col-gutter-lg">
+            <div class="col-12 col-md-4">
+              <q-select v-model="formEditar.estado"
+                :options="[{label:'Disponible',value:'disponible'},{label:'Mantenimiento',value:'mantenimiento'},{label:'Baja',value:'baja'}]"
+                label="ESTADO" filled dark class="premium-input-login" stack-label emit-value map-options />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="formEditar.venc_airworthiness" type="date" label="VENC. AIRWORTHINESS" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="formEditar.venc_seguro" type="date" label="VENC. SEGURO" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_celula_total" type="number" min="0" label="TTAE CÉLULA" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_motor_total" type="number" min="0" label="TTE MOTOR" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_desde_oh" type="number" min="0" label="SMOH MOTOR" filled dark class="premium-input-login" stack-label />
+            </div>
+          </div>
+
+          <q-btn type="submit" color="red-10" icon="save" label="Guardar Cambios"
+            class="full-width premium-btn q-py-lg shadow-24" :loading="guardandoEditar" />
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <!-- ════ DIÁLOGO: REGISTRAR NUEVA AERONAVE ════ -->
     <q-dialog v-model="dialogNueva" backdrop-filter="blur(15px)">
@@ -202,16 +253,21 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
 
+const $q          = useQuasar()
 const authStore   = useAuthStore()
 const aeronaves   = ref([])
 const cargando    = ref(false)
 const filtroEstado = ref(null)
-const dialogNueva  = ref(false)
-const guardando    = ref(false)
+const dialogNueva    = ref(false)
+const guardando      = ref(false)
+const dialogEditar   = ref(false)
+const guardandoEditar = ref(false)
+const formEditar     = ref({})
 
 const form = ref({
   matricula: '',
@@ -240,6 +296,33 @@ async function guardarNueva() {
     const msg = e.response?.data?.mensaje || 'Error al registrar aeronave.'
     $q.notify({ color: 'negative', message: msg })
   } finally { guardando.value = false }
+}
+
+function abrirEditar(av) {
+  formEditar.value = {
+    id: av.id,
+    matricula: av.matricula,
+    estado: av.estado,
+    venc_airworthiness: av.venc_airworthiness ?? '',
+    venc_seguro: av.venc_seguro ?? '',
+    horas_celula_total: av.horas_celula_total ?? 0,
+    horas_motor_total: av.horas_motor_total ?? 0,
+    horas_desde_oh: av.horas_desde_oh ?? 0,
+  }
+  dialogEditar.value = true
+}
+
+async function guardarEditar() {
+  guardandoEditar.value = true
+  try {
+    const { id, matricula, ...payload } = formEditar.value
+    await api.put(`/aeronaves/${id}`, payload)
+    $q.notify({ color: 'positive', message: `Aeronave ${matricula} actualizada.` })
+    dialogEditar.value = false
+    cargar()
+  } catch (e) {
+    $q.notify({ color: 'negative', message: e.response?.data?.message ?? 'Error al actualizar.' })
+  } finally { guardandoEditar.value = false }
 }
 
 const aeronavesFiltradas = computed(() =>

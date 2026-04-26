@@ -153,7 +153,7 @@ async function cargar() {
     const params = {}
     if (filtros.value.tipo) params.tipo = filtros.value.tipo
     const res = await api.get('/endorsements', { params })
-    rows.value = res.data
+    rows.value = res.data.data ?? []
   } finally {
     loading.value = false
   }
@@ -161,7 +161,7 @@ async function cargar() {
 
 async function cargarEstudiantes() {
   const res = await api.get('/estudiantes?per_page=200')
-  todosEstudiantes.value = (res.data.data ?? res.data).map(e => ({
+  todosEstudiantes.value = (res.data.data?.data ?? res.data.data ?? []).map(e => ({
     ...e,
     nombre_completo: `${e.nombres} ${e.apellidos}`,
   }))

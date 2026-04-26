@@ -63,7 +63,7 @@ class ReservaController extends Controller
             'fecha'         => 'required|date|after_or_equal:today',
             'hora_inicio'   => 'required|date_format:H:i',
             'hora_fin'      => 'required|date_format:H:i|after:hora_inicio',
-            'tipo'          => 'required|in:instruccion,solo,simulador',
+            'tipo'          => 'required|string|max:60',
             'objetivos'     => 'nullable|string|max:1000',
         ]);
 
@@ -131,7 +131,7 @@ class ReservaController extends Controller
             'fecha'      => 'sometimes|date|after_or_equal:today',
             'hora_inicio'=> 'sometimes|date_format:H:i',
             'hora_fin'   => 'sometimes|date_format:H:i',
-            'tipo'       => 'sometimes|in:instruccion,solo,simulador',
+            'tipo'       => 'sometimes|string|max:60',
         ]);
 
         $reserva->update($data);
@@ -233,12 +233,17 @@ class ReservaController extends Controller
     public function aceptarVuelo(Request $request, int $id): JsonResponse
     {
         $user       = $request->user();
+        $rol        = $user->rol?->nombre;
         $estudiante = $user->persona?->estudiante;
 
-        $reserva = Reserva::where('estudiante_id', $estudiante?->id)
-            ->where('confirmacion_estudiante', 'pendiente')
-            ->where('confirmacion_expira', '>', now())
-            ->findOrFail($id);
+        $query = Reserva::where('confirmacion_estudiante', 'pendiente')
+            ->where('confirmacion_expira', '>', now());
+
+        if (! in_array($rol, ['admin', 'dir_ops'])) {
+            $query->where('estudiante_id', $estudiante?->id);
+        }
+
+        $reserva = $query->findOrFail($id);
 
         $reserva->update([
             'confirmacion_estudiante' => 'aceptada',
@@ -268,13 +273,18 @@ class ReservaController extends Controller
     public function rechazarVuelo(Request $request, int $id): JsonResponse
     {
         $user       = $request->user();
+        $rol        = $user->rol?->nombre;
         $estudiante = $user->persona?->estudiante;
 
         $request->validate(['motivo' => 'nullable|string|max:300']);
 
-        $reserva = Reserva::where('estudiante_id', $estudiante?->id)
-            ->where('confirmacion_estudiante', 'pendiente')
-            ->findOrFail($id);
+        $query = Reserva::where('confirmacion_estudiante', 'pendiente');
+
+        if (! in_array($rol, ['admin', 'dir_ops'])) {
+            $query->where('estudiante_id', $estudiante?->id);
+        }
+
+        $reserva = $query->findOrFail($id);
 
         $motivo = $request->motivo ?: 'El estudiante indicó que no puede asistir.';
 

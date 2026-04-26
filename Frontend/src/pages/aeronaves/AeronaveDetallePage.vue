@@ -29,8 +29,12 @@
             <q-icon :name="aeronave.airworthiness_vigente ? 'verified' : 'warning'" size="16px" class="q-mr-sm" />
             {{ aeronave.airworthiness_vigente ? 'HK — AIRWORTHY' : 'ALERTA — UNSERVICEABLE' }}
           </q-badge>
-          <q-btn flat color="grey-6" icon="arrow_back" label="Volver a Flota"
-            class="font-mono" @click="$router.push('/aeronaves')" />
+          <div class="row q-gutter-sm">
+            <q-btn v-if="puedeEditar" unelevated color="red-9" icon="edit" label="Editar"
+              class="premium-btn font-mono" no-caps @click="abrirEditar" />
+            <q-btn flat color="grey-6" icon="arrow_back" label="Volver a Flota"
+              class="font-mono" @click="$router.push('/aeronaves')" />
+          </div>
         </div>
       </div>
     </q-card>
@@ -139,7 +143,7 @@
                   <div class="text-subtitle1 text-white font-head text-weight-bold">{{ mx.descripcion }}</div>
                 </div>
                 <div class="text-caption text-grey-6 font-mono">
-                  {{ mx.fecha_realizado }} · <span class="text-red-9 text-weight-bold">{{ mx.horas_aeronave }}h</span> · TEC: {{ mx.realizado_por }}
+                  {{ formatFechaCO(mx.fecha_realizado) }} · <span class="text-red-9 text-weight-bold">{{ mx.horas_aeronave }}h</span> · TEC: {{ mx.realizado_por }}
                 </div>
               </div>
             </div>
@@ -171,7 +175,7 @@
               <div class="col">
                 <div class="text-subtitle1 text-white font-head text-weight-bold q-mb-xs">ATA {{ m.item_ata }} — {{ m.descripcion }}</div>
                 <div class="text-caption text-grey-6 font-mono">
-                  APERTURA: {{ m.fecha_apertura }} · LÍMITE: <span class="text-red-9 text-weight-bolder">{{ m.fecha_limite }}</span>
+                  APERTURA: {{ formatFechaCO(m.fecha_apertura) }} · LÍMITE: <span class="text-red-9 text-weight-bolder">{{ formatFechaCO(m.fecha_limite) }}</span>
                 </div>
               </div>
               <q-badge :color="m.estado === 'abierto' ? 'red-10' : 'emerald-9'"
@@ -204,7 +208,7 @@
                   <q-badge color="red-10" :label="ad.numero_ad" class="font-mono text-weight-bolder shadow-24" />
                   <div class="text-subtitle1 text-white font-head text-weight-bold">{{ ad.descripcion }}</div>
                 </div>
-                <div class="text-caption text-grey-6 font-mono">LÍMITE: {{ ad.fecha_limite }} · Horas: {{ ad.horas_limite }}h</div>
+                <div class="text-caption text-grey-6 font-mono">LÍMITE: {{ formatFechaCO(ad.fecha_limite) }} · Horas: {{ ad.horas_limite }}h</div>
               </div>
               <q-badge :color="ad.estado === 'pendiente' ? 'red-10' : 'emerald-9'"
                 :label="ad.estado?.toUpperCase()"
@@ -236,6 +240,52 @@
       </q-tab-panels>
     </q-card>
 
+    <!-- ════ DIÁLOGO: EDITAR AERONAVE ════ -->
+    <q-dialog v-model="dialogEditar" backdrop-filter="blur(15px)">
+      <q-card style="width:min(640px,95vw)" class="premium-glass-card q-pa-xl border-red-low shadow-24 rounded-20">
+        <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
+          <div class="row items-center">
+            <q-icon name="edit" color="red-9" size="28px" class="q-mr-md" />
+            <div class="text-h6 text-white font-head text-weight-bolder uppercase">Editar — {{ aeronave?.matricula }}</div>
+          </div>
+          <q-btn flat round dense icon="close" @click="dialogEditar = false" color="grey-6" />
+        </div>
+
+        <q-form @submit.prevent="guardarEditar" class="q-gutter-y-lg">
+          <div class="row q-col-gutter-lg">
+            <div class="col-12 col-md-4">
+              <q-select v-model="formEditar.estado"
+                :options="[{label:'Disponible',value:'disponible'},{label:'Mantenimiento',value:'mantenimiento'},{label:'Baja',value:'baja'}]"
+                label="ESTADO" filled dark class="premium-input-login" stack-label emit-value map-options />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="formEditar.venc_airworthiness" type="date" label="VENC. AIRWORTHINESS"
+                filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-12 col-md-4">
+              <q-input v-model="formEditar.venc_seguro" type="date" label="VENC. SEGURO"
+                filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_celula_total" type="number" min="0"
+                label="TTAE CÉLULA" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_motor_total" type="number" min="0"
+                label="TTE MOTOR" filled dark class="premium-input-login" stack-label />
+            </div>
+            <div class="col-4">
+              <q-input v-model.number="formEditar.horas_desde_oh" type="number" min="0"
+                label="SMOH MOTOR" filled dark class="premium-input-login" stack-label />
+            </div>
+          </div>
+
+          <q-btn type="submit" color="red-10" icon="save" label="Guardar Cambios"
+            class="full-width premium-btn q-py-lg shadow-24" :loading="guardandoEditar" />
+        </q-form>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -245,6 +295,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 import dayjs from 'dayjs'
 
 const route     = useRoute()
@@ -262,8 +313,12 @@ const cargando          = ref(false)
 const tab               = ref('info')
 const dialogMx          = ref(false)
 const dialogMel         = ref(false)
+const dialogEditar      = ref(false)
+const guardandoEditar   = ref(false)
+const formEditar        = ref({})
 
 const puedeRegistrarMx = computed(() => ['mantenimiento', 'dir_ops', 'admin'].includes(authStore.rol))
+const puedeEditar      = computed(() => ['dir_ops', 'admin'].includes(authStore.rol))
 const melAbiertos      = computed(() => mel.value.filter(m => m.estado === 'abierto').length)
 const adsPendientes    = computed(() => ads.value.filter(a => a.estado === 'pendiente').length)
 
@@ -311,6 +366,30 @@ async function cargar() {
     horasData.value         = horasRes.data.data
     bitacorasTecnicas.value = bitRes.data.data?.data || []
   } finally { cargando.value = false }
+}
+
+function abrirEditar() {
+  formEditar.value = {
+    estado: aeronave.value.estado,
+    venc_airworthiness: aeronave.value.venc_airworthiness ?? '',
+    venc_seguro: aeronave.value.venc_seguro ?? '',
+    horas_celula_total: aeronave.value.horas_celula_total ?? 0,
+    horas_motor_total: aeronave.value.horas_motor_total ?? 0,
+    horas_desde_oh: aeronave.value.horas_desde_oh ?? 0,
+  }
+  dialogEditar.value = true
+}
+
+async function guardarEditar() {
+  guardandoEditar.value = true
+  try {
+    await api.put(`/aeronaves/${id}`, formEditar.value)
+    $q.notify({ color: 'positive', message: 'Aeronave actualizada correctamente.' })
+    dialogEditar.value = false
+    cargar()
+  } catch (e) {
+    $q.notify({ color: 'negative', message: e.response?.data?.message ?? 'Error al actualizar.' })
+  } finally { guardandoEditar.value = false }
 }
 
 onMounted(cargar)

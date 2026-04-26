@@ -23,7 +23,20 @@ class HorasVueloService
      */
     public function resumen(Estudiante $estudiante): array
     {
-        $programa = $estudiante->programa;
+        $programa = $estudiante->programa ?? $estudiante->load('programa')->programa;
+
+        // Sin programa asignado: devolver estructura vacía sin crashear
+        if (! $programa) {
+            return [
+                'estudiante_id'     => $estudiante->id,
+                'num_expediente'    => $estudiante->num_expediente,
+                'programa'          => null,
+                'total_vuelos'      => 0,
+                'categorias'        => [],
+                'listo_para_examen' => false,
+                'tiene_medico'      => $estudiante->tieneMedicoVigente(),
+            ];
+        }
 
         $acumulado = BitacoraVuelo::where('estudiante_id', $estudiante->id)
             ->selectRaw('
@@ -132,6 +145,15 @@ class HorasVueloService
      */
     public function validarRequisitosExamen(Estudiante $estudiante): array
     {
+        if (! $estudiante->programa) {
+            return [
+                'aprobado'     => false,
+                'validaciones' => [['criterio' => 'Programa', 'cumplido' => false, 'mensaje' => '✘ El estudiante no tiene programa asignado.', 'rac' => 'RAC 141']],
+                'programa'     => null,
+                'expediente'   => $estudiante->num_expediente,
+            ];
+        }
+
         $resumen    = $this->resumen($estudiante);
         $validaciones = [];
         $aprobado   = true;

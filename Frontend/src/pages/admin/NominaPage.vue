@@ -26,7 +26,7 @@
                 <q-item-section>
                   <q-item-label class="text-white text-weight-bold font-mono">{{ p.periodo }}</q-item-label>
                   <q-item-label caption class="font-mono text-grey-6" style="font-size:10px">
-                    {{ p.fecha_inicio }} → {{ p.fecha_fin }}
+                    {{ formatFechaCO(p.fecha_inicio) }} → {{ formatFechaCO(p.fecha_fin) }}
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
@@ -206,6 +206,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q = useQuasar()
 const cargando = ref(false)

@@ -22,6 +22,7 @@ use App\Http\Controllers\PlanClaseController;
 use App\Http\Controllers\Api\NormatividadController;
 use App\Http\Controllers\Api\CertificadoController;
 use App\Http\Controllers\Api\EndorsementController;
+use App\Http\Controllers\Api\BriefingController;
 use App\Http\Controllers\Api\MensajeController;
 use App\Http\Controllers\Api\ProspectoController;
 use App\Http\Controllers\Api\EvaluacionInstructorController;
@@ -77,10 +78,14 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::prefix('instructores')->group(function () {
-        Route::get('/',            [InstructorController::class, 'index']);
-        Route::post('/',           [InstructorController::class, 'store']);
-        Route::get('{id}',         [InstructorController::class, 'show']);
-        Route::put('{id}',         [InstructorController::class, 'update']);
+        Route::get('/',                          [InstructorController::class, 'index']);
+        Route::post('/',                         [InstructorController::class, 'store']);
+        Route::get('{id}',                       [InstructorController::class, 'show']);
+        Route::put('{id}',                       [InstructorController::class, 'update']);
+        Route::get('{id}/certificaciones',       [InstructorController::class, 'certificaciones']);
+        Route::post('{id}/certificaciones',      [InstructorController::class, 'storeCertificacion']);
+        Route::get('{id}/planes-clase',          [InstructorController::class, 'planesClase']);
+        Route::post('{id}/planes-clase',         [InstructorController::class, 'storePlanClase']);
     });
 
     Route::prefix('programas')->group(function () {
@@ -185,6 +190,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('autorizar-reintento', [AulaVirtualController::class, 'autorizarReintento']);
     });
 
+    Route::get('materias', [MateriaController::class, 'index']);
+
     Route::prefix('gestion-materias')->group(function () {
         Route::put('{id}/lms',              [MateriaController::class, 'updateLms']);
         Route::get('{id}/preguntas',        [MateriaController::class, 'preguntas']);
@@ -245,6 +252,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/',    [EndorsementController::class, 'index']);
         Route::post('/',   [EndorsementController::class, 'store']);
         Route::get('{id}', [EndorsementController::class, 'show']);
+    });
+
+    // --- Briefings / Debriefings ---
+    Route::prefix('briefings')->group(function () {
+        Route::get('/',      [BriefingController::class, 'index']);
+        Route::post('/',     [BriefingController::class, 'store']);
+        Route::put('{id}',   [BriefingController::class, 'update']);
     });
 
     // --- Mensajería Interna ---

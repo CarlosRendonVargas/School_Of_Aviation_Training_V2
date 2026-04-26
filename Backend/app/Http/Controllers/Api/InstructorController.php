@@ -90,6 +90,60 @@ class InstructorController extends Controller
         });
     }
 
+    public function certificaciones($id): JsonResponse
+    {
+        \App\Models\Instructor::findOrFail($id);
+        $certs = \App\Models\CertInstructor::where('instructor_id', $id)
+            ->orderByDesc('fecha_vencimiento')
+            ->get();
+        return response()->json(['ok' => true, 'data' => $certs]);
+    }
+
+    public function storeCertificacion(Request $request, $id): JsonResponse
+    {
+        \App\Models\Instructor::findOrFail($id);
+        $data = $request->validate([
+            'tipo'               => 'required|string|max:60',
+            'descripcion'        => 'nullable|string',
+            'numero'             => 'nullable|string|max:50',
+            'fecha_emision'      => 'nullable|date',
+            'fecha_vencimiento'  => 'nullable|date',
+            'archivo_url'        => 'nullable|string',
+            'activo'             => 'boolean',
+        ]);
+        $data['instructor_id'] = $id;
+        $cert = \App\Models\CertInstructor::create($data);
+        return response()->json(['ok' => true, 'data' => $cert], 201);
+    }
+
+    public function planesClase($id): JsonResponse
+    {
+        \App\Models\Instructor::findOrFail($id);
+        $planes = \App\Models\PlanClase::where('instructor_id', $id)
+            ->with('materia')
+            ->orderByDesc('fecha')
+            ->get();
+        return response()->json(['ok' => true, 'data' => $planes]);
+    }
+
+    public function storePlanClase(Request $request, $id): JsonResponse
+    {
+        \App\Models\Instructor::findOrFail($id);
+        $data = $request->validate([
+            'materia_id'   => 'nullable|exists:materias,id',
+            'fecha'        => 'required|date',
+            'duracion_min' => 'nullable|integer|min:1',
+            'objetivos'    => 'nullable|string',
+            'contenido'    => 'nullable|string',
+            'recursos'     => 'nullable|string',
+            'estado'       => 'nullable|string|max:30',
+            'observaciones'=> 'nullable|string',
+        ]);
+        $data['instructor_id'] = $id;
+        $plan = \App\Models\PlanClase::create($data);
+        return response()->json(['ok' => true, 'data' => $plan->load('materia')], 201);
+    }
+
     public function update(Request $request, $id): JsonResponse
     {
         $instructor = \App\Models\Instructor::with('persona')->findOrFail($id);

@@ -218,43 +218,60 @@ const menuCompleto = computed(() => {
   const v  = vencimientosStore.totalAlertas
   const vp = vuelosPendientes.value
   return [
-    { to: '/normatividad',  label: 'Normatividad',  icono: 'gavel',            roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
-    { to: '/dashboard',     label: 'Dashboard',     icono: 'dashboard',        roles: ['all'] },
-    { to: '/vencimientos',  label: 'Alertas RAC',   icono: 'shutter_speed',    roles: ['all'], badge: v || null, badgeColor: 'red-5' },
-    { to: '/mensajes',      label: 'Mensajes',      icono: 'forum',            roles: ['all'], sublabel: 'Comunicaciones internas' },
-    { to: '/cronograma',    label: 'Mi Cronograma', icono: 'assignment',       roles: ['all'], sublabel: 'Confirmar planes de vuelo', badge: vp || null, badgeColor: 'purple' },
-    { to: '/reservas',      label: 'Programar Vuelo', icono: 'add_circle',     roles: ['admin', 'dir_ops', 'instructor'], sublabel: 'Agendar actividad de instrucción' },
-    { to: '/calendario',    label: 'Calendario',    icono: 'event_available',  roles: ['all'], sublabel: 'Planificación de Vuelos' },
+    // ── General ──────────────────────────────────────────────────────
+    { to: '/dashboard',     label: 'Dashboard',       icono: 'dashboard',          roles: ['all'], sublabel: 'Resumen operacional' },
+    { to: '/vencimientos',  label: 'Alertas RAC',     icono: 'shutter_speed',      roles: ['all'], badge: v || null, badgeColor: 'red-5', sublabel: 'Vencimientos de documentos' },
+    { to: '/mensajes',      label: 'Mensajes',        icono: 'forum',              roles: ['all'], sublabel: 'Comunicaciones internas' },
+    { to: '/normatividad',  label: 'Normatividad',    icono: 'menu_book',          roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
 
-    { separador: true, sectionLabel: 'Formación' },
-    { to: '/vuelo',         label: 'Vuelo y Diario', icono: 'flight_takeoff',  roles: ['all'], sublabel: 'Bitácoras RAC 91.417' },
-    { to: '/academico',     label: 'Académico',      icono: 'auto_stories',    roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] },
-    { to: '/aula-virtual',  label: 'Aula Virtual',   icono: 'school',          roles: ['estudiante'] },
-    { to: '/certificados',  label: 'Certificados',   icono: 'workspace_premium', roles: ['all'], sublabel: 'Constancias RAC 141.77' },
-    { to: '/endorsements',  label: 'Endorsements',   icono: 'flight_takeoff',  roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Primer vuelo solo' },
+    // ── Operaciones de Vuelo ─────────────────────────────────────────
+    { separador: true, sectionLabel: 'Operaciones de Vuelo' },
+    { to: '/cronograma',    label: 'Mi Cronograma',   icono: 'assignment',         roles: ['all'], sublabel: 'Planes de vuelo programados', badge: vp || null, badgeColor: 'purple' },
+    { to: '/reservas',      label: 'Programar Vuelo', icono: 'add_circle_outline', roles: ['admin', 'dir_ops', 'instructor'], sublabel: 'Agendar actividad de instrucción' },
+    { to: '/calendario',    label: 'Calendario',      icono: 'event_available',    roles: ['all'], sublabel: 'Vista mensual de actividades' },
+    { to: '/vuelo',         label: 'Bitácoras',       icono: 'flight_takeoff',     roles: ['all'], sublabel: 'Diario de vuelo RAC 91.417' },
+
+    // ── Formación Académica ──────────────────────────────────────────
+    { separador: true, sectionLabel: 'Formación Académica' },
+    { to: '/academico',     label: 'Gestión Académica',icono: 'auto_stories',      roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Materias, notas y programas' },
+    { to: '/aula-virtual',  label: 'Aula Virtual',    icono: 'cast_for_education', roles: ['estudiante'], sublabel: 'Mis cursos y exámenes' },
+    { to: '/mi-progreso',   label: 'Mi Progreso',     icono: 'trending_up',        roles: ['estudiante'], sublabel: 'Horas y avance de carrera' },
+    { to: '/estudiantes',   label: 'Estudiantes',     icono: 'groups',             roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Expedientes y progreso' },
+    { to: '/certificados',  label: 'Certificados',    icono: 'workspace_premium',  roles: ['all'], sublabel: 'Constancias RAC 141.77' },
+    { to: '/endorsements',  label: 'Endorsements',    icono: 'verified',           roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Primer vuelo solo' },
     { to: '/evaluaciones-instructor', label: 'Eval. Instructores', icono: 'rate_review', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'RAC 65 — Competencias' },
 
+    // ── Seguridad Operacional ────────────────────────────────────────
     { separador: true, sectionLabel: 'Seguridad Operacional' },
-    { to: '/sms',                label: 'Reportes SMS',      icono: 'warning_amber',    roles: ['all'], sublabel: 'OACI Anexo 19' },
-    { to: '/sms/erg',            label: 'Plan ERG',          icono: 'local_fire_department', roles: ['all'], sublabel: 'Respuesta emergencias' },
-    { to: '/sms/capacitaciones', label: 'Capacitaciones SMS',icono: 'cast_for_education', roles: ['all'], sublabel: 'Cultura de seguridad' },
+    { to: '/sms',                label: 'Reportes SMS',       icono: 'warning_amber',         roles: ['all'], sublabel: 'OACI Anexo 19' },
+    { to: '/sms/erg',            label: 'Plan ERG',           icono: 'local_fire_department', roles: ['all'], sublabel: 'Respuesta a emergencias' },
+    { to: '/sms/capacitaciones', label: 'Capacitaciones SMS', icono: 'school',                roles: ['all'], sublabel: 'Cultura de seguridad' },
 
+    // ── Flota y Mantenimiento ────────────────────────────────────────
+    { separador: true, sectionLabel: 'Flota y Mantenimiento' },
+    { to: '/aeronaves',     label: 'Aeronaves',       icono: 'flight',             roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], sublabel: 'Registro y gestión de flota' },
+    { to: '/mantenimiento', label: 'Control MX',      icono: 'settings_suggest',   roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], sublabel: 'RETAC · Intervenciones' },
+
+    // ── Cumplimiento UAEAC ───────────────────────────────────────────
     { separador: true, sectionLabel: 'Cumplimiento UAEAC' },
-    { to: '/cumplimiento',              label: 'Cumplimiento RAC', icono: 'gavel',        roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Documentos RAC 141' },
-    { to: '/cumplimiento/enmiendas',    label: 'Enmiendas MOE/PIA',icono: 'edit_document', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Control de cambios' },
-    { to: '/cumplimiento/correspondencia', label: 'Correspondencia',icono: 'mark_email_read', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Comunicaciones UAEAC' },
-    { to: '/cumplimiento/reportes',     label: 'Reportes UAEAC',  icono: 'bar_chart',    roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Estadísticas regulatorias' },
+    { to: '/cumplimiento',                 label: 'Cumplimiento RAC',    icono: 'gavel',           roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Documentos RAC 141' },
+    { to: '/cumplimiento/enmiendas',       label: 'Enmiendas MOE/PIA',   icono: 'edit_document',   roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Control de cambios' },
+    { to: '/cumplimiento/correspondencia', label: 'Correspondencia',     icono: 'mark_email_read', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Comunicaciones UAEAC' },
+    { to: '/cumplimiento/reportes',        label: 'Reportes UAEAC',      icono: 'bar_chart',       roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Estadísticas regulatorias' },
 
+    // ── Administración ───────────────────────────────────────────────
     { separador: true, sectionLabel: 'Administración' },
-    { to: '/financiero',    label: 'Financiero',     icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'] },
-    { to: '/prospectos',    label: 'CRM Prospectos', icono: 'people_alt',      roles: ['admin', 'dir_ops'], sublabel: 'Leads e inscripciones' },
-    { to: '/nomina',        label: 'Nómina',         icono: 'payments',        roles: ['admin', 'dir_ops'], sublabel: 'Gestión de personal' },
-    { to: '/gastos',        label: 'Gastos / Caja',  icono: 'receipt_long',    roles: ['admin', 'dir_ops'], sublabel: 'Caja menor y presupuesto' },
-    { to: '/mantenimiento', label: 'Flota MX',       icono: 'settings_suggest', roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'] },
-    { to: '/instructores',  label: 'Talento I/P',    icono: 'supervisor_account', roles: ['admin', 'dir_ops'] },
+    { to: '/instructores',  label: 'Instructores',    icono: 'supervisor_account', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Talento I/P · Licencias' },
+    { to: '/financiero',    label: 'Financiero',      icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'], sublabel: 'Resumen financiero' },
+    { to: '/matriculas',    label: 'Matrículas',      icono: 'how_to_reg',         roles: ['admin', 'dir_ops'], sublabel: 'Inscripciones y pagos' },
+    { to: '/facturacion',   label: 'Facturación',     icono: 'receipt',            roles: ['admin', 'dir_ops'], sublabel: 'Facturas y cobros' },
+    { to: '/prospectos',    label: 'CRM Prospectos',  icono: 'people_alt',         roles: ['admin', 'dir_ops'], sublabel: 'Leads e inscripciones' },
+    { to: '/nomina',        label: 'Nómina',          icono: 'payments',           roles: ['admin', 'dir_ops'], sublabel: 'Gestión de personal' },
+    { to: '/gastos',        label: 'Gastos / Caja',   icono: 'receipt_long',       roles: ['admin', 'dir_ops'], sublabel: 'Caja menor y presupuesto' },
 
+    // ── Configuración ────────────────────────────────────────────────
     { separador: true, sectionLabel: 'Configuración' },
-    { to: '/seguridad',     label: 'Acceso y Logs',  icono: 'vpn_key',         roles: ['admin'] },
+    { to: '/seguridad',     label: 'Acceso y Logs',   icono: 'vpn_key',            roles: ['admin'], sublabel: 'Usuarios y auditoría' },
   ]
 })
 
@@ -267,12 +284,33 @@ const menuFiltrado = computed(() =>
 
 const menuMovil = computed(() => {
   const r = authStore.rol
-  const items = [{ to: '/dashboard', label: 'Inicio', icono: 'home' }]
-  if (['admin', 'dir_ops'].includes(r)) items.push({ to: '/financiero', label: 'Admin', icono: 'payments' })
-  items.push({ to: '/vuelo', label: 'Vuelo', icono: 'flight' })
-  items.push({ to: '/sms', label: 'SMS', icono: 'medical_services' })
-  items.push({ to: '/vencimientos', label: 'Alertas', icono: 'timer' })
-  return items.slice(0, 5)
+  if (r === 'estudiante') return [
+    { to: '/dashboard',    label: 'Inicio',      icono: 'home' },
+    { to: '/cronograma',   label: 'Cronograma',  icono: 'event_note' },
+    { to: '/aula-virtual', label: 'Aula',        icono: 'cast_for_education' },
+    { to: '/mi-progreso',  label: 'Progreso',    icono: 'insights' },
+    { to: '/vencimientos', label: 'Alertas',     icono: 'timer' },
+  ]
+  if (r === 'instructor') return [
+    { to: '/dashboard',    label: 'Inicio',      icono: 'home' },
+    { to: '/cronograma',   label: 'Cronograma',  icono: 'event_note' },
+    { to: '/vuelo',        label: 'Reservas',    icono: 'flight' },
+    { to: '/sms',          label: 'SMS',         icono: 'medical_services' },
+    { to: '/vencimientos', label: 'Alertas',     icono: 'timer' },
+  ]
+  if (['admin', 'dir_ops'].includes(r)) return [
+    { to: '/dashboard',    label: 'Inicio',      icono: 'home' },
+    { to: '/vuelo',        label: 'Reservas',    icono: 'flight' },
+    { to: '/academico',    label: 'Académico',   icono: 'school' },
+    { to: '/sms',          label: 'SMS',         icono: 'medical_services' },
+    { to: '/vencimientos', label: 'Alertas',     icono: 'timer' },
+  ]
+  return [
+    { to: '/dashboard',    label: 'Inicio',      icono: 'home' },
+    { to: '/vuelo',        label: 'Vuelo',       icono: 'flight' },
+    { to: '/sms',          label: 'SMS',         icono: 'medical_services' },
+    { to: '/vencimientos', label: 'Alertas',     icono: 'timer' },
+  ]
 })
 
 async function cerrarSesion() {
@@ -290,13 +328,19 @@ async function cerrarSesion() {
 }
 
 async function cargarVuelosPendientes() {
-  if (authStore.rol !== 'estudiante') return
   try {
     const { data } = await api.get('/reservas/cronograma')
     const reservas = data.data ?? []
-    vuelosPendientes.value = reservas.filter(
-      r => r.confirmacion_estudiante === 'pendiente' && r.estado === 'pendiente'
-    ).length
+    if (authStore.rol === 'estudiante') {
+      vuelosPendientes.value = reservas.filter(
+        r => r.confirmacion_estudiante === 'pendiente' && r.estado === 'pendiente'
+      ).length
+    } else {
+      // Para admin/dir_ops/instructor: vuelos que esperan confirmación del estudiante
+      vuelosPendientes.value = reservas.filter(
+        r => r.confirmacion_estudiante === 'pendiente'
+      ).length
+    }
   } catch { /* silencioso */ }
 }
 

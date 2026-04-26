@@ -48,7 +48,7 @@
                 </div>
                 <div class="text-white text-weight-bold q-mb-xs" style="font-size:15px">{{ plan.titulo }}</div>
                 <div class="font-mono text-grey-6" style="font-size:10px">
-                  Versión {{ plan.version }} · Rev. {{ plan.fecha_revision }}
+                  Versión {{ plan.version }} · Rev. {{ formatFechaCO(plan.fecha_revision) }}
                 </div>
               </div>
               <div v-if="auth.esAdmin || auth.esDirOps" class="row no-wrap">
@@ -196,6 +196,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q   = useQuasar()
 const auth = useAuthStore()

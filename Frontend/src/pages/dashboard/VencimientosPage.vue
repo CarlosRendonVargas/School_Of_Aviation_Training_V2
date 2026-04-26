@@ -78,7 +78,7 @@
             <div class="font-mono text-grey-6 uppercase flex items-center flex-wrap q-gutter-xs" style="font-size:10px">
               <span>{{ v.tipo_entidad }}</span>
               <q-icon name="fiber_manual_record" size="6px" />
-              <span class="text-red-9 text-weight-bold">INOPERATIVO DESDE {{ v.fecha_vencimiento }}</span>
+              <span class="text-red-9 text-weight-bold">INOPERATIVO DESDE {{ formatFechaCO(v.fecha_vencimiento) }}</span>
             </div>
           </div>
           <q-btn flat round icon="more_vert" color="grey-7" class="flex-shrink-0" />
@@ -113,7 +113,7 @@
             <q-item-section>
               <q-item-label class="text-subtitle1 text-grey-2 font-head text-weight-bold">{{ v.descripcion }}</q-item-label>
               <q-item-label caption class="text-grey-6 font-mono uppercase" style="font-size:10px">
-                {{ v.tipo_entidad }} · {{ v.fecha_vencimiento }}
+                {{ v.tipo_entidad }} · {{ formatFechaCO(v.fecha_vencimiento) }}
               </q-item-label>
             </q-item-section>
 
@@ -141,6 +141,7 @@ import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { useVencimientosStore } from 'store/vencimientos'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q        = useQuasar()
 const authStore = useAuthStore()

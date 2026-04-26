@@ -10,14 +10,14 @@ class AeronavePolicy
     public function viewAny(Usuario $usuario): bool
     {
         return in_array($usuario->rol?->nombre, [
-            'instructor', 'dir_ops', 'admin', 'mantenimiento', 'auditor_uaeac',
+            'estudiante', 'instructor', 'dir_ops', 'admin', 'mantenimiento', 'auditor_uaeac',
         ]);
     }
 
     public function view(Usuario $usuario, Aeronave $aeronave): bool
     {
         return in_array($usuario->rol?->nombre, [
-            'instructor', 'dir_ops', 'admin', 'mantenimiento', 'auditor_uaeac',
+            'estudiante', 'instructor', 'dir_ops', 'admin', 'mantenimiento', 'auditor_uaeac',
         ]);
     }
 

@@ -48,7 +48,7 @@
                   <q-badge v-if="cap.obligatoria" color="red-9" class="font-mono q-mb-xs q-ml-xs" style="font-size:9px">OBLIGATORIA</q-badge>
                   <div class="text-white text-weight-bold" style="font-size:14px">{{ cap.titulo }}</div>
                   <div class="font-mono text-grey-6 q-mt-xs" style="font-size:10px">
-                    {{ cap.fecha }} · {{ cap.duracion_horas }}h
+                    {{ formatFechaCO(cap.fecha) }} · {{ cap.duracion_horas }}h
                     <span v-if="cap.instructor_nombre"> · {{ cap.instructor_nombre }}</span>
                   </div>
                 </div>
@@ -225,6 +225,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q   = useQuasar()
 const auth = useAuthStore()

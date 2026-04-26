@@ -123,13 +123,37 @@
            
            <div class="row q-col-gutter-lg">
               <div class="col-6">
-                 <q-input v-model="form.hora_inicio" type="time" filled dark label="HORA INICIO (UTC)" class="premium-input-login" stack-label>
+                 <q-input v-model="form.hora_inicio" filled dark label="HORA INICIO (ZULU)" class="premium-input-login" stack-label readonly>
                     <template #prepend><q-icon name="schedule" color="red-9" /></template>
+                    <template #append>
+                       <q-icon name="access_time" class="cursor-pointer" color="grey-5">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                             <q-time v-model="form.hora_inicio" format24h mask="HH:mm" color="red-9" dark>
+                                <div class="row items-center justify-between q-pa-sm">
+                                   <span class="text-grey-5 font-mono text-caption">UTC / ZULU</span>
+                                   <q-btn v-close-popup label="Confirmar" color="red-9" flat dense />
+                                </div>
+                             </q-time>
+                          </q-popup-proxy>
+                       </q-icon>
+                    </template>
                  </q-input>
               </div>
               <div class="col-6">
-                 <q-input v-model="form.hora_fin" type="time" filled dark label="HORA FINAL (UTC)" class="premium-input-login" stack-label>
+                 <q-input v-model="form.hora_fin" filled dark label="HORA FINAL (ZULU)" class="premium-input-login" stack-label readonly>
                     <template #prepend><q-icon name="event_repeat" color="red-9" /></template>
+                    <template #append>
+                       <q-icon name="access_time" class="cursor-pointer" color="grey-5">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                             <q-time v-model="form.hora_fin" format24h mask="HH:mm" color="red-9" dark>
+                                <div class="row items-center justify-between q-pa-sm">
+                                   <span class="text-grey-5 font-mono text-caption">UTC / ZULU</span>
+                                   <q-btn v-close-popup label="Confirmar" color="red-9" flat dense />
+                                </div>
+                             </q-time>
+                          </q-popup-proxy>
+                       </q-icon>
+                    </template>
                  </q-input>
               </div>
            </div>
@@ -152,6 +176,23 @@
               emit-value map-options stack-label
            >
               <template #prepend><q-icon name="stars" color="red-9" /></template>
+              <template #append>
+                <q-btn flat round dense icon="add_circle_outline" color="red-9" size="sm" @click.stop="agregarTipo">
+                  <q-tooltip>Agregar modalidad</q-tooltip>
+                </q-btn>
+              </template>
+              <template #option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section v-if="!TIPOS_DEFECTO.includes(scope.opt.value)" side>
+                    <q-btn flat round dense icon="close" size="xs" color="red-9" @click.stop="eliminarTipo(scope.opt.value)">
+                      <q-tooltip>Eliminar</q-tooltip>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </template>
            </q-select>
 
            <q-input
@@ -205,7 +246,7 @@
               <div class="q-mt-md font-mono text-grey-6" style="font-size:10px">AERONAVE / FECHA / HORA</div>
               <div class="text-white text-weight-bold font-mono">
                 <q-badge color="red-9" class="q-mr-sm">{{ reservaSel.aeronave?.matricula }}</q-badge>
-                {{ reservaSel.fecha }} ({{ reservaSel.hora_inicio }} - {{ reservaSel.hora_fin }} UTC)
+                {{ formatFechaCO(reservaSel.fecha) }} ({{ reservaSel.hora_inicio }} - {{ reservaSel.hora_fin }} UTC)
               </div>
             </q-card>
 
@@ -304,6 +345,7 @@ import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
 import dayjs from 'dayjs'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const router    = useRouter()
 const $q        = useQuasar()
@@ -340,11 +382,38 @@ const opcionesEstado = [
   { label: 'COMPLETADA', value: 'completada' },
   { label: 'CANCELADA',  value: 'cancelada' },
 ]
-const opcionesTipo = [
-  { label: 'INSTRUCCIÓN DUAL', value: 'instruccion' },
-  { label: 'SOLO / PIC',        value: 'solo' },
-  { label: 'SIMULADOR',         value: 'simulador' },
-]
+const TIPOS_DEFECTO = ['instruccion', 'solo', 'simulador']
+const opcionesTipo = ref(
+  JSON.parse(localStorage.getItem('sat_tipos_entrenamiento') || 'null') || [
+    { label: 'INSTRUCCIÓN DUAL', value: 'instruccion' },
+    { label: 'SOLO / PIC',       value: 'solo' },
+    { label: 'SIMULADOR',        value: 'simulador' },
+  ]
+)
+function agregarTipo() {
+  $q.dialog({
+    title: 'Nueva modalidad',
+    message: 'Nombre de la modalidad de entrenamiento:',
+    prompt: { model: '', type: 'text', filled: true },
+    cancel: { flat: true, label: 'Cancelar', color: 'grey' },
+    ok: { label: 'Agregar', color: 'red-9' },
+    dark: true,
+  }).onOk(nombre => {
+    const n = nombre?.trim()
+    if (!n) return
+    const val = n.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+    if (!opcionesTipo.value.some(o => o.value === val)) {
+      opcionesTipo.value.push({ label: n.toUpperCase(), value: val })
+      localStorage.setItem('sat_tipos_entrenamiento', JSON.stringify(opcionesTipo.value))
+    }
+    form.value.tipo = val
+  })
+}
+function eliminarTipo(val) {
+  opcionesTipo.value = opcionesTipo.value.filter(o => o.value !== val)
+  localStorage.setItem('sat_tipos_entrenamiento', JSON.stringify(opcionesTipo.value))
+  if (form.value.tipo === val) form.value.tipo = null
+}
 
 const opcionesAeronaves = computed(() => aeronaves.value.filter(a => a.estado === 'disponible').map(a => ({ value: a.id, label: `${a.matricula} · ${a.modelo}` })))
 const colorEstadoReserva = (e) => ({ pendiente:'warning', confirmada:'emerald', completada:'blue-10', cancelada:'red-10' }[e]||'grey-8')
@@ -480,12 +549,24 @@ async function crearReserva() {
   creando.value = true
   try {
     const payload = { ...form.value }
-    if (authStore.esEstudiante) payload.estudiante_id = null // Override si es estudiante
     await api.post('/reservas', payload)
     $q.notify({ color: 'emerald', icon: 'verified', message: 'Misión agendada exitosamente en el despacho operativo.' })
     cerrarDialog(); cargar()
   } catch (e) {
-    if (e.response?.status === 422) erroresRac.value = e.response.data.errores || ['Error de validación UAEAC.']
+    if (e.response?.status === 422) {
+      const data = e.response.data
+      if (data.errores?.length) {
+        // Errores de la ReservaService (validaciones RAC)
+        erroresRac.value = data.errores
+      } else if (data.errors) {
+        // Errores de validación de Laravel ($request->validate)
+        erroresRac.value = Object.values(data.errors).flat()
+      } else {
+        erroresRac.value = [data.message || 'Error de validación.']
+      }
+    } else {
+      erroresRac.value = ['Error de servidor. Intente nuevamente.']
+    }
   } finally { creando.value = false }
 }
 

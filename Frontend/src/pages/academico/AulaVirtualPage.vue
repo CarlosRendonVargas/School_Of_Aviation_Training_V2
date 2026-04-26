@@ -12,8 +12,18 @@
       </div>
     </div>
 
+    <!-- Loading / Error state -->
+    <div v-if="cargandoMaterias && !materiaActiva" class="flex flex-center q-pa-xl">
+      <q-spinner-orbit color="red-9" size="64px" />
+    </div>
+    <div v-if="errorMaterias && !materiaActiva" class="flex flex-center q-pa-xl column text-center">
+      <q-icon name="error_outline" color="red-9" size="64px" class="q-mb-md" />
+      <div class="text-white font-head text-h6">{{ errorMaterias }}</div>
+      <q-btn flat label="Reintentar" color="red-9" icon="refresh" class="q-mt-md" @click="cargarMaterias" />
+    </div>
+
     <!-- ════ LISTA DE MATERIAS (HANGAR DE ESTUDIO) ════ -->
-    <div class="row q-col-gutter-xl" v-if="!materiaActiva">
+    <div class="row q-col-gutter-xl" v-if="!materiaActiva && !cargandoMaterias && !errorMaterias">
       <div v-for="m in materias" :key="m.id" class="col-12 col-md-4 col-lg-3 animate-slide-up">
         <q-card class="premium-glass-card hover-row full-height flex column overflow-hidden shadow-24 border-red-low">
           <div class="status-gradient-line" :class="m.aprobado ? 'bg-emerald' : 'bg-red-9'"></div>
@@ -50,7 +60,7 @@
     </div>
 
     <!-- ════ DETALLE DE MATERIA (CABINA DE INSTRUCCIÓN) ════ -->
-    <div v-else>
+    <div v-if="materiaActiva">
         <div class="row items-center justify-between q-mb-lg welcome-hero premium-glass-card border-red-low shadow-24 overflow-hidden" 
              :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
            <div class="hero-glow"></div>
@@ -128,12 +138,23 @@
 
                                                 
                                                 <!-- Document Viewer -->
-                                                <div v-if="lec.documento_url" class="document-vault border-red-low shadow-inner" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
-                                                    <div class="row justify-between items-center q-mb-lg" :class="$q.screen.lt.md ? 'column text-center' : ''">
-                                                       <div class="font-head text-grey-4 text-weight-bold" :class="$q.screen.lt.md ? 'text-subtitle2 q-mb-md' : 'text-subtitle1'">MATERIAL DE REFERENCIA RAC</div>
-                                                       <q-btn color="red-9" icon="open_in_new" label="Ver Expediente PDF" size="sm" class="premium-btn shadow-24" :class="$q.screen.lt.md ? 'full-width' : ''" @click="abrirEnlace(lec.documento_url)" />
+                                                <div v-if="lec.documento_url" class="document-vault border-red-low shadow-inner q-pa-md">
+                                                    <div class="font-head text-grey-4 text-weight-bold q-mb-sm" :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-subtitle1'">MATERIAL DE REFERENCIA RAC</div>
+                                                    <!-- Solo teléfonos (<600px): botón directo -->
+                                                    <div v-if="$q.screen.lt.sm" class="pdf-mobile-card flex column items-center justify-center q-pa-xl rounded-12 border-red-low shadow-inner text-center">
+                                                        <q-icon name="picture_as_pdf" color="red-9" size="64px" class="q-mb-md opacity-80" />
+                                                        <div class="font-head text-white text-weight-bold text-subtitle1 q-mb-sm">Documento PDF Disponible</div>
+                                                        <q-btn color="red-9" icon="open_in_new" label="Abrir PDF" class="premium-btn full-width shadow-24 q-mt-md" @click="abrirEnlace(lec.documento_url)" />
                                                     </div>
-                                                    <iframe :src="getEmbedUrl(lec.documento_url)" class="pdf-frame shadow-24 rounded-12" :style="$q.screen.lt.md ? 'height: 400px' : ''" />
+                                                    <!-- Tablets y escritorio: iframe Google Docs Viewer -->
+                                                    <div v-else class="pdf-frame-wrapper shadow-24 rounded-12">
+                                                        <iframe
+                                                            :src="getPdfEmbedUrl(lec.documento_url)"
+                                                            class="pdf-frame-inner"
+                                                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                                                            loading="lazy"
+                                                        />
+                                                    </div>
                                                 </div>
 
 
@@ -177,7 +198,7 @@
 
 
                         <!-- BRIEFING EN VIVO (IFRAME EMBED) -->
-                        <q-tab-panel name="clase" class="q-pa-none bg-black overflow-hidden relative-position" :style="$q.screen.lt.md ? 'height: 500px' : 'height: 750px'">
+                        <q-tab-panel name="clase" class="q-pa-none bg-black relative-position" :style="$q.screen.lt.md ? 'height: 500px' : 'height: 750px'">
                             <div v-if="materiaActiva.link_meet" class="full-height column">
                                 <div class="row items-center justify-between q-pa-md bg-black-20 border-bottom">
                                     <div class="row items-center">
@@ -193,25 +214,26 @@
                                         <q-btn flat dense icon="open_in_new" label="Ventana Externa" color="red-9" size="sm" class="text-weight-bold" @click="abrirEnlace(materiaActiva.link_meet)" />
                                     </div>
                                 </div>
-                                <div class="col relative-position bg-black-30 flex flex-center">
+                                <div class="col relative-position bg-black-30" style="overflow-y: auto;">
                                     <!-- Si es Google Meet, mostramos una interfaz de "Unirse" premium en lugar de un iframe roto -->
-                                    <div v-if="materiaActiva.link_meet.includes('meet.google.com')" class="text-center q-pa-xl animate-fade">
-                                        <div class="video-preview-placeholder shadow-24 q-mb-xl flex flex-center">
-                                            <q-icon name="videocam" size="100px" color="red-9" class="pulsate opacity-20" />
+                                    <div v-if="materiaActiva.link_meet.includes('meet.google.com')" class="text-center animate-fade" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+                                        <div class="video-preview-placeholder shadow-24 flex flex-center q-mx-auto" :class="$q.screen.lt.md ? 'q-mb-md' : 'q-mb-xl'">
+                                            <q-icon name="videocam" :size="$q.screen.lt.md ? '60px' : '100px'" color="red-9" class="pulsate opacity-20" />
                                             <div class="absolute-center full-width">
-                                                <div class="text-h6 font-head text-weight-bold">GOOGLE MEET</div>
+                                                <div class="font-head text-weight-bold" :class="$q.screen.lt.md ? 'text-subtitle1' : 'text-h6'">GOOGLE MEET</div>
                                                 <div class="text-caption font-mono text-grey-5">SESIÓN EXTERNA REQUERIDA</div>
                                             </div>
                                         </div>
-                                        <div class="text-h4 font-head text-white text-weight-bolder q-mb-md">Sala de Instrucción Lista</div>
-                                        <p class="text-grey-6 font-mono max-width-500 q-mx-auto q-mb-xl">Debido a políticas de seguridad de Google, las sesiones de Meet deben abrirse en una ventana independiente para habilitar cámara y micrófono.</p>
-                                        <q-btn 
-                                            label="Unirse a la Sesión Ahora" 
-                                            color="red-10" 
-                                            icon="open_in_new" 
-                                            class="premium-btn q-px-xl q-py-lg shadow-24" 
-                                            size="lg"
-                                            @click="abrirEnlace(materiaActiva.link_meet)" 
+                                        <div class="font-head text-white text-weight-bolder q-mb-sm" :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'">Sala de Instrucción Lista</div>
+                                        <p class="text-grey-6 font-mono q-mx-auto" :class="$q.screen.lt.md ? 'text-caption q-mb-md' : 'max-width-500 q-mb-xl'">Debido a políticas de seguridad de Google, las sesiones de Meet deben abrirse en una ventana independiente para habilitar cámara y micrófono.</p>
+                                        <q-btn
+                                            label="Unirse a la Sesión Ahora"
+                                            color="red-10"
+                                            icon="open_in_new"
+                                            class="premium-btn shadow-24"
+                                            :class="$q.screen.lt.md ? 'q-px-lg full-width' : 'q-px-xl q-py-lg'"
+                                            :size="$q.screen.lt.md ? 'md' : 'lg'"
+                                            @click="abrirEnlace(materiaActiva.link_meet)"
                                         />
                                     </div>
 
@@ -417,14 +439,18 @@
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import dayjs from 'dayjs'
 
-const $q = useQuasar()
+const $q   = useQuasar()
+const route = useRoute()
 const materias = ref([])
 const materiaActiva = ref(null)
 const tabAula = ref('lecciones')
+const cargandoMaterias = ref(false)
+const errorMaterias = ref('')
 
 // Examen State
 const dialogExamen = ref(false)
@@ -459,7 +485,17 @@ const startTimer = (minutes) => {
 const preguntaActual = computed(() => preguntas.value[currentQuestionIndex.value])
 
 const cargarMaterias = async () => {
-    try { const { data } = await api.get('/aula-virtual/mis-materias'); materias.value = data.data } catch (e) {}
+    cargandoMaterias.value = true
+    errorMaterias.value = ''
+    try {
+        const { data } = await api.get('/aula-virtual/mis-materias')
+        materias.value = data.data ?? []
+        if (materias.value.length === 0) errorMaterias.value = 'No hay módulos disponibles para tu programa. Contacta a la administración.'
+    } catch (e) {
+        errorMaterias.value = e.response?.data?.mensaje ?? 'Error al cargar los módulos. Verifica tu conexión.'
+    } finally {
+        cargandoMaterias.value = false
+    }
 }
 
 const entrarAula = async (m) => {
@@ -639,7 +675,18 @@ const preventKeyCombos = (e) => {
     }
 }
 
-const abrirEnlace = (url) => { window.open(url, '_blank') }
+const abrirEnlace = (url) => {
+    if (!url) return
+    const fullUrl = /^https?:\/\//i.test(url) ? url : 'https://' + url
+    const a = document.createElement('a')
+    a.href = fullUrl
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+}
+
 const getEmbedUrl = (url) => {
     if (!url) return ''
     let videoId = ''
@@ -652,13 +699,29 @@ const getEmbedUrl = (url) => {
     } else if (url.includes('youtube.com/live/')) {
         videoId = url.split('live/')[1]?.split('?')[0]
     }
-    
     if (videoId) return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`
     if (url.includes('drive.google.com/file/d/')) return url.replace(/\/view.*?$/, '/preview')
     return url
 }
 
-onMounted(cargarMaterias)
+const getPdfEmbedUrl = (url) => {
+    if (!url) return ''
+    if (url.includes('drive.google.com/file/d/')) return url.replace(/\/view.*?$/, '/preview')
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+}
+
+onMounted(async () => {
+    await cargarMaterias()
+    // Deep-link desde el calendario: ?materia=5&tab=clase
+    const materiaId = route.query.materia
+    if (materiaId) {
+        const mat = materias.value.find(m => String(m.id) === String(materiaId))
+        if (mat) {
+            await entrarAula(mat)
+            if (route.query.tab) tabAula.value = route.query.tab
+        }
+    }
+})
 onUnmounted(cleanupAntiFraude)
 const formatFecha = (f) => {
     if (!f) return ''
@@ -681,8 +744,20 @@ const formatFecha = (f) => {
 .bg-black-20 { background: rgba(0,0,0,0.2); }
 
 .video-container-premium { border-radius: 20px; overflow: hidden; background: #000; .aspect-16-9 { aspect-ratio: 16/9; } }
-.document-vault { background: rgba(255,255,255,0.02); border-radius: 16px; margin-top: 40px; }
-.pdf-frame { width: 100%; height: 650px; border: none; background: white; }
+.document-vault { background: rgba(255,255,255,0.02); border-radius: 16px; margin-top: 8px; }
+.pdf-frame-wrapper {
+    overflow: hidden;
+    height: 650px;
+}
+.pdf-frame-inner {
+    width: calc(100% + 80px);
+    height: 100%;
+    border: none;
+    background: white;
+    display: block;
+    margin-right: -80px;
+}
+.pdf-mobile-card { background: rgba(161,11,19,0.05); min-height: 200px; }
 
 .score-master-dial { padding: 50px; border-radius: 50%; background: radial-gradient(circle, rgba(161, 11, 19, 0.1) 0%, transparent 70%); }
 .sticky-score { position: sticky; top: 120px; }

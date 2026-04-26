@@ -30,14 +30,17 @@ class ReservaService
         }
 
         $reserva = Reserva::create([
-            'aeronave_id'   => $datos['aeronave_id'],
-            'estudiante_id' => $datos['estudiante_id'],
-            'instructor_id' => $datos['instructor_id'] ?? null,
-            'fecha'         => $datos['fecha'],
-            'hora_inicio'   => $datos['hora_inicio'],
-            'hora_fin'      => $datos['hora_fin'],
-            'tipo'          => $datos['tipo'],
-            'estado'        => 'pendiente',
+            'aeronave_id'             => $datos['aeronave_id'],
+            'estudiante_id'           => $datos['estudiante_id'],
+            'instructor_id'           => $datos['instructor_id'] ?? null,
+            'fecha'                   => $datos['fecha'],
+            'hora_inicio'             => $datos['hora_inicio'],
+            'hora_fin'                => $datos['hora_fin'],
+            'tipo'                    => $datos['tipo'],
+            'objetivos'               => $datos['objetivos'] ?? null,
+            'estado'                  => 'pendiente',
+            'confirmacion_estudiante' => $datos['confirmacion_estudiante'] ?? 'pendiente',
+            'confirmacion_expira'     => $datos['confirmacion_expira'] ?? null,
         ]);
 
         return ['ok' => true, 'reserva' => $reserva];
@@ -59,7 +62,7 @@ class ReservaService
         if (! $aeronave) {
             $errores[] = 'Aeronave no encontrada.';
         } else {
-            if (! $aeronave->disponible()) {
+            if (! $aeronave->estaDisponible()) {
                 $errores[] = "La aeronave {$aeronave->matricula} no está disponible (estado: {$aeronave->estado}).";
             }
             if (! $aeronave->airworthinessVigente()) {

@@ -92,7 +92,7 @@
                       </div>
                       <div class="col">
                          <div class="text-subtitle1 text-white font-head text-weight-bold">{{ doc.titulo }}</div>
-                         <div class="text-caption text-grey-6 font-mono">Res. UAEAC: {{ doc.fecha_documento }} · Rev. {{ doc.version }}</div>
+                         <div class="text-caption text-grey-6 font-mono">Res. UAEAC: {{ formatFechaCO(doc.fecha_documento) }} · Rev. {{ doc.version }}</div>
                       </div>
                       <q-btn flat round icon="download" color="grey-7" :href="doc.archivo_url" target="_blank" />
                    </div>
@@ -141,6 +141,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const authStore   = useAuthStore()
 const tab         = ref('checklist')
