@@ -219,66 +219,68 @@ const menuCompleto = computed(() => {
   const vp = vuelosPendientes.value
   return [
     // ── General ──────────────────────────────────────────────────────
-    { to: '/dashboard',     label: 'Dashboard',       icono: 'dashboard',          roles: ['all'], sublabel: 'Resumen operacional' },
-    { to: '/vencimientos',  label: 'Alertas RAC',     icono: 'shutter_speed',      roles: ['all'], badge: v || null, badgeColor: 'red-5', sublabel: 'Vencimientos de documentos' },
-    { to: '/mensajes',      label: 'Mensajes',        icono: 'forum',              roles: ['all'], sublabel: 'Comunicaciones internas' },
-    { to: '/normatividad',  label: 'Normatividad',    icono: 'menu_book',          roles: ['all'], sublabel: 'Reglamentos RAC · UAEAC' },
+    { to: '/dashboard',     label: 'Dashboard',       icono: 'dashboard',          roles: ['all'], modulo: 'dashboard',    sublabel: 'Resumen operacional' },
+    { to: '/vencimientos',  label: 'Alertas RAC',     icono: 'shutter_speed',      roles: ['all'], modulo: 'vencimientos', badge: v || null, badgeColor: 'red-5', sublabel: 'Vencimientos de documentos' },
+    { to: '/mensajes',      label: 'Mensajes',        icono: 'forum',              roles: ['all'], modulo: 'mensajes',     sublabel: 'Comunicaciones internas' },
+    { to: '/normatividad',  label: 'Normatividad',    icono: 'menu_book',          roles: ['all'], modulo: 'normatividad', sublabel: 'Reglamentos RAC · UAEAC' },
 
     // ── Operaciones de Vuelo ─────────────────────────────────────────
     { separador: true, sectionLabel: 'Operaciones de Vuelo' },
-    { to: '/cronograma',    label: 'Mi Cronograma',   icono: 'assignment',         roles: ['all'], sublabel: 'Planes de vuelo programados', badge: vp || null, badgeColor: 'purple' },
-    { to: '/reservas',      label: 'Programar Vuelo', icono: 'add_circle_outline', roles: ['admin', 'dir_ops', 'instructor'], sublabel: 'Agendar actividad de instrucción' },
-    { to: '/calendario',    label: 'Calendario',      icono: 'event_available',    roles: ['all'], sublabel: 'Vista mensual de actividades' },
-    { to: '/vuelo',         label: 'Bitácoras',       icono: 'flight_takeoff',     roles: ['all'], sublabel: 'Diario de vuelo RAC 91.417' },
+    { to: '/cronograma',    label: 'Mi Cronograma',   icono: 'assignment',         roles: ['all'], modulo: 'cronograma',  sublabel: 'Planes de vuelo programados', badge: vp || null, badgeColor: 'purple' },
+    { to: '/reservas',      label: 'Programar Vuelo', icono: 'add_circle_outline', roles: ['admin', 'dir_ops', 'instructor'], modulo: 'reservas',   sublabel: 'Agendar actividad de instrucción' },
+    { to: '/calendario',    label: 'Calendario',      icono: 'event_available',    roles: ['all'], modulo: 'calendario',  sublabel: 'Vista mensual de actividades' },
+    { to: '/vuelo',         label: 'Bitácoras',       icono: 'flight_takeoff',     roles: ['all'], modulo: 'vuelo',       sublabel: 'Diario de vuelo RAC 91.417' },
 
     // ── Formación Académica ──────────────────────────────────────────
     { separador: true, sectionLabel: 'Formación Académica' },
-    { to: '/academico',     label: 'Gestión Académica',icono: 'auto_stories',      roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Materias, notas y programas' },
-    { to: '/aula-virtual',  label: 'Aula Virtual',    icono: 'cast_for_education', roles: ['estudiante'], sublabel: 'Mis cursos y exámenes' },
-    { to: '/mi-progreso',   label: 'Mi Progreso',     icono: 'trending_up',        roles: ['estudiante'], sublabel: 'Horas y avance de carrera' },
-    { to: '/estudiantes',   label: 'Estudiantes',     icono: 'groups',             roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Expedientes y progreso' },
-    { to: '/certificados',  label: 'Certificados',    icono: 'workspace_premium',  roles: ['all'], sublabel: 'Constancias RAC 141.77' },
-    { to: '/endorsements',  label: 'Endorsements',    icono: 'verified',           roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], sublabel: 'Primer vuelo solo' },
-    { to: '/evaluaciones-instructor', label: 'Eval. Instructores', icono: 'rate_review', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'RAC 65 — Competencias' },
+    { to: '/academico',     label: 'Gestión Académica',icono: 'auto_stories',      roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'academico',               sublabel: 'Materias, notas y programas' },
+    { to: '/aula-virtual',  label: 'Aula Virtual',    icono: 'cast_for_education', roles: ['estudiante'],                                      modulo: 'aula-virtual',            sublabel: 'Mis cursos y exámenes' },
+    { to: '/mi-progreso',   label: 'Mi Progreso',     icono: 'trending_up',        roles: ['estudiante'],                                      modulo: 'mi-progreso',             sublabel: 'Horas y avance de carrera' },
+    { to: '/estudiantes',   label: 'Estudiantes',     icono: 'groups',             roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'estudiantes',             sublabel: 'Expedientes y progreso' },
+    { to: '/certificados',  label: 'Certificados',    icono: 'workspace_premium',  roles: ['all'],                                             modulo: 'certificados',            sublabel: 'Constancias RAC 141.77' },
+    { to: '/endorsements',  label: 'Endorsements',    icono: 'verified',           roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'endorsements',            sublabel: 'Primer vuelo solo' },
+    { to: '/evaluaciones-instructor', label: 'Eval. Instructores', icono: 'rate_review', roles: ['admin', 'dir_ops', 'auditor_uaeac'],         modulo: 'evaluaciones-instructor', sublabel: 'RAC 65 — Competencias' },
 
     // ── Seguridad Operacional ────────────────────────────────────────
     { separador: true, sectionLabel: 'Seguridad Operacional' },
-    { to: '/sms',                label: 'Reportes SMS',       icono: 'warning_amber',         roles: ['all'], sublabel: 'OACI Anexo 19' },
-    { to: '/sms/erg',            label: 'Plan ERG',           icono: 'local_fire_department', roles: ['all'], sublabel: 'Respuesta a emergencias' },
-    { to: '/sms/capacitaciones', label: 'Capacitaciones SMS', icono: 'school',                roles: ['all'], sublabel: 'Cultura de seguridad' },
+    { to: '/sms',                label: 'Reportes SMS',       icono: 'warning_amber',         roles: ['all'], modulo: 'sms',                sublabel: 'OACI Anexo 19' },
+    { to: '/sms/erg',            label: 'Plan ERG',           icono: 'local_fire_department', roles: ['all'], modulo: 'sms-erg',            sublabel: 'Respuesta a emergencias' },
+    { to: '/sms/capacitaciones', label: 'Capacitaciones SMS', icono: 'school',                roles: ['all'], modulo: 'sms-capacitaciones', sublabel: 'Cultura de seguridad' },
 
     // ── Flota y Mantenimiento ────────────────────────────────────────
     { separador: true, sectionLabel: 'Flota y Mantenimiento' },
-    { to: '/aeronaves',     label: 'Aeronaves',       icono: 'flight',             roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], sublabel: 'Registro y gestión de flota' },
-    { to: '/mantenimiento', label: 'Control MX',      icono: 'settings_suggest',   roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], sublabel: 'RETAC · Intervenciones' },
+    { to: '/aeronaves',     label: 'Aeronaves',       icono: 'flight',           roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], modulo: 'aeronaves',     sublabel: 'Registro y gestión de flota' },
+    { to: '/mantenimiento', label: 'Control MX',      icono: 'settings_suggest', roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'], modulo: 'mantenimiento', sublabel: 'RETAC · Intervenciones' },
 
     // ── Cumplimiento UAEAC ───────────────────────────────────────────
     { separador: true, sectionLabel: 'Cumplimiento UAEAC' },
-    { to: '/cumplimiento',                 label: 'Cumplimiento RAC',    icono: 'gavel',           roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Documentos RAC 141' },
-    { to: '/cumplimiento/enmiendas',       label: 'Enmiendas MOE/PIA',   icono: 'edit_document',   roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Control de cambios' },
-    { to: '/cumplimiento/correspondencia', label: 'Correspondencia',     icono: 'mark_email_read', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Comunicaciones UAEAC' },
-    { to: '/cumplimiento/reportes',        label: 'Reportes UAEAC',      icono: 'bar_chart',       roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Estadísticas regulatorias' },
+    { to: '/cumplimiento',                 label: 'Cumplimiento RAC',    icono: 'gavel',           roles: ['admin', 'dir_ops', 'auditor_uaeac'], modulo: 'cumplimiento',                 sublabel: 'Documentos RAC 141' },
+    { to: '/cumplimiento/enmiendas',       label: 'Enmiendas MOE/PIA',   icono: 'edit_document',   roles: ['admin', 'dir_ops', 'auditor_uaeac'], modulo: 'cumplimiento-enmiendas',       sublabel: 'Control de cambios' },
+    { to: '/cumplimiento/correspondencia', label: 'Correspondencia',     icono: 'mark_email_read', roles: ['admin', 'dir_ops', 'auditor_uaeac'], modulo: 'cumplimiento-correspondencia', sublabel: 'Comunicaciones UAEAC' },
+    { to: '/cumplimiento/reportes',        label: 'Reportes UAEAC',      icono: 'bar_chart',       roles: ['admin', 'dir_ops', 'auditor_uaeac'], modulo: 'cumplimiento-reportes',        sublabel: 'Estadísticas regulatorias' },
 
     // ── Administración ───────────────────────────────────────────────
     { separador: true, sectionLabel: 'Administración' },
-    { to: '/instructores',  label: 'Instructores',    icono: 'supervisor_account', roles: ['admin', 'dir_ops', 'auditor_uaeac'], sublabel: 'Talento I/P · Licencias' },
-    { to: '/financiero',    label: 'Financiero',      icono: 'account_balance_wallet', roles: ['admin', 'dir_ops'], sublabel: 'Resumen financiero' },
-    { to: '/matriculas',    label: 'Matrículas',      icono: 'how_to_reg',         roles: ['admin', 'dir_ops'], sublabel: 'Inscripciones y pagos' },
-    { to: '/facturacion',   label: 'Facturación',     icono: 'receipt',            roles: ['admin', 'dir_ops'], sublabel: 'Facturas y cobros' },
-    { to: '/prospectos',    label: 'CRM Prospectos',  icono: 'people_alt',         roles: ['admin', 'dir_ops'], sublabel: 'Leads e inscripciones' },
-    { to: '/nomina',        label: 'Nómina',          icono: 'payments',           roles: ['admin', 'dir_ops'], sublabel: 'Gestión de personal' },
-    { to: '/gastos',        label: 'Gastos / Caja',   icono: 'receipt_long',       roles: ['admin', 'dir_ops'], sublabel: 'Caja menor y presupuesto' },
+    { to: '/instructores',  label: 'Instructores',    icono: 'supervisor_account',      roles: ['admin', 'dir_ops', 'auditor_uaeac'], modulo: 'instructores', sublabel: 'Talento I/P · Licencias' },
+    { to: '/financiero',    label: 'Financiero',      icono: 'account_balance_wallet',  roles: ['admin', 'dir_ops'], modulo: 'financiero',  sublabel: 'Resumen financiero' },
+    { to: '/matriculas',    label: 'Matrículas',      icono: 'how_to_reg',              roles: ['admin', 'dir_ops'], modulo: 'matriculas',  sublabel: 'Inscripciones y pagos' },
+    { to: '/facturacion',   label: 'Facturación',     icono: 'receipt',                 roles: ['admin', 'dir_ops'], modulo: 'facturacion', sublabel: 'Facturas y cobros' },
+    { to: '/prospectos',    label: 'CRM Prospectos',  icono: 'people_alt',              roles: ['admin', 'dir_ops'], modulo: 'prospectos',  sublabel: 'Leads e inscripciones' },
+    { to: '/nomina',        label: 'Nómina',          icono: 'payments',                roles: ['admin', 'dir_ops'], modulo: 'nomina',      sublabel: 'Gestión de personal' },
+    { to: '/gastos',        label: 'Gastos / Caja',   icono: 'receipt_long',            roles: ['admin', 'dir_ops'], modulo: 'gastos',      sublabel: 'Caja menor y presupuesto' },
 
     // ── Configuración ────────────────────────────────────────────────
     { separador: true, sectionLabel: 'Configuración' },
-    { to: '/seguridad',     label: 'Acceso y Logs',   icono: 'vpn_key',            roles: ['admin'], sublabel: 'Usuarios y auditoría' },
+    { to: '/seguridad',     label: 'Acceso y Logs',   icono: 'vpn_key',            roles: ['admin'], modulo: 'seguridad', sublabel: 'Usuarios y auditoría' },
   ]
 })
 
 const menuFiltrado = computed(() =>
   menuCompleto.value.filter(item => {
     if (item.separador) return true
-    return (item.roles || []).includes('all') || (item.roles || []).includes(authStore.rol)
+    const roleOk = (item.roles || []).includes('all') || (item.roles || []).includes(authStore.rol)
+    if (!roleOk) return false
+    return !item.modulo || authStore.tieneModulo(item.modulo)
   })
 )
 

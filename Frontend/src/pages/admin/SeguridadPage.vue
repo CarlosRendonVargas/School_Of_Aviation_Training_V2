@@ -25,12 +25,13 @@
         no-caps
         style="padding-left: 10px"
       >
-        <q-tab name="usuarios" icon="people" label="Directorio de Usuarios" />
-        <q-tab name="audit" icon="history" label="Registros de Auditoría (Logs)" />
+        <q-tab name="usuarios"  icon="people"               label="Directorio de Usuarios" />
+        <q-tab name="audit"     icon="history"              label="Registros de Auditoría (Logs)" />
+        <q-tab name="modulos"   icon="tune"                 label="Control de Módulos" />
       </q-tabs>
 
       <q-tab-panels v-model="tab" animated class="bg-transparent text-white">
-        
+
         <!-- ════ DIRECTORIO DE USUARIOS ════ -->
         <q-tab-panel name="usuarios" class="q-pa-lg">
           <q-table
@@ -55,7 +56,7 @@
                 </q-badge>
               </q-td>
             </template>
-            
+
             <template v-slot:body-cell-rol="props">
               <q-td :props="props">
                 <q-chip outline :style="`border-color: ${getColorPorRol(props.row.rol?.nombre)}; color: ${getColorPorRol(props.row.rol?.nombre)}`" size="sm" class="font-mono text-weight-bolder">
@@ -95,9 +96,9 @@
                     </div>
                     <div class="text-weight-bold text-white text-h6" style="line-height:1.2">{{ props.row.persona?.nombres }} {{ props.row.persona?.apellidos }}</div>
                     <div class="text-caption text-grey-5 font-mono q-mb-md">{{ props.row.email }}</div>
-                    
+
                     <q-separator dark class="opacity-5" />
-                    
+
                     <div class="row justify-between items-center q-mt-md">
                        <q-badge :color="props.row.activo ? 'emerald' : 'red-10'" class="text-weight-bold" style="font-size:9px">{{ props.row.activo ? 'ACTIVE' : 'LOCKED' }}</q-badge>
                        <div class="q-gutter-x-xs">
@@ -118,7 +119,7 @@
             <q-icon name="terminal" color="red-9" size="20px" class="q-mr-sm" />
             <span class="font-mono text-grey-5" style="font-size:12px">REGISTROS CRÍTICOS RAC 141.77</span>
           </div>
-          
+
           <q-table
             :rows="auditorias"
             :columns="columnsAudit"
@@ -158,6 +159,91 @@
               </div>
             </template>
           </q-table>
+        </q-tab-panel>
+
+        <!-- ════ CONTROL DE MÓDULOS ════ -->
+        <q-tab-panel name="modulos" class="q-pa-lg">
+          <div class="row items-center justify-between q-mb-lg">
+            <div class="row items-center">
+              <q-icon name="tune" color="red-9" size="20px" class="q-mr-sm" />
+              <span class="font-mono text-grey-5" style="font-size:12px">MATRIZ DE ACCESO A MÓDULOS POR ROL</span>
+            </div>
+            <div class="row q-gutter-sm">
+              <q-btn flat label="Restablecer Defaults" icon="restore" color="grey-5" size="sm" @click="restablecerDefaults" />
+              <q-btn label="Guardar Cambios" icon="save" color="red-9" class="premium-btn" :loading="guardandoMatriz" @click="guardarMatriz" />
+            </div>
+          </div>
+
+          <q-inner-loading :showing="loadingMatriz">
+            <q-spinner-orbit color="red-9" size="48px" />
+          </q-inner-loading>
+
+          <div v-if="!loadingMatriz" class="matriz-wrapper">
+            <!-- Leyenda de roles -->
+            <div class="row items-center q-mb-md q-gutter-sm">
+              <q-chip v-for="r in rolesOrden" :key="r" size="sm" class="font-mono text-weight-bold"
+                :style="`background: ${getColorPorRol(r)}22; border: 1px solid ${getColorPorRol(r)}55; color: ${getColorPorRol(r)}`">
+                {{ ROLE_LABELS[r] || r }}
+              </q-chip>
+              <q-space />
+              <div class="row items-center text-grey-6 text-caption font-mono">
+                <q-icon name="lock" size="14px" class="q-mr-xs text-amber-6" />
+                Celda bloqueada (no modificable)
+              </div>
+            </div>
+
+            <!-- Tabla de la matriz -->
+            <div class="overflow-auto">
+              <table class="matriz-tabla full-width">
+                <thead>
+                  <tr>
+                    <th class="text-left text-grey-6 font-mono" style="font-size:11px; padding: 8px 12px; min-width: 180px">MÓDULO</th>
+                    <th v-for="r in rolesOrden" :key="r" class="text-center font-mono" style="font-size:11px; padding: 8px; min-width: 80px"
+                      :style="`color: ${getColorPorRol(r)}`">
+                      {{ ROLE_LABELS[r] || r }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="grupo in GRUPOS" :key="grupo.label">
+                    <!-- Separador de sección -->
+                    <tr class="grupo-separador">
+                      <td :colspan="rolesOrden.length + 1" class="font-mono text-grey-7 text-uppercase q-px-md q-py-xs" style="font-size: 10px; letter-spacing: 1px; background: rgba(255,255,255,0.03)">
+                        {{ grupo.label }}
+                      </td>
+                    </tr>
+                    <!-- Filas de módulos -->
+                    <tr v-for="mod in grupo.modulos" :key="mod.key" class="modulo-fila">
+                      <td class="q-px-md q-py-sm">
+                        <div class="text-white text-weight-medium" style="font-size:13px">{{ mod.label }}</div>
+                        <div class="font-mono text-grey-7" style="font-size:9px">{{ mod.key }}</div>
+                      </td>
+                      <td v-for="r in rolesOrden" :key="r" class="text-center q-py-sm">
+                        <template v-if="esBloqueado(mod.key, r)">
+                          <q-icon name="lock" color="amber-6" size="18px">
+                            <q-tooltip>Acceso permanente — no se puede deshabilitar</q-tooltip>
+                          </q-icon>
+                        </template>
+                        <template v-else>
+                          <q-toggle
+                            v-model="matrizLocal[mod.key][r]"
+                            color="red-9"
+                            keep-color
+                            dense
+                            size="sm"
+                          />
+                        </template>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="q-mt-lg row justify-end">
+              <q-btn label="Guardar Cambios" icon="save" color="red-9" class="premium-btn" :loading="guardandoMatriz" @click="guardarMatriz" />
+            </div>
+          </div>
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
@@ -236,13 +322,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const tab = ref('usuarios')
 
+// ── Usuarios ──────────────────────────────────────────────────────────────
 const usuarios = ref([])
 const auditorias = ref([])
 const roles = ref([])
@@ -259,6 +346,96 @@ const usuClaveTemp = ref(null)
 const verP1 = ref(false)
 const verP2 = ref(false)
 
+// ── Módulos ───────────────────────────────────────────────────────────────
+const loadingMatriz  = ref(false)
+const guardandoMatriz = ref(false)
+const matrizLocal    = reactive({})
+const rolesOrden     = ref([])
+const bloqueados     = ref({})
+
+const ROLE_LABELS = {
+  admin:         'Admin',
+  dir_ops:       'Dir. Ops',
+  instructor:    'Instructor',
+  estudiante:    'Estudiante',
+  mantenimiento: 'Mant.',
+  auditor_uaeac: 'Auditor',
+}
+
+const GRUPOS = [
+  {
+    label: 'General',
+    modulos: [
+      { key: 'dashboard',    label: 'Dashboard' },
+      { key: 'vencimientos', label: 'Alertas RAC' },
+      { key: 'mensajes',     label: 'Mensajes' },
+      { key: 'normatividad', label: 'Normatividad' },
+    ],
+  },
+  {
+    label: 'Operaciones de Vuelo',
+    modulos: [
+      { key: 'cronograma', label: 'Mi Cronograma' },
+      { key: 'reservas',   label: 'Programar Vuelo' },
+      { key: 'calendario', label: 'Calendario' },
+      { key: 'vuelo',      label: 'Bitácoras' },
+    ],
+  },
+  {
+    label: 'Formación Académica',
+    modulos: [
+      { key: 'academico',               label: 'Gestión Académica' },
+      { key: 'aula-virtual',            label: 'Aula Virtual' },
+      { key: 'mi-progreso',             label: 'Mi Progreso' },
+      { key: 'estudiantes',             label: 'Estudiantes' },
+      { key: 'certificados',            label: 'Certificados' },
+      { key: 'endorsements',            label: 'Endorsements' },
+      { key: 'evaluaciones-instructor', label: 'Eval. Instructores' },
+    ],
+  },
+  {
+    label: 'Seguridad Operacional',
+    modulos: [
+      { key: 'sms',                label: 'Reportes SMS' },
+      { key: 'sms-erg',            label: 'Plan ERG' },
+      { key: 'sms-capacitaciones', label: 'Capacitaciones SMS' },
+    ],
+  },
+  {
+    label: 'Flota y Mantenimiento',
+    modulos: [
+      { key: 'aeronaves',     label: 'Aeronaves' },
+      { key: 'mantenimiento', label: 'Control MX' },
+    ],
+  },
+  {
+    label: 'Cumplimiento UAEAC',
+    modulos: [
+      { key: 'cumplimiento',                 label: 'Cumplimiento RAC' },
+      { key: 'cumplimiento-enmiendas',       label: 'Enmiendas MOE/PIA' },
+      { key: 'cumplimiento-correspondencia', label: 'Correspondencia' },
+      { key: 'cumplimiento-reportes',        label: 'Reportes UAEAC' },
+    ],
+  },
+  {
+    label: 'Administración',
+    modulos: [
+      { key: 'instructores', label: 'Instructores' },
+      { key: 'financiero',   label: 'Financiero' },
+      { key: 'matriculas',   label: 'Matrículas' },
+      { key: 'facturacion',  label: 'Facturación' },
+      { key: 'prospectos',   label: 'CRM Prospectos' },
+      { key: 'nomina',       label: 'Nómina' },
+      { key: 'gastos',       label: 'Gastos / Caja' },
+    ],
+  },
+  {
+    label: 'Configuración',
+    modulos: [
+      { key: 'seguridad', label: 'Acceso y Logs' },
+    ],
+  },
+]
 
 const columnsUsuarios = [
   { name: 'nombre', label: 'Funcionario / ID', align: 'left' },
@@ -276,96 +453,193 @@ const columnsAudit = [
 ]
 
 const getColorPorRol = (rolName) => {
-    switch (rolName) {
-        case 'admin': return '#f43f5e'
-        case 'instructor': return '#3b82f6'
-        case 'estudiante': return '#10b981'
-        default: return '#94a3b8'
-    }
+  const map = {
+    admin:         '#f43f5e',
+    instructor:    '#3b82f6',
+    estudiante:    '#10b981',
+    dir_ops:       '#fb923c',
+    mantenimiento: '#60a5fa',
+    auditor_uaeac: '#4ade80',
+  }
+  return map[rolName] || '#94a3b8'
 }
 
+function esBloqueado(modulo, rol) {
+  return Array.isArray(bloqueados.value[modulo]) && bloqueados.value[modulo].includes(rol)
+}
+
+// ── Carga inicial ─────────────────────────────────────────────────────────
 const cargarTodo = async () => {
-    loadingUsuarios.value = true
-    loadingAudit.value = true
-    try {
-        const [u, a, r] = await Promise.all([
-            api.get('/usuarios'),
-            api.get('/auditoria'),
-            api.get('/usuarios/roles')
-        ])
-        usuarios.value = u.data.data || []
-        auditorias.value = (a.data.data || []).slice(0, 50)
-        roles.value = r.data.data || []
-    } finally {
-        loadingUsuarios.value = false
-        loadingAudit.value = false
-    }
+  loadingUsuarios.value = true
+  loadingAudit.value = true
+  try {
+    const [u, a, r] = await Promise.all([
+      api.get('/usuarios'),
+      api.get('/auditoria'),
+      api.get('/usuarios/roles')
+    ])
+    usuarios.value  = u.data.data || []
+    auditorias.value = (a.data.data || []).slice(0, 50)
+    roles.value     = r.data.data || []
+  } finally {
+    loadingUsuarios.value = false
+    loadingAudit.value    = false
+  }
 }
 
-const toggleStatus = async (usuario) => {
-    try {
-        await api.put(`/usuarios/${usuario.id}`, { activo: usuario.activo })
-        $q.notify({ color: 'emerald', message: 'Configuración de acceso actualizada.', icon: 'verified', textColor: 'dark' })
-    } catch(e) {
-        usuario.activo = !usuario.activo
-        $q.notify({ type: 'negative', message: 'Error de servidor.' })
+const cargarMatriz = async () => {
+  loadingMatriz.value = true
+  try {
+    const { data } = await api.get('/permisos/matrix')
+    rolesOrden.value = data.roles || []
+    bloqueados.value = data.bloqueados || {}
+
+    // Poblar matrizLocal
+    for (const modulo of (data.modulos || [])) {
+      if (!matrizLocal[modulo]) matrizLocal[modulo] = {}
+      for (const rol of data.roles) {
+        matrizLocal[modulo][rol] = data.matrix?.[modulo]?.[rol] ?? false
+      }
     }
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al cargar la matriz de permisos.' })
+  } finally {
+    loadingMatriz.value = false
+  }
+}
+
+// Cargar la matriz solo cuando el usuario abre la pestaña por primera vez
+const matrizCargada = ref(false)
+watch(tab, (val) => {
+  if (val === 'modulos' && !matrizCargada.value) {
+    matrizCargada.value = true
+    cargarMatriz()
+  }
+})
+
+// ── Acciones Usuarios ─────────────────────────────────────────────────────
+const toggleStatus = async (usuario) => {
+  try {
+    await api.put(`/usuarios/${usuario.id}`, { activo: usuario.activo })
+    $q.notify({ color: 'emerald', message: 'Configuración de acceso actualizada.', icon: 'verified', textColor: 'dark' })
+  } catch {
+    usuario.activo = !usuario.activo
+    $q.notify({ type: 'negative', message: 'Error de servidor.' })
+  }
 }
 
 const guardarUsuario = async () => {
-    try {
-        await api.post('/usuarios', formUsu.value)
-        $q.notify({ type: 'positive', message: 'Cuenta activada correctamente.' })
-        dialogUsuario.value = false
-        cargarTodo()
-    } catch { $q.notify({ type: 'negative', message: 'Error al procesar solicitud.' }) }
+  try {
+    await api.post('/usuarios', formUsu.value)
+    $q.notify({ type: 'positive', message: 'Cuenta activada correctamente.' })
+    dialogUsuario.value = false
+    cargarTodo()
+  } catch { $q.notify({ type: 'negative', message: 'Error al procesar solicitud.' }) }
 }
 
 const abrirClave = (row) => {
-    usuClaveTemp.value = row
-    formClave.value = ''
-    dialogClave.value = true
+  usuClaveTemp.value = row
+  formClave.value = ''
+  dialogClave.value = true
 }
 
 const restablecerClave = async () => {
-    try {
-        await api.put(`/usuarios/${usuClaveTemp.value.id}/password`, { password: formClave.value })
-        $q.notify({ color: 'emerald', message: 'Clave actualizada exitosamente.', textColor: 'dark' })
-        dialogClave.value = false
-    } catch { $q.notify({ type: 'negative', message: 'Error en el cambio de credenciales.' }) }
+  try {
+    await api.put(`/usuarios/${usuClaveTemp.value.id}/password`, { password: formClave.value })
+    $q.notify({ color: 'emerald', message: 'Clave actualizada exitosamente.', textColor: 'dark' })
+    dialogClave.value = false
+  } catch { $q.notify({ type: 'negative', message: 'Error en el cambio de credenciales.' }) }
 }
 
 const abrirEditar = (row) => {
-    formUsuEdit.value = {
-        id: row.id,
-        nombres: row.persona?.nombres || '',
-        apellidos: row.persona?.apellidos || '',
-        num_documento: row.persona?.num_documento || '',
-        telefono: row.persona?.telefono || '',
-        rol_id: row.rol_id
-    }
-    dialogEditar.value = true
+  formUsuEdit.value = {
+    id: row.id,
+    nombres: row.persona?.nombres || '',
+    apellidos: row.persona?.apellidos || '',
+    num_documento: row.persona?.num_documento || '',
+    telefono: row.persona?.telefono || '',
+    rol_id: row.rol_id
+  }
+  dialogEditar.value = true
 }
 
 const guardarEdicion = async () => {
-    try {
-        await api.put(`/usuarios/${formUsuEdit.value.id}`, formUsuEdit.value)
-        $q.notify({ color: 'emerald', message: 'Datos operacionales actualizados correctamente.', textColor: 'dark', icon: 'verified' })
-        dialogEditar.value = false
-        cargarTodo()
-    } catch {
-        $q.notify({ type: 'negative', message: 'Error al actualizar cuenta en el servidor.' })
-    }
+  try {
+    await api.put(`/usuarios/${formUsuEdit.value.id}`, formUsuEdit.value)
+    $q.notify({ color: 'emerald', message: 'Datos operacionales actualizados correctamente.', textColor: 'dark', icon: 'verified' })
+    dialogEditar.value = false
+    cargarTodo()
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al actualizar cuenta en el servidor.' })
+  }
+}
+
+// ── Acciones Módulos ──────────────────────────────────────────────────────
+const guardarMatriz = async () => {
+  guardandoMatriz.value = true
+  try {
+    await api.put('/permisos/matrix', { matrix: matrizLocal })
+    $q.notify({ color: 'emerald', icon: 'verified', textColor: 'dark', message: 'Permisos de módulos guardados. Los cambios aplican en el próximo inicio de sesión.' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Error al guardar la matriz de permisos.' })
+  } finally {
+    guardandoMatriz.value = false
+  }
+}
+
+const restablecerDefaults = () => {
+  $q.dialog({
+    title: 'Restablecer Defaults',
+    message: '¿Deseas recargar la configuración predeterminada del servidor? Perderás los cambios no guardados.',
+    cancel: { flat: true, label: 'Cancelar', color: 'grey-6' },
+    ok: { label: 'Sí, restablecer', color: 'red-9' },
+    dark: true,
+    class: 'premium-glass-card',
+  }).onOk(() => {
+    matrizCargada.value = false
+    Object.keys(matrizLocal).forEach(k => delete matrizLocal[k])
+    cargarMatriz()
+  })
 }
 
 onMounted(cargarTodo)
 </script>
 
 <style lang="scss" scoped>
-
 .terminal-style {
   font-family: 'JetBrains Mono', monospace;
   background: rgba(0, 0, 0, 0.2) !important;
   border-radius: 8px;
+}
+
+.matriz-wrapper {
+  overflow-x: auto;
+}
+
+.matriz-tabla {
+  border-collapse: collapse;
+  width: 100%;
+
+  th, td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  thead th {
+    background: rgba(255, 255, 255, 0.03);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .grupo-separador td {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .modulo-fila {
+    transition: background 0.15s;
+    &:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  }
 }
 </style>

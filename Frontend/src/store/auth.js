@@ -90,5 +90,12 @@ export const useAuthStore = defineStore('auth', {
         (p) => p.modulo === modulo && p.accion === accion
       ) ?? false
     },
+
+    tieneModulo(key) {
+      const accesos = (this.permisos || []).filter(p => p.accion === 'acceso')
+      // Sin permisos de acceso configurados: mostrar todo según rol (compatibilidad)
+      if (accesos.length === 0) return true
+      return accesos.some(p => p.modulo === key)
+    },
   },
 })

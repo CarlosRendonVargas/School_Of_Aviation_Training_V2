@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\EnmiendaController;
 use App\Http\Controllers\Api\NominaController;
 use App\Http\Controllers\Api\GastoOperativoController;
 use App\Http\Controllers\Api\CorrespondenciaController;
+use App\Http\Controllers\Api\PermisoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -328,6 +329,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/',       [GastoOperativoController::class, 'index']);
         Route::post('/',      [GastoOperativoController::class, 'store']);
     });
+
+    // --- Permisos de Módulos (Matriz dinámica) ---
+    Route::get('permisos/matrix',  [PermisoController::class, 'matrix']);
+    Route::put('permisos/matrix',  [PermisoController::class, 'update']);
 
     // --- Correspondencia UAEAC ---
     Route::prefix('correspondencia')->group(function () {
