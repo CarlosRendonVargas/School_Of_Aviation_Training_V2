@@ -215,14 +215,27 @@
            <q-input v-model="formNueva.concepto" filled dark label="CONCEPTO *" class="premium-input-login" stack-label />
 
            <div class="row q-col-gutter-md">
-              <div class="col-6">
-                 <q-input v-model.number="formNueva.subtotal" type="number" filled dark label="SUBTOTAL *" class="premium-input-login" stack-label />
+              <div class="col-7">
+                 <q-input v-model.number="formNueva.subtotal" type="number" filled dark label="SUBTOTAL *" class="premium-input-login" stack-label prefix="$" />
               </div>
-              <div class="col-6">
-                 <q-input v-model.number="formNueva.iva" type="number" filled dark label="IVA *" class="premium-input-login" stack-label />
+              <div class="col-5">
+                 <q-input v-model.number="formNueva.iva_porcentaje" type="number" filled dark label="IVA (%)" class="premium-input-login" stack-label suffix="%" />
               </div>
            </div>
-           <q-input v-model.number="formNueva.total" type="number" filled dark label="TOTAL (COP) *" class="premium-input-login" stack-label />
+
+           <!-- IVA calculado + Total: solo lectura -->
+           <div class="row q-col-gutter-md">
+              <div class="col-5">
+                 <q-input :model-value="formatCOP(formNueva.iva)" readonly filled dark label="VALOR IVA" class="premium-input-login" stack-label>
+                   <template #prepend><q-icon name="percent" color="grey-6" /></template>
+                 </q-input>
+              </div>
+              <div class="col-7">
+                 <q-input :model-value="formatCOP(formNueva.total)" readonly filled dark label="TOTAL (COP)" class="premium-input-login" stack-label>
+                   <template #prepend><q-icon name="calculate" color="red-9" /></template>
+                 </q-input>
+              </div>
+           </div>
            <q-input v-model="formNueva.cufe" filled dark label="CUFE DIAN" class="premium-input-login" stack-label />
 
            <q-btn type="submit" color="red-10" label="Emitir Factura" icon="send" class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" :loading="guardando" />
@@ -322,10 +335,21 @@ const guardando         = ref(false)
 const formPago = ref({ valor: '', metodo: null, referencia: '', comprobante_url: '', fecha_pago: new Date().toISOString().slice(0,10) })
 
 const hoy = new Date().toISOString().slice(0,10)
-const formNueva = ref({ matricula_id: null, numero_factura: '', fecha_factura: hoy, fecha_vencimiento_pago: hoy, concepto: '', subtotal: 0, iva: 0, total: 0, cufe: '' })
+const formNueva = ref({ matricula_id: null, numero_factura: '', fecha_factura: hoy, fecha_vencimiento_pago: hoy, concepto: '', subtotal: 0, iva_porcentaje: 19, iva: 0, total: 0, cufe: '' })
 
 const matriculasAll = ref([])
 const matriculasOps = ref([])
+
+watch(
+  () => [formNueva.value.subtotal, formNueva.value.iva_porcentaje],
+  ([sub, pct]) => {
+    const subtotal = Number(sub) || 0
+    const ivaVal   = Math.round(subtotal * (Number(pct) || 0) / 100)
+    formNueva.value.iva   = ivaVal
+    formNueva.value.total = subtotal + ivaVal
+  },
+  { immediate: true }
+)
 
 const estadoFiltro = computed(() => ({ todas: null, pend: 'pendiente', venc: 'vencida', pagadas: 'pagada', cartera: 'vencida' }[tab.value]))
 
@@ -406,8 +430,20 @@ async function guardarPago() {
 
 async function generarPdf(f) {
   $q.loading.show({ message: 'Compilando Soporte PDF UAEAC/DIAN...' })
-  try { await api.get(`/facturas/${f.id}/pdf`); $q.notify({ color: 'red-9', icon: 'picture_as_pdf', message: 'PDF Exportado a archivos locales.' }) } 
-  finally { $q.loading.hide() }
+  try {
+    const res = await api.get(`/facturas/${f.id}/pdf`, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Factura_${f.numero_factura}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+    $q.notify({ color: 'red-9', icon: 'picture_as_pdf', message: 'PDF descargado correctamente.' })
+  } catch {
+    $q.notify({ color: 'negative', icon: 'error', message: 'Error al generar el PDF.' })
+  } finally {
+    $q.loading.hide()
+  }
 }
 
 async function cargar() {

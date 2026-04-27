@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Factura;
 use App\Models\Pago;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -88,15 +89,14 @@ class FacturaController extends Controller
 
     public function pdf($id)
     {
-        $factura = Factura::with(['matricula.estudiante.persona', 'pagos'])->findOrFail($id);
-        
-        // Simulación de respuesta PDF (en una app real usaría mPDF o dompdf)
-        // Por ahora devolvemos un JSON que indica que el PDF está "generado"
-        return response()->json([
-            'ok' => true, 
-            'mensaje' => 'Generando PDF para Factura ' . $factura->numero_factura,
-            'url' => url("/api/v1/facturas/{$id}") // Placeholder corrigiendo la ruta no definida
-        ]);
+        $factura = Factura::with(['matricula.estudiante.persona', 'matricula.programa', 'pagos'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.factura', compact('factura'))
+                  ->setPaper('letter', 'portrait');
+
+        $nombre = 'Factura_' . $factura->numero_factura . '.pdf';
+
+        return $pdf->download($nombre);
     }
 
     public function storePago(Request $request, $id): JsonResponse
