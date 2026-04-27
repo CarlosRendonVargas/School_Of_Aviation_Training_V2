@@ -64,7 +64,7 @@ const routes = [
       // 09: Estudiantes (directorio + expediente detalle)
       { path: 'estudiantes',     name: 'estudiantes',     component: () => import('pages/estudiantes/EstudiantesPage.vue'),    meta: { roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] } },
       { path: 'estudiantes/:id', name: 'estudiante-detalle', component: () => import('pages/estudiantes/EstudianteDetallePage.vue'), meta: { roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'] } },
-      { path: 'mi-progreso',    name: 'mi-progreso',    component: () => import('pages/estudiantes/MiProgresPage.vue'),       meta: { roles: ['estudiante'] } },
+      { path: 'mi-progreso',    name: 'mi-progreso',    component: () => import('pages/estudiantes/MiProgresPage.vue'),       meta: { roles: ['estudiante', 'admin'] } },
 
       // 10: Aeronaves (flota + detalle)
       { path: 'aeronaves',      name: 'aeronaves',      component: () => import('pages/aeronaves/AeronavesPage.vue'),         meta: { roles: ['admin', 'dir_ops', 'mantenimiento', 'auditor_uaeac'] } },

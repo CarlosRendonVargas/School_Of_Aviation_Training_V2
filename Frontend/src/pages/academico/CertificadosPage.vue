@@ -156,6 +156,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q   = useQuasar()
 const auth = useAuthStore()
@@ -217,7 +218,7 @@ const columnas = [
   { name: 'numero_certificado', label: 'N.º Cert.', field: 'numero_certificado', align: 'left' },
   { name: 'tipo',               label: 'Tipo',       field: 'tipo',              align: 'left' },
   { name: 'estudiante',         label: 'Estudiante', field: row => `${row.estudiante?.persona?.nombres} ${row.estudiante?.persona?.apellidos}`, align: 'left' },
-  { name: 'fecha_emision',      label: 'Emisión',    field: 'fecha_emision',     align: 'left' },
+  { name: 'fecha_emision',      label: 'Emisión',    field: row => formatFechaCO(row.fecha_emision), align: 'left' },
   { name: 'anulado',            label: 'Estado',     field: 'anulado',           align: 'center' },
   { name: 'acciones',           label: '',           field: 'id',                align: 'center' },
 ]

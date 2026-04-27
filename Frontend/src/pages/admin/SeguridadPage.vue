@@ -26,6 +26,7 @@
         style="padding-left: 10px"
       >
         <q-tab name="usuarios"  icon="people"               label="Directorio de Usuarios" />
+        <q-tab name="perfiles"  icon="badge"                label="Perfiles de Acceso" />
         <q-tab name="audit"     icon="history"              label="Registros de Auditoría (Logs)" />
         <q-tab name="modulos"   icon="tune"                 label="Control de Módulos" />
       </q-tabs>
@@ -72,6 +73,18 @@
               </q-td>
             </template>
 
+            <template v-slot:body-cell-ultimo_acceso="props">
+              <q-td :props="props" class="font-mono" style="font-size:12px">
+                <template v-if="props.row.ultimo_acceso">
+                  <span class="text-grey-4">{{ formatTimestampCO(props.row.ultimo_acceso) }}</span>
+                </template>
+                <template v-else>
+                  <span class="text-grey-6">Alta: {{ formatTimestampCO(props.row.created_at, 'DD/MM/YYYY') }}</span>
+                  <q-badge color="grey-8" label="Sin acceso" class="q-ml-xs font-mono" style="font-size:8px" />
+                </template>
+              </q-td>
+            </template>
+
             <template v-slot:body-cell-acciones="props">
               <q-td :props="props" class="text-right q-gutter-x-sm">
                 <q-btn flat round color="red-9" icon="edit_note" size="sm" @click="abrirEditar(props.row)">
@@ -79,6 +92,9 @@
                 </q-btn>
                 <q-btn flat round color="white" icon="key" size="sm" @click="abrirClave(props.row)">
                   <q-tooltip>Modificar Credenciales</q-tooltip>
+                </q-btn>
+                <q-btn flat round color="red-10" icon="delete_forever" size="sm" @click="eliminarUsuario(props.row)">
+                  <q-tooltip>Eliminar Usuario</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -104,11 +120,64 @@
                        <div class="q-gutter-x-xs">
                           <q-btn flat round outline color="red-9" icon="edit_note" size="sm" @click="abrirEditar(props.row)" />
                           <q-btn flat round outline color="white" icon="key" size="sm" @click="abrirClave(props.row)" />
+                          <q-btn flat round outline color="red-10" icon="delete_forever" size="sm" @click="eliminarUsuario(props.row)" />
                        </div>
                     </div>
                   </q-card-section>
                 </q-card>
               </div>
+            </template>
+          </q-table>
+        </q-tab-panel>
+
+        <!-- ════ PERFILES DE ACCESO ════ -->
+        <q-tab-panel name="perfiles" class="q-pa-lg">
+          <div class="row items-center justify-between q-mb-lg">
+            <div class="row items-center">
+              <q-icon name="badge" color="red-9" size="20px" class="q-mr-sm" />
+              <span class="font-mono text-grey-5" style="font-size:12px">PERFILES DE ACCESO Y AUTORIZACIÓN RAC</span>
+            </div>
+            <q-btn color="red-9" icon="add" label="Nuevo Perfil" class="premium-btn" size="sm" @click="abrirNuevoRol" />
+          </div>
+
+          <q-table
+            :rows="rolesTabla"
+            :columns="columnsRoles"
+            row-key="id"
+            class="rac-table"
+            flat
+            :loading="loadingRoles"
+          >
+            <template v-slot:body-cell-nombre="props">
+              <q-td :props="props">
+                <q-chip outline :style="`border-color: ${getColorPorRol(props.row.nombre)}; color: ${getColorPorRol(props.row.nombre)}`"
+                  size="sm" class="font-mono text-weight-bolder">
+                  {{ props.row.nombre.toUpperCase() }}
+                </q-chip>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-descripcion="props">
+              <q-td :props="props" class="text-grey-4" style="font-size:12px">
+                {{ props.row.descripcion || '—' }}
+              </q-td>
+            </template>
+            <template v-slot:body-cell-usuarios_count="props">
+              <q-td :props="props" class="text-center">
+                <q-badge :color="props.row.usuarios_count > 0 ? 'blue-9' : 'grey-8'" class="font-mono">
+                  {{ props.row.usuarios_count }}
+                </q-badge>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-acciones_rol="props">
+              <q-td :props="props" class="text-right q-gutter-x-xs">
+                <q-btn flat round icon="edit_note" color="red-9" size="sm" @click="abrirEditarRol(props.row)">
+                  <q-tooltip>Editar descripción</q-tooltip>
+                </q-btn>
+                <q-btn flat round icon="delete_forever" color="red-10" size="sm" @click="eliminarRol(props.row)"
+                  :disable="props.row.usuarios_count > 0">
+                  <q-tooltip>{{ props.row.usuarios_count > 0 ? 'Tiene usuarios asignados' : 'Eliminar perfil' }}</q-tooltip>
+                </q-btn>
+              </q-td>
             </template>
           </q-table>
         </q-tab-panel>
@@ -129,6 +198,12 @@
             :loading="loadingAudit"
             :grid="$q.screen.lt.md"
           >
+            <template v-slot:body-cell-fecha="props">
+              <q-td :props="props" class="font-mono text-grey-5" style="font-size:11px">
+                {{ formatTimestampCO(props.row.created_at) }}
+              </q-td>
+            </template>
+
             <template v-slot:body-cell-usuario="props">
               <q-td :props="props" class="text-weight-bold text-red-7 font-mono">
                 {{ props.row.usuario?.email?.split('@')[0] || 'SYSTEM' }}
@@ -149,7 +224,7 @@
                   <q-card-section class="q-pa-xs">
                     <div class="row items-center justify-between">
                        <span :class="props.row.accion === 'CREATE' ? 'text-emerald' : (props.row.accion === 'UPDATE' ? 'text-orange-9' : 'text-red-9')" class="text-weight-bolder font-mono">[{{ props.row.accion }}]</span>
-                       <span class="font-mono text-grey-5" style="font-size:10px">{{ props.row.created_at ? props.row.created_at.slice(0,19).replace('T',' ') : '' }}</span>
+                       <span class="font-mono text-grey-5" style="font-size:10px">{{ formatTimestampCO(props.row.created_at) }}</span>
                     </div>
                     <div class="text-weight-bold text-red-7 font-mono q-mt-sm">{{ props.row.usuario?.email?.split('@')[0] || 'SYSTEM' }}</div>
                     <div class="text-caption text-grey-4 q-mt-xs">{{ props.row.detalles || 'Trazabilidad RAC' }}</div>
@@ -267,7 +342,14 @@
               </q-input>
             </div>
 
-            <div class="col-6"><q-select v-model="formUsu.rol_id" :options="roles" option-value="id" option-label="nombre" emit-value map-options label="Perfil RAC *" outlined /></div>
+            <div class="col-6">
+              <q-select v-model="formUsu.rol_id" :options="roles" option-value="id" emit-value map-options label="Perfil RAC *" outlined
+                :option-label="r => r.nombre?.toUpperCase()">
+                <template #selected-item="s">
+                  <span class="text-white font-mono text-weight-bold">{{ s.opt.nombre?.toUpperCase() }}</span>
+                </template>
+              </q-select>
+            </div>
             <div class="col-12 row justify-end q-gutter-sm q-mt-md">
               <q-btn flat label="Cancelar" color="grey-6" v-close-popup />
               <q-btn type="submit" label="Activar Usuario" color="red-9" class="premium-btn" />
@@ -308,10 +390,45 @@
             <div class="col-6"><q-input v-model="formUsuEdit.apellidos" label="Apellidos *" outlined /></div>
             <div class="col-6"><q-input v-model="formUsuEdit.num_documento" label="Cédula/ID *" outlined /></div>
             <div class="col-6"><q-input v-model="formUsuEdit.telefono" label="Contacto *" outlined /></div>
-            <div class="col-12"><q-select v-model="formUsuEdit.rol_id" :options="roles" option-value="id" option-label="nombre" emit-value map-options label="Perfil RAC *" outlined /></div>
+            <div class="col-12">
+              <q-select v-model="formUsuEdit.rol_id" :options="roles" option-value="id" emit-value map-options label="Perfil RAC *" outlined
+                :option-label="r => r.nombre?.toUpperCase()">
+                <template #selected-item="s">
+                  <span class="text-white font-mono text-weight-bold">{{ s.opt.nombre?.toUpperCase() }}</span>
+                </template>
+              </q-select>
+            </div>
             <div class="col-12 row justify-end q-gutter-sm q-mt-md">
               <q-btn flat label="Cancelar" color="grey-6" v-close-popup />
               <q-btn type="submit" label="Aplicar Cambios" color="red-9" class="premium-btn text-weight-bolder" />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- ═══ DIALOG ROL ═══ -->
+    <q-dialog v-model="dialogRol" persistent backdrop-filter="blur(15px)">
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(480px,95vw)">
+        <q-card-section class="q-pa-lg">
+          <div class="text-h6 font-head text-white q-mb-lg">
+            {{ modoRol === 'crear' ? 'Nuevo Perfil de Acceso' : 'Editar Perfil' }}
+          </div>
+          <q-form @submit="guardarRol" class="q-gutter-y-md">
+            <q-input v-if="modoRol === 'crear'" v-model="formRol.nombre" label="NOMBRE DEL PERFIL *"
+              outlined dark filled class="premium-input-login"
+              hint="Solo letras y guiones bajos. Ej: contador, dir_tecnico"
+              :rules="[v => !!v || 'Requerido']" />
+            <div v-else class="font-mono text-grey-5 q-mb-sm" style="font-size:11px">
+              PERFIL: <span class="text-white text-weight-bold">{{ formRol.nombre?.toUpperCase() }}</span>
+              <span class="text-grey-7 q-ml-sm">(el nombre no se puede cambiar)</span>
+            </div>
+            <q-input v-model="formRol.descripcion" label="DESCRIPCIÓN / CARGO" outlined dark filled
+              class="premium-input-login" type="textarea" rows="2"
+              hint="Descripción opcional del perfil (ej: Director de Operaciones de Vuelo)" />
+            <div class="row justify-end q-gutter-sm q-mt-md">
+              <q-btn flat label="Cancelar" color="grey-6" v-close-popup />
+              <q-btn type="submit" :label="modoRol === 'crear' ? 'Crear Perfil' : 'Guardar'" color="red-9" class="premium-btn" :loading="guardandoRol" />
             </div>
           </q-form>
         </q-card-section>
@@ -325,6 +442,10 @@
 import { ref, reactive, watch, onMounted } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import { formatTimestampCO } from 'src/utils/formatters'
+import { useAuthStore } from 'store/auth'
+
+const authStore = useAuthStore()
 
 const $q = useQuasar()
 const tab = ref('usuarios')
@@ -338,6 +459,21 @@ const loadingAudit = ref(false)
 const dialogUsuario = ref(false)
 const dialogEditar = ref(false)
 const dialogClave = ref(false)
+
+// ── Roles ─────────────────────────────────────────────────────────────────────
+const rolesTabla    = ref([])
+const loadingRoles  = ref(false)
+const dialogRol     = ref(false)
+const modoRol       = ref('crear')
+const guardandoRol  = ref(false)
+const formRol       = ref({ id: null, nombre: '', descripcion: '' })
+
+const columnsRoles = [
+  { name: 'nombre',         label: 'PERFIL RAC',       align: 'left' },
+  { name: 'descripcion',    label: 'DESCRIPCIÓN',      align: 'left' },
+  { name: 'usuarios_count', label: 'USUARIOS',         align: 'center' },
+  { name: 'acciones_rol',   label: 'ACCIONES',         align: 'right' },
+]
 
 const formUsu = ref({ nombres: '', apellidos: '', num_documento: '', email: '', password: '', rol_id: null, telefono: '' })
 const formUsuEdit = ref({ id: null, nombres: '', apellidos: '', num_documento: '', telefono: '', rol_id: null })
@@ -476,11 +612,12 @@ const cargarTodo = async () => {
     const [u, a, r] = await Promise.all([
       api.get('/usuarios'),
       api.get('/auditoria'),
-      api.get('/usuarios/roles')
+      api.get('/roles')
     ])
     usuarios.value  = u.data.data || []
     auditorias.value = (a.data.data || []).slice(0, 50)
     roles.value     = r.data.data || []
+    rolesTabla.value = r.data.data || []
   } finally {
     loadingUsuarios.value = false
     loadingAudit.value    = false
@@ -537,6 +674,27 @@ const guardarUsuario = async () => {
   } catch { $q.notify({ type: 'negative', message: 'Error al procesar solicitud.' }) }
 }
 
+const eliminarUsuario = (row) => {
+  const nombre = row.persona ? `${row.persona.nombres} ${row.persona.apellidos}` : row.email
+  $q.dialog({
+    title: `<span class="text-red-9 font-head">Eliminar: ${nombre}</span>`,
+    message: `Esta acción eliminará permanentemente la cuenta <b>${row.email}</b> y todos sus datos personales. No se puede deshacer.`,
+    html: true,
+    dark: true,
+    ok: { color: 'red-10', label: 'ELIMINAR PERMANENTEMENTE', unelevated: true, icon: 'delete_forever' },
+    cancel: { label: 'Cancelar', flat: true, color: 'grey-6' }
+  }).onOk(async () => {
+    try {
+      await api.delete(`/usuarios/${row.id}`)
+      $q.notify({ color: 'positive', message: 'Usuario eliminado correctamente.', icon: 'check_circle' })
+      cargarTodo()
+    } catch (e) {
+      const msg = e.response?.data?.mensaje || 'Error al eliminar el usuario.'
+      $q.notify({ type: 'negative', message: msg })
+    }
+  })
+}
+
 const abrirClave = (row) => {
   usuClaveTemp.value = row
   formClave.value = ''
@@ -569,6 +727,9 @@ const guardarEdicion = async () => {
     $q.notify({ color: 'emerald', message: 'Datos operacionales actualizados correctamente.', textColor: 'dark', icon: 'verified' })
     dialogEditar.value = false
     cargarTodo()
+    if (formUsuEdit.value.id === authStore.usuario?.id) {
+      await authStore.cargarPerfil()
+    }
   } catch {
     $q.notify({ type: 'negative', message: 'Error al actualizar cuenta en el servidor.' })
   }
@@ -590,17 +751,90 @@ const guardarMatriz = async () => {
 const restablecerDefaults = () => {
   $q.dialog({
     title: 'Restablecer Defaults',
-    message: '¿Deseas recargar la configuración predeterminada del servidor? Perderás los cambios no guardados.',
+    message: 'Esto sobreescribirá TODOS los permisos con los valores predeterminados del sistema. ¿Confirmas?',
     cancel: { flat: true, label: 'Cancelar', color: 'grey-6' },
     ok: { label: 'Sí, restablecer', color: 'red-9' },
     dark: true,
     class: 'premium-glass-card',
-  }).onOk(() => {
-    matrizCargada.value = false
-    Object.keys(matrizLocal).forEach(k => delete matrizLocal[k])
-    cargarMatriz()
+  }).onOk(async () => {
+    try {
+      await api.post('/permisos/reset')
+      Object.keys(matrizLocal).forEach(k => delete matrizLocal[k])
+      await cargarMatriz()
+      $q.notify({ color: 'emerald', icon: 'restore', message: 'Permisos restablecidos a valores predeterminados.', textColor: 'dark' })
+    } catch {
+      $q.notify({ type: 'negative', message: 'Error al restablecer los permisos.' })
+    }
   })
 }
+
+// ── CRUD Roles ────────────────────────────────────────────────────────────────
+const cargarRoles = async () => {
+  loadingRoles.value = true
+  try {
+    const { data } = await api.get('/roles')
+    rolesTabla.value = data.data || []
+    roles.value = data.data || []
+  } finally {
+    loadingRoles.value = false
+  }
+}
+
+const abrirNuevoRol = () => {
+  modoRol.value  = 'crear'
+  formRol.value  = { id: null, nombre: '', descripcion: '' }
+  dialogRol.value = true
+}
+
+const abrirEditarRol = (row) => {
+  modoRol.value  = 'editar'
+  formRol.value  = { id: row.id, nombre: row.nombre, descripcion: row.descripcion || '' }
+  dialogRol.value = true
+}
+
+const guardarRol = async () => {
+  guardandoRol.value = true
+  try {
+    if (modoRol.value === 'crear') {
+      await api.post('/roles', formRol.value)
+      $q.notify({ color: 'positive', message: 'Perfil creado. Configura sus módulos en la pestaña "Control de Módulos".', icon: 'badge' })
+    } else {
+      await api.put(`/roles/${formRol.value.id}`, { descripcion: formRol.value.descripcion })
+      $q.notify({ color: 'emerald', message: 'Perfil actualizado.', textColor: 'dark', icon: 'check_circle' })
+    }
+    dialogRol.value = false
+    await cargarRoles()
+    matrizCargada.value = false
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.response?.data?.mensaje || 'Error al guardar el perfil.' })
+  } finally {
+    guardandoRol.value = false
+  }
+}
+
+const eliminarRol = (row) => {
+  $q.dialog({
+    title: `<span class="text-red-9">Eliminar perfil: ${row.nombre.toUpperCase()}</span>`,
+    message: 'Se eliminarán también todos los permisos de módulos asociados a este perfil. Esta acción no se puede deshacer.',
+    html: true, dark: true,
+    ok: { color: 'red-10', label: 'ELIMINAR', unelevated: true, icon: 'delete_forever' },
+    cancel: { flat: true, label: 'Cancelar', color: 'grey-6' }
+  }).onOk(async () => {
+    try {
+      await api.delete(`/roles/${row.id}`)
+      $q.notify({ color: 'positive', message: 'Perfil eliminado correctamente.', icon: 'check_circle' })
+      await cargarRoles()
+      matrizCargada.value = false
+    } catch (e) {
+      $q.notify({ type: 'negative', message: e.response?.data?.mensaje || 'Error al eliminar.' })
+    }
+  })
+}
+
+// Cargar roles cuando se abre esa pestaña
+watch(tab, (val) => {
+  if (val === 'perfiles') cargarRoles()
+})
 
 onMounted(cargarTodo)
 </script>

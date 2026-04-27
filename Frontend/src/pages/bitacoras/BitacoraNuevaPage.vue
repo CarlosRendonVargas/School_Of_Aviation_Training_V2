@@ -196,7 +196,7 @@
              <q-separator dark class="q-my-xl opacity-5" />
 
              <div>
-                <q-input v-model="form.observaciones" type="textarea" filled dark label="OBSERVACIONES TÉCNICAS Y MANIOBRAS" class="premium-input-login" stack-label rows="6" placeholder="Documente las maniobras, aproximaciones y progreso del cadete..." />
+                <q-input v-model="form.observaciones" type="textarea" filled dark label="OBSERVACIONES TÉCNICAS Y MANIOBRAS" class="premium-input-login" stack-label rows="6" placeholder="Documente las maniobras, aproximaciones y progreso del estudiante..." />
              </div>
           </q-card>
 

@@ -77,7 +77,7 @@
                     <q-card-section>
                        <div class="row items-center justify-between">
                          <q-badge :color="props.row.estado === 'activa' ? 'emerald' : 'red-9'" :label="props.row.estado.toUpperCase()" class="text-weight-bold" />
-                         <span class="font-mono text-grey-5">{{ props.row.fecha_matricula ? props.row.fecha_matricula.slice(0,10) : '' }}</span>
+                         <span class="font-mono text-grey-5">{{ formatFechaCO(props.row.fecha_matricula) }}</span>
                        </div>
                        <div class="text-white text-h6 font-head q-mt-sm">{{ props.row.estudiante?.persona?.nombres }} {{ props.row.estudiante?.persona?.apellidos }}</div>
                        <div class="text-caption text-grey-4">Programa: {{ props.row.programa?.nombre }}</div>
@@ -385,6 +385,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar, exportFile } from 'quasar'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q = useQuasar()
 const tab = ref('matriculas')
@@ -413,7 +414,7 @@ const formAbono = ref({ valor: 0, metodo: 'Transferencia', referencia: '', fecha
 const abonoTemp = ref(null)
 
 const columnsMatriculas = [
-  { name: 'fecha_matricula', label: 'Fecha', align: 'left', field: 'fecha_matricula', sortable: true },
+  { name: 'fecha_matricula', label: 'Fecha', align: 'left', field: row => formatFechaCO(row.fecha_matricula), sortable: true },
   { name: 'estudiante', label: 'Beneficiario', align: 'left', field: row => row.estudiante?.persona?.nombres },
   { name: 'programa', label: 'Programa PIA', align: 'left', field: row => row.programa?.nombre },
   { name: 'estado', label: 'Estado RAC', align: 'center', field: 'estado' },

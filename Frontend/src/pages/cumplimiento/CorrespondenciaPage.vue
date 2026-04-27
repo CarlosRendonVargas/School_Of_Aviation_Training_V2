@@ -61,7 +61,7 @@
         <template #body-cell-vencimiento="{ row }">
           <q-td>
             <span v-if="row.fecha_vencimiento_respuesta" :class="vencimientoClass(row)">
-              {{ fmtFecha(row.fecha_vencimiento_respuesta) }}
+              {{ formatFechaCO(row.fecha_vencimiento_respuesta) }}
             </span>
             <span v-else class="text-grey-5">—</span>
           </q-td>
@@ -127,6 +127,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q = useQuasar()
 const rows = ref([])
@@ -163,7 +164,7 @@ const columnas = [
   { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'center', sortable: true },
   { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left', sortable: true },
   { name: 'asunto', label: 'Asunto', field: 'asunto', align: 'left', style: 'max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' },
-  { name: 'fecha_documento', label: 'Fecha Doc.', field: r => fmtFecha(r.fecha_documento), align: 'center', sortable: true },
+  { name: 'fecha_documento', label: 'Fecha Doc.', field: r => formatFechaCO(r.fecha_documento), align: 'center', sortable: true },
   { name: 'vencimiento', label: 'Vence', field: 'fecha_vencimiento_respuesta', align: 'center' },
   { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
 ]

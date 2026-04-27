@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', {
     autenticado:    (state) => !!state.token,
     rol:            (state) => state.usuario?.rol || null,
     nombre:         (state) => state.usuario?.nombre_completo || '',
-    foto:           (state) => state.usuario?.foto_url || null,
+    foto:           (state) => state.usuario?.foto_url || state.usuario?.persona?.foto_url || null,
     permisos:       (state) => state.usuario?.permisos || [],
 
     esEstudiante:   (state) => state.usuario?.rol === 'estudiante',
@@ -92,8 +92,8 @@ export const useAuthStore = defineStore('auth', {
     },
 
     tieneModulo(key) {
+      if (this.rol === 'admin') return true
       const accesos = (this.permisos || []).filter(p => p.accion === 'acceso')
-      // Sin permisos de acceso configurados: mostrar todo según rol (compatibilidad)
       if (accesos.length === 0) return true
       return accesos.some(p => p.modulo === key)
     },

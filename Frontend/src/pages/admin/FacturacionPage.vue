@@ -188,21 +188,43 @@
            <q-btn flat round dense icon="close" v-close-popup color="grey-7" class="shadow-inner" />
         </div>
         <q-form class="q-gutter-y-lg" @submit.prevent="crearFactura">
-           <q-input v-model="formNueva.numero_factura" filled dark label="NÚMERO DE FACTURA" class="premium-input-login" stack-label />
-           <q-input v-model="formNueva.fecha_factura" type="date" filled dark label="FECHA DE EMISIÓN" class="premium-input-login" stack-label />
-           <q-input v-model="formNueva.concepto" filled dark label="CONCEPTO" class="premium-input-login" stack-label />
-           
+           <q-select
+              v-model="formNueva.matricula_id"
+              :options="matriculasOps"
+              filled dark label="MATRÍCULA VINCULADA *"
+              class="premium-input-login" stack-label
+              emit-value map-options
+              use-input hide-selected fill-input input-debounce="0"
+              @filter="filtrarMatriculas"
+           >
+              <template #prepend><q-icon name="how_to_reg" color="red-9" /></template>
+              <template #no-option><q-item><q-item-section class="text-grey-6 font-mono text-caption">Sin resultados</q-item-section></q-item></template>
+           </q-select>
+
+           <q-input v-model="formNueva.numero_factura" filled dark label="NÚMERO DE FACTURA" class="premium-input-login" stack-label placeholder="Se genera automáticamente si se deja vacío" />
+
            <div class="row q-col-gutter-md">
               <div class="col-6">
-                 <q-input v-model.number="formNueva.subtotal" type="number" filled dark label="SUBTOTAL" class="premium-input-login" stack-label />
+                 <q-input v-model="formNueva.fecha_factura" type="date" filled dark label="FECHA DE EMISIÓN *" class="premium-input-login" stack-label />
               </div>
               <div class="col-6">
-                 <q-input v-model.number="formNueva.iva" type="number" filled dark label="IVA" class="premium-input-login" stack-label />
+                 <q-input v-model="formNueva.fecha_vencimiento_pago" type="date" filled dark label="FECHA DE VENCIMIENTO *" class="premium-input-login" stack-label />
               </div>
            </div>
-           <q-input v-model.number="formNueva.total" type="number" filled dark label="TOTAL (COP)" class="premium-input-login" stack-label />
+
+           <q-input v-model="formNueva.concepto" filled dark label="CONCEPTO *" class="premium-input-login" stack-label />
+
+           <div class="row q-col-gutter-md">
+              <div class="col-6">
+                 <q-input v-model.number="formNueva.subtotal" type="number" filled dark label="SUBTOTAL *" class="premium-input-login" stack-label />
+              </div>
+              <div class="col-6">
+                 <q-input v-model.number="formNueva.iva" type="number" filled dark label="IVA *" class="premium-input-login" stack-label />
+              </div>
+           </div>
+           <q-input v-model.number="formNueva.total" type="number" filled dark label="TOTAL (COP) *" class="premium-input-login" stack-label />
            <q-input v-model="formNueva.cufe" filled dark label="CUFE DIAN" class="premium-input-login" stack-label />
-           
+
            <q-btn type="submit" color="red-10" label="Emitir Factura" icon="send" class="full-width premium-btn q-py-lg shadow-24 text-weight-bolder" :loading="guardando" />
         </q-form>
       </q-card>
@@ -280,6 +302,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q = useQuasar()
 
@@ -297,7 +320,12 @@ const guardando         = ref(false)
 
 
 const formPago = ref({ valor: '', metodo: null, referencia: '', comprobante_url: '', fecha_pago: new Date().toISOString().slice(0,10) })
-const formNueva = ref({ numero_factura: '', fecha_factura: new Date().toISOString().slice(0,10), concepto: '', subtotal: 0, iva: 0, total: 0, cufe: '' })
+
+const hoy = new Date().toISOString().slice(0,10)
+const formNueva = ref({ matricula_id: null, numero_factura: '', fecha_factura: hoy, fecha_vencimiento_pago: hoy, concepto: '', subtotal: 0, iva: 0, total: 0, cufe: '' })
+
+const matriculasAll = ref([])
+const matriculasOps = ref([])
 
 const estadoFiltro = computed(() => ({ todas: null, pend: 'pendiente', venc: 'vencida', pagadas: 'pagada', cartera: 'vencida' }[tab.value]))
 
@@ -315,7 +343,7 @@ const facturasFiltradas = computed(() => {
 
 const columnas = [
   { name:'numero_factura', label:'REF. FISCAL',  field:'numero_factura', align:'left', sortable:true },
-  { name:'fecha_factura',  label:'EMISIÓN DIAN', field:'fecha_factura',  align:'left', sortable:true },
+  { name:'fecha_factura',  label:'EMISIÓN DIAN', field: row => formatFechaCO(row.fecha_factura),  align:'left', sortable:true },
   { name:'concepto',       label:'CONCEPTO OPERATIVO', field: row => row.concepto || 'Entrenamiento de Vuelo / PIA', align:'left' },
   { name:'total',          label:'VALOR BRUTO',    field:'total',          align:'right', sortable:true },
   { name:'estado',         label:'ESTATUS',        field:'estado',         align:'center' },
@@ -390,7 +418,27 @@ async function cargar() {
   } finally { cargando.value = false }
 }
 
-onMounted(cargar)
+async function cargarMatriculas() {
+  try {
+    const { data } = await api.get('/matriculas', { params: { per_page: 500 } })
+    const lista = data.data?.data || data.data || []
+    matriculasAll.value = lista.map(m => ({
+      value: m.id,
+      label: `MAT-${String(m.id).padStart(5,'0')} · ${m.estudiante?.persona?.nombres ?? ''} ${m.estudiante?.persona?.apellidos ?? ''} — ${m.programa?.codigo ?? ''}`.trim(),
+    }))
+    matriculasOps.value = [...matriculasAll.value]
+  } catch { /* silencioso */ }
+}
+
+function filtrarMatriculas(val, update) {
+  update(() => {
+    if (!val.trim()) { matriculasOps.value = matriculasAll.value; return }
+    const q = val.toLowerCase()
+    matriculasOps.value = matriculasAll.value.filter(m => m.label.toLowerCase().includes(q))
+  })
+}
+
+onMounted(() => { cargar(); cargarMatriculas() })
 </script>
 
 <style lang="scss" scoped>

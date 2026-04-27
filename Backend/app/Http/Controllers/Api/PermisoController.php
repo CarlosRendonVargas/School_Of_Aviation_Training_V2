@@ -89,6 +89,26 @@ class PermisoController extends Controller
     }
 
     /**
+     * POST /api/v1/permisos/reset
+     * Restablece todos los permisos de acceso a los valores predeterminados del sistema.
+     */
+    public function reset(): JsonResponse
+    {
+        $roles = Rol::all()->keyBy('nombre');
+
+        foreach (self::MODULOS as $modulo => $defaultRoles) {
+            foreach ($roles as $rolNombre => $rol) {
+                Permiso::updateOrCreate(
+                    ['rol_id' => $rol->id, 'modulo' => $modulo, 'accion' => 'acceso'],
+                    ['activo' => in_array($rolNombre, $defaultRoles)]
+                );
+            }
+        }
+
+        return response()->json(['ok' => true, 'mensaje' => 'Permisos restablecidos a valores predeterminados.']);
+    }
+
+    /**
      * PUT /api/v1/permisos/matrix
      * Actualiza en bloque los permisos de acceso a módulos por rol.
      */

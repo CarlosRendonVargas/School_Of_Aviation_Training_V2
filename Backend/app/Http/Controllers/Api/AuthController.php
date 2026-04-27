@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -89,11 +90,103 @@ class AuthController extends Controller
                 'rol'             => $usuario->rol?->nombre,
                 'foto_url'        => $usuario->persona?->foto_url,
                 'ultimo_acceso'   => $usuario->ultimo_acceso?->toDateTimeString(),
+                'persona'         => $usuario->persona ? [
+                    'nombres'       => $usuario->persona->nombres,
+                    'apellidos'     => $usuario->persona->apellidos,
+                    'num_documento' => $usuario->persona->num_documento,
+                    'telefono'      => $usuario->persona->telefono,
+                    'direccion'     => $usuario->persona->direccion,
+                    'ciudad'        => $usuario->persona->ciudad,
+                ] : null,
                 'permisos'        => $usuario->rol?->permisos()
                                         ->where('activo', true)
                                         ->get(['modulo', 'accion']),
             ],
         ]);
+    }
+
+    /**
+     * PUT /api/v1/auth/perfil
+     */
+    public function updatePerfil(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nombres'       => 'required|string|max:100',
+            'apellidos'     => 'required|string|max:100',
+            'telefono'      => 'nullable|string|max:20',
+            'num_documento' => 'nullable|string|max:20',
+            'direccion'     => 'nullable|string|max:255',
+            'ciudad'        => 'nullable|string|max:100',
+        ]);
+
+        $usuario = $request->user()->load('persona');
+
+        \App\Models\Persona::updateOrCreate(
+            ['usuario_id' => $usuario->id],
+            $data
+        );
+
+        $usuario->refresh()->load(['rol', 'persona']);
+
+        return response()->json([
+            'ok'   => true,
+            'data' => [
+                'id'              => $usuario->id,
+                'email'           => $usuario->email,
+                'nombre_completo' => $usuario->nombre_completo,
+                'rol'             => $usuario->rol?->nombre,
+                'foto_url'        => $usuario->persona?->foto_url,
+                'ultimo_acceso'   => $usuario->ultimo_acceso?->toDateTimeString(),
+                'persona'         => $usuario->persona ? [
+                    'nombres'       => $usuario->persona->nombres,
+                    'apellidos'     => $usuario->persona->apellidos,
+                    'num_documento' => $usuario->persona->num_documento,
+                    'telefono'      => $usuario->persona->telefono,
+                    'direccion'     => $usuario->persona->direccion,
+                    'ciudad'        => $usuario->persona->ciudad,
+                ] : null,
+                'permisos'        => $usuario->rol?->permisos()
+                                        ->where('activo', true)
+                                        ->get(['modulo', 'accion']),
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/v1/auth/foto
+     */
+    public function subirFoto(Request $request): JsonResponse
+    {
+        $request->validate([
+            'foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:3072',
+        ]);
+
+        $usuario = $request->user()->load('persona');
+
+        if (!$usuario->persona) {
+            $persona = \App\Models\Persona::create([
+                'usuario_id'      => $usuario->id,
+                'nombres'         => 'Sin',
+                'apellidos'       => 'Nombre',
+                'tipo_documento'  => 'CC',
+                'num_documento'   => 'USR-' . $usuario->id,
+                'fecha_nacimiento'=> '1990-01-01',
+            ]);
+            $usuario->setRelation('persona', $persona);
+        }
+
+        // Eliminar foto anterior si existe
+        if ($usuario->persona->foto_url) {
+            $oldRelPath = str_replace(Storage::disk('public')->url(''), '', $usuario->persona->foto_url);
+            Storage::disk('public')->delete($oldRelPath);
+        }
+
+        $path = $request->file('foto')->store('fotos', 'public');
+        $url  = Storage::disk('public')->url($path);
+
+        $usuario->persona->update(['foto_url' => $url]);
+
+        return response()->json(['ok' => true, 'foto_url' => $url]);
     }
 
     /**

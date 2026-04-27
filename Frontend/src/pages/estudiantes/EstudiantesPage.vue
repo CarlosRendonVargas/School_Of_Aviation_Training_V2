@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md animate-fade" style="padding-bottom:100px">
 
-    <!-- ══ Encabezado de Gestión de Cadetes ══ -->
+    <!-- ══ Encabezado de Gestión de Estudiantes ══ -->
     <div class="row items-center justify-between q-mb-xl rac-page-header">
       <div class="row items-center">
         <q-icon name="group" size="48px" color="red-9" class="q-mr-md glow-primary pulsate" />
@@ -141,7 +141,7 @@
         </div>
         <div class="rac-dialog-scroll rac-dialog-body">
 
-        <div class="text-subtitle1 text-grey-4 font-mono q-mb-xl">CADETE: {{ estudianteSeleccionado?.persona?.nombres }} {{ estudianteSeleccionado?.persona?.apellidos }}</div>
+        <div class="text-subtitle1 text-grey-4 font-mono q-mb-xl">ESTUDIANTE: {{ estudianteSeleccionado?.persona?.nombres }} {{ estudianteSeleccionado?.persona?.apellidos }}</div>
 
         <div v-for="cat in categoriasProgreso" :key="cat.key" class="q-mb-lg last-no-margin">
            <div class="row justify-between items-end q-mb-sm">
@@ -176,7 +176,7 @@
         <div class="rac-dialog-scroll rac-dialog-body">
 
         <q-form @submit.prevent="guardarNuevo" class="q-gutter-y-lg">
-          <div class="form-section-title">Datos del Cadete</div>
+          <div class="form-section-title">Datos del Estudiante</div>
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-6">
               <label class="campo-label required">Nombres</label>
@@ -230,7 +230,7 @@
               </div>
               <div class="col-12">
                 <label class="campo-label">Observaciones (Opcional)</label>
-                <q-input v-model="formNuevo.observaciones" type="textarea" rows="2" outlined dense dark placeholder="Anotaciones internas del cadete..." />
+                <q-input v-model="formNuevo.observaciones" type="textarea" rows="2" outlined dense dark placeholder="Anotaciones internas del estudiante..." />
               </div>
             </div>
           </div>
@@ -248,6 +248,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q        = useQuasar()
 const authStore = useAuthStore()
@@ -275,7 +276,7 @@ const puedeCrear = computed(() => ['admin', 'dir_ops'].includes(authStore.rol))
 const columnas = [
   { name: 'nombre', label: 'NOMBRE DEL CANDIDATO', field: 'id', align: 'left' },
   { name: 'programa', label: 'CURSO', field: 'programa_id', align: 'center' },
-  { name: 'ingreso', label: 'ADMISIÓN', field: 'fecha_ingreso', align: 'left' },
+  { name: 'ingreso', label: 'ADMISIÓN', field: row => formatFechaCO(row.fecha_ingreso), align: 'left' },
   { name: 'estado', label: 'STATUS', field: 'estado', align: 'center' },
   { name: 'medico', label: 'RAC 67', field: 'tiene_medico', align: 'center' },
   { name: 'acciones', label: 'ACCIONES', field: 'id', align: 'right' },
@@ -283,7 +284,7 @@ const columnas = [
 
 const stats = computed(() => [
   { label: 'Matrículas Totales', valor: paginacion.value.rowsNumber, color: 'white' },
-  { label: 'Cadetes Activos', valor: estudiantes.value.filter(e => e.estado === 'activo').length, color: '#10b981' },
+  { label: 'Estudiantes Activos', valor: estudiantes.value.filter(e => e.estado === 'activo').length, color: '#10b981' },
   { label: 'Alertas Médicas', valor: estudiantes.value.filter(e => !e.tiene_medico).length, color: '#A10B13' },
   { label: 'Graduados Élite', valor: estudiantes.value.filter(e => e.estado === 'graduado').length, color: '#60a5fa' },
 ])

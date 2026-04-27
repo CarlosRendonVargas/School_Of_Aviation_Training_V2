@@ -35,15 +35,17 @@
 
         <!-- 👤 User Profile Dropdown -->
         <q-btn flat round dense class="premium-avatar-btn">
-          <q-avatar size="34px" class="glow-avatar" :style="`background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})`">
-            <span class="text-white text-weight-bold" style="font-size:12px">{{ iniciales }}</span>
+          <q-avatar size="34px" class="glow-avatar" :style="!authStore.foto ? `background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})` : ''">
+            <img v-if="authStore.foto" :src="authStore.foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+            <span v-else class="text-white text-weight-bold" style="font-size:12px">{{ iniciales }}</span>
           </q-avatar>
-          
+
           <q-menu anchor="bottom right" self="top right" class="premium-glass-card q-mt-sm" style="min-width:240px">
             <div class="q-pa-lg text-white">
               <div class="row items-center q-mb-md">
-                 <q-avatar size="48px" class="q-mr-md" :style="`background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})`">
-                   <span class="text-h6 text-white">{{ iniciales }}</span>
+                 <q-avatar size="48px" class="q-mr-md" :style="!authStore.foto ? `background: linear-gradient(135deg, ${rolStyle.bg}, ${rolStyle.accent})` : ''">
+                   <img v-if="authStore.foto" :src="authStore.foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+                   <span v-else class="text-h6 text-white">{{ iniciales }}</span>
                  </q-avatar>
                  <div>
                    <div class="text-weight-bold text-subtitle1">{{ authStore.nombre }}</div>
@@ -235,7 +237,7 @@ const menuCompleto = computed(() => {
     { separador: true, sectionLabel: 'Formación Académica' },
     { to: '/academico',     label: 'Gestión Académica',icono: 'auto_stories',      roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'academico',               sublabel: 'Materias, notas y programas' },
     { to: '/aula-virtual',  label: 'Aula Virtual',    icono: 'cast_for_education', roles: ['estudiante'],                                      modulo: 'aula-virtual',            sublabel: 'Mis cursos y exámenes' },
-    { to: '/mi-progreso',   label: 'Mi Progreso',     icono: 'trending_up',        roles: ['estudiante'],                                      modulo: 'mi-progreso',             sublabel: 'Horas y avance de carrera' },
+    { to: '/mi-progreso',   label: 'Mi Progreso',     icono: 'trending_up',        roles: ['estudiante', 'admin'],                             modulo: 'mi-progreso',             sublabel: 'Horas y avance de carrera' },
     { to: '/estudiantes',   label: 'Estudiantes',     icono: 'groups',             roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'estudiantes',             sublabel: 'Expedientes y progreso' },
     { to: '/certificados',  label: 'Certificados',    icono: 'workspace_premium',  roles: ['all'],                                             modulo: 'certificados',            sublabel: 'Constancias RAC 141.77' },
     { to: '/endorsements',  label: 'Endorsements',    icono: 'verified',           roles: ['admin', 'dir_ops', 'instructor', 'auditor_uaeac'], modulo: 'endorsements',            sublabel: 'Primer vuelo solo' },
@@ -278,8 +280,8 @@ const menuCompleto = computed(() => {
 const menuFiltrado = computed(() =>
   menuCompleto.value.filter(item => {
     if (item.separador) return true
-    const roleOk = (item.roles || []).includes('all') || (item.roles || []).includes(authStore.rol)
-    if (!roleOk) return false
+    const rol = authStore.rol
+    if (item.roles && !item.roles.includes('all') && !item.roles.includes(rol)) return false
     return !item.modulo || authStore.tieneModulo(item.modulo)
   })
 )

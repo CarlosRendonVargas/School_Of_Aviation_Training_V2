@@ -72,14 +72,10 @@
                     {{ prog.descripcion || 'Manual de instrucción de vuelo y tierra aprobado según RAC 141.' }}
                   </div>
                   
-                  <div class="row q-col-gutter-sm bg-black-20 rounded-12 q-pa-sm shadow-inner border-red-low">
-                    <div class="col-6 text-left">
-                      <div class="text-caption text-grey-7 font-mono uppercase tracking-widest" style="font-size:8px">VUELO</div>
-                      <div class="text-subtitle1 text-red-9 text-weight-bolder font-mono">{{ prog.horas_vuelo_min }}<span class="text-caption text-grey-6">H</span></div>
-                    </div>
-                    <div class="col-6 text-right">
-                      <div class="text-caption text-grey-7 font-mono uppercase tracking-widest" style="font-size:8px">TIERRA</div>
-                      <div class="text-subtitle1 text-white text-weight-bolder font-mono">{{ prog.horas_tierra_min }}<span class="text-caption text-grey-6">H</span></div>
+                  <div class="row bg-black-20 rounded-12 q-pa-sm shadow-inner border-red-low items-center justify-between">
+                    <div class="text-caption text-grey-7 font-mono uppercase tracking-widest" style="font-size:8px">HORAS ACADÉMICAS</div>
+                    <div class="text-subtitle1 text-amber-4 text-weight-bolder font-mono">
+                      {{ sumaHorasProg(prog).toFixed(1) }}<span class="text-caption text-grey-6">H</span>
                     </div>
                   </div>
                 </q-card-section>
@@ -113,7 +109,7 @@
                 @keyup.enter="cargarDatos">
                 <template #prepend><q-icon name="manage_search" color="red-9" /></template>
               </q-input>
-              <q-btn color="red-10" icon="person_add" label="Matricular Cadete" @click="abrirNuevoEstudiante" class="premium-btn q-px-md" />
+              <q-btn color="red-10" icon="person_add" label="Matricular Estudiante" @click="abrirNuevoEstudiante" class="premium-btn q-px-md" />
             </div>
           </div>
 
@@ -512,7 +508,27 @@
               <q-input v-model="progForm.codigo" label="CÓDIGO UAEAC" filled dark class="premium-input-login" stack-label />
             </div>
             <div class="col-12 col-md-4">
-              <q-select v-model="progForm.tipo" :options="['PPL', 'CPL', 'ATPL', 'HABILITACION']" label="CATEGORÍA RAC" filled dark class="premium-input-login" stack-label />
+              <q-select
+                v-model="progForm.tipo"
+                :options="tiposFiltrados"
+                label="CATEGORÍA RAC"
+                filled dark class="premium-input-login" stack-label
+                use-input
+                hide-selected
+                fill-input
+                input-debounce="0"
+                new-value-mode="add-unique"
+                @filter="filtrarTipos"
+                @new-value="(val, done) => done(val.toUpperCase().trim())"
+              >
+                <template #no-option>
+                  <q-item>
+                    <q-item-section class="text-grey-6 font-mono" style="font-size:12px">
+                      Escribe para crear una nueva categoría
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
             </div>
             <div class="col-12 col-md-4">
               <q-input v-model="progForm.rac_referencia" label="RAC REFERENCIA" placeholder="61.109" filled dark class="premium-input-login" stack-label />
@@ -522,21 +538,21 @@
             </div>
 
             <div class="col-12 text-grey-6 font-mono text-uppercase q-mt-md" style="font-size:10px; letter-spacing: 2px;">REQUISITOS MÍNIMOS DE EXPERIENCIA (HORAS)</div>
-            
-            <div class="col-6 col-md-3">
+
+            <div class="col-6 col-md-4">
               <q-input v-model.number="progForm.horas_vuelo_min" type="number" label="VUELO TOTAL" filled dark class="premium-input-login" stack-label />
             </div>
-            <div class="col-6 col-md-3">
-              <q-input v-model.number="progForm.horas_tierra_min" type="number" label="Tierra/Teoría" filled dark class="premium-input-login" stack-label />
+            <div class="col-6 col-md-4">
+              <q-input v-model.number="progForm.horas_tierra_min" type="number" label="TIERRA / TEORÍA" filled dark class="premium-input-login" stack-label />
             </div>
-            <div class="col-6 col-md-3">
-              <q-input v-model.number="progForm.horas_dual_min" type="number" label="INSTR. DUAL" filled dark class="premium-input-login" stack-label />
+            <div class="col-6 col-md-4">
+              <q-input v-model.number="progForm.horas_dual_min" type="number" label="INSTRUCCIÓN DUAL" filled dark class="premium-input-login" stack-label />
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-4">
               <q-input v-model.number="progForm.horas_solo_min" type="number" label="VUELO SOLO" filled dark class="premium-input-login" stack-label />
             </div>
             <div class="col-6 col-md-4">
-              <q-input v-model.number="progForm.horas_ifr_min" type="number" label="HORAS IFR/SIM" filled dark class="premium-input-login" stack-label />
+              <q-input v-model.number="progForm.horas_ifr_min" type="number" label="HORAS IFR / SIM" filled dark class="premium-input-login" stack-label />
             </div>
             <div class="col-6 col-md-4">
               <q-input v-model.number="progForm.horas_noche_min" type="number" label="HORAS NOCHE" filled dark class="premium-input-login" stack-label />
@@ -554,191 +570,190 @@
 
     <!-- ════ DIÁLOGO: SYLLABUS DEL PROGRAMA ════ -->
     <q-dialog v-model="dialogSyllabus" persistent :maximized="$q.screen.lt.md" transition-show="slide-up" transition-hide="slide-down" backdrop-filter="blur(25px)">
-      <q-card class="bg-dark-page text-white overflow-hidden flex column" 
-        :class="$q.screen.gt.sm ? 'premium-glass-card shadow-24 border-red-top rounded-20' : ''" 
-        :style="$q.screen.gt.sm ? 'width:min(1200px, 95vw); height: 90vh;' : 'height: 100vh;'">
+      <q-card class="syllabus-dialog text-white overflow-hidden flex column"
+        :class="$q.screen.gt.sm ? 'shadow-24 rounded-20' : ''"
+        :style="$q.screen.gt.sm ? 'width:min(1100px, 95vw); height: 90vh;' : 'height: 100vh;'">
 
-        
-        <!-- Navbar Superior (Syllabus) -->
-        <q-toolbar class="border-bottom-border bg-black-20 q-py-md no-wrap" :class="$q.screen.lt.md ? 'q-px-md' : 'q-px-xl'">
-            <q-btn flat round dense icon="arrow_back" @click="dialogSyllabus = false" v-if="$q.screen.lt.md" class="q-mr-sm" />
-            <div class="column col overflow-hidden">
-               <div class="text-caption text-grey-6 font-mono uppercase tracking-widest hidden-xs" style="font-size:7px; letter-spacing: 1px;">Estructura Curricular Autorizada · PIA</div>
-               <div class="text-white font-head text-weight-bolder uppercase ellipsis" :style="$q.screen.lt.md ? 'font-size:16px' : 'font-size:24px'">{{ progTemp?.nombre }}</div>
-               <div class="row items-center q-gutter-x-sm">
-                  <q-badge outline color="red-9" :label="progTemp?.codigo" class="font-mono text-weight-bolder" style="font-size:9px" />
-               </div>
+        <!-- ══ HEADER ══ -->
+        <div class="syllabus-header q-px-lg q-px-md-xl q-py-lg no-wrap row items-center">
+          <q-btn flat round dense icon="arrow_back" @click="dialogSyllabus = false" v-if="$q.screen.lt.md" class="q-mr-sm text-grey-4" />
+
+          <!-- Ícono del programa -->
+          <div class="syllabus-header-icon q-mr-lg gt-sm">
+            <q-icon name="flight" size="28px" color="red-9" />
+          </div>
+
+          <div class="col" style="min-width:0">
+            <div class="font-mono text-grey-6 q-mb-xs" style="font-size:8px; letter-spacing:2px; text-transform:uppercase">
+              Estructura Curricular Autorizada · PIA
             </div>
-            <div class="row items-center q-gutter-x-sm shrink-0">
-               <q-btn color="red-9" icon="add" :label="$q.screen.gt.sm ? 'AGREGAR FASE' : ''" @click="abrirNuevaEtapa" class="premium-btn shadow-24 q-px-md">
-                   <q-tooltip v-if="$q.screen.lt.md">Agregar Fase al Syllabus</q-tooltip>
-               </q-btn>
-               <q-btn flat round dense icon="close" v-close-popup color="grey-5" class="bg-black-20 hover-red" v-if="$q.screen.gt.sm" />
+            <div class="font-head text-weight-bolder text-white"
+                 style="font-size:clamp(15px, 3vw, 22px); line-height:1.2; word-break:break-word">
+              {{ progTemp?.nombre }}
             </div>
-        </q-toolbar>
+            <div class="row items-center q-gutter-x-sm q-mt-xs">
+              <q-badge color="red-10" :label="progTemp?.codigo" class="font-mono text-weight-bolder" style="font-size:9px; padding: 3px 8px; border-radius:4px" />
+              <span class="font-mono text-grey-7" style="font-size:9px">· {{ progTemp?.etapas?.length || 0 }} FASES</span>
+            </div>
+          </div>
+
+          <div class="row items-center q-gutter-x-sm q-ml-md">
+            <q-btn unelevated color="red-9" icon="add" :label="$q.screen.gt.sm ? 'AGREGAR FASE' : ''" @click="abrirNuevaEtapa"
+              class="premium-btn" style="border-radius:10px; font-size:12px; font-weight:700; letter-spacing:0.5px">
+              <q-tooltip v-if="$q.screen.lt.md">Agregar Fase al Syllabus</q-tooltip>
+            </q-btn>
+            <q-btn flat round dense icon="close" v-close-popup color="grey-6" style="background:rgba(255,255,255,0.05); border-radius:10px" v-if="$q.screen.gt.sm" />
+          </div>
+        </div>
 
         <q-card-section class="q-pa-none col overflow-hidden">
           <q-scroll-area class="full-height">
-            <div class="q-pa-md q-pa-md-xl q-gutter-y-xl">
+            <div :class="$q.screen.lt.md ? 'q-pa-md' : 'q-pa-xl'" style="padding-top: 24px !important">
 
-          <!-- KPIs de horas (Responsive & Consistent) -->
-          <div class="row q-col-gutter-sm q-col-gutter-md-lg">
-            <div class="col-12 col-sm-4">
-              <q-card class="premium-glass-card q-pa-md text-center border-red-low shadow-24 rounded-16 hover-card bg-kpi-vuelo flex items-center justify-between no-wrap" v-if="$q.screen.lt.sm">
-                <div class="text-left">
-                  <div class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px">VUELO (MIN)</div>
-                  <div class="text-h5 text-weight-bolder text-red-9">{{ Number(progTemp?.horas_vuelo_min || 0).toFixed(1) }}</div>
-                </div>
-                <q-icon name="flight_takeoff" color="red-9" size="24px" class="opacity-30" />
-              </q-card>
-              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-vuelo" v-else>
-                <q-icon name="flight_takeoff" color="red-9" size="20px" class="q-mb-xs opacity-50" />
-                <div class="text-h4 text-weight-bolder text-red-9 line-height-1">{{ Number(progTemp?.horas_vuelo_min || 0).toFixed(1) }}</div>
-                <q-separator dark class="q-my-sm opacity-10" />
-                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">VUELO (MIN)</div>
-              </q-card>
-            </div>
-            <div class="col-6 col-sm-4">
-              <q-card class="premium-glass-card q-pa-md text-center border-red-low shadow-24 rounded-16 hover-card bg-kpi-tierra flex items-center justify-between no-wrap" v-if="$q.screen.lt.sm">
-                <div class="text-left">
-                  <div class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px">TIERRA (MIN)</div>
-                  <div class="text-h5 text-weight-bolder text-white">{{ Number(progTemp?.horas_tierra_min || 0).toFixed(1) }}</div>
-                </div>
-                <q-icon name="school" color="white" size="24px" class="opacity-30" />
-              </q-card>
-              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-tierra" v-else>
-                <q-icon name="school" color="white" size="20px" class="q-mb-xs opacity-50" />
-                <div class="text-h4 text-weight-bolder text-white line-height-1">{{ Number(progTemp?.horas_tierra_min || 0).toFixed(1) }}</div>
-                <q-separator dark class="q-my-sm opacity-10" />
-                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">TIERRA (MIN)</div>
-              </q-card>
-            </div>
-            <div class="col-6 col-sm-4">
-              <q-card class="premium-glass-card q-pa-md text-center border-red-low shadow-24 rounded-16 hover-card bg-kpi-sim flex items-center justify-between no-wrap" v-if="$q.screen.lt.sm">
-                <div class="text-left">
-                  <div class="text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px">SIM (MAX)</div>
-                  <div class="text-h5 text-weight-bolder text-grey-4">{{ Number(progTemp?.horas_sim_max || 0).toFixed(1) }}</div>
-                </div>
-                <q-icon name="videogame_asset" color="grey-4" size="24px" class="opacity-30" />
-              </q-card>
-              <q-card class="premium-glass-card q-pa-lg text-center border-red-low shadow-24 rounded-20 hover-card bg-kpi-sim" v-else>
-                <q-icon name="videogame_asset" color="grey-4" size="20px" class="q-mb-xs opacity-50" />
-                <div class="text-h4 text-weight-bolder text-grey-4 line-height-1">{{ Number(progTemp?.horas_sim_max || 0).toFixed(1) }}</div>
-                <q-separator dark class="q-my-sm opacity-10" />
-                <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:8px; letter-spacing: 1px;">SIM (MAX)</div>
-              </q-card>
-            </div>
-          </div>
-
-
-          <!-- Módulos de instrucción -->
-          <div class="q-mt-xl">
-            <div class="text-caption text-grey-6 font-mono uppercase tracking-widest q-mb-lg border-bottom-border pb-md" :style="$q.screen.lt.md ? 'font-size:8px; letter-spacing: 1px;' : 'font-size:10px; letter-spacing: 2px;'">
-              Módulos de Instrucción Registrados
-            </div>
-            
-            <q-list dark class="bg-transparent no-border q-gutter-y-lg">
-              <template v-for="(et, n) in progTemp?.etapas" :key="et.id">
-                <div class="q-mb-xl last-no-margin">
-
-                  <!-- Cabecera de Etapa (Ultra-Responsive) -->
-                  <div class="bg-black-20 rounded-20 border-red-low shadow-10 q-pa-lg shadow-inner overflow-hidden" 
-                       :class="$q.screen.lt.sm ? 'column items-center text-center' : 'row items-center justify-between'">
-
-
-                    
-                    <!-- Lado Izquierdo / Superior -->
-                    <div class="row items-center col-grow" :class="$q.screen.lt.sm ? 'column' : 'q-gutter-x-lg'">
-                       <q-avatar color="red-low" text-color="red-9" size="48px" class="shadow-24 border-red-low font-head text-weight-bolder gt-xs">{{ et.orden }}</q-avatar>
-                       <div class="column" :class="$q.screen.lt.sm ? 'q-mb-md' : ''">
-                          <div class="text-white font-head text-weight-bolder uppercase tracking-widest" :class="$q.screen.lt.sm ? 'text-h6' : 'text-h5'">{{ et.nombre }}</div>
-                          <div class="text-grey-6 font-mono line-height-tight q-mt-xs" style="font-size:10px" v-if="et.descripcion">{{ et.descripcion }}</div>
-                       </div>
-                    </div>
-
-
-
-                    <!-- Lado Derecho / Inferior (Métricas y Acciones) -->
-                    <div :class="$q.screen.lt.sm ? 'full-width column items-center q-mt-md' : 'row items-center q-gutter-x-xl'">
-                       <!-- Métricas de Horas -->
-                       <div class="row q-gutter-x-lg" :class="$q.screen.lt.sm ? 'q-mb-lg' : ''">
-                          <div class="text-center">
-                             <div class="text-red-9 font-mono text-weight-bolder text-h6 line-height-1">{{ Number(et.horas_vuelo).toFixed(1) || '0.0' }}H</div>
-                             <div class="text-grey-6 font-mono uppercase tracking-tighter" style="font-size:8px">VUELO</div>
-                          </div>
-                          <div class="text-center border-column-left pl-md">
-                             <div class="text-white font-mono text-weight-bolder text-h6 line-height-1">{{ Number(et.horas_tierra).toFixed(1) || '0.0' }}H</div>
-                             <div class="text-grey-6 font-mono uppercase tracking-tighter" style="font-size:8px">TIERRA</div>
-                          </div>
-                       </div>
-
-                       
-                       <!-- Acciones -->
-                       <div class="row no-wrap q-gutter-x-sm">
-                                         <q-btn unelevated round icon="delete" color="red-10" size="md" @click="eliminarEtapa(et.id)" />
-                        </div>
-                     </div>
+              <!-- ══ KPI BAND ══ -->
+              <div class="kpi-band row q-col-gutter-md q-mb-xl">
+                <!-- ACADÉMICAS -->
+                <div class="col-4 col-sm-6">
+                  <div class="kpi-card kpi-vuelo">
+                    <div class="kpi-bg-icon gt-xs"><q-icon name="menu_book" size="64px" /></div>
+                    <div class="kpi-label font-mono">HORAS ACAD.</div>
+                    <div class="kpi-value text-amber-4">{{ sumaHorasProg(progTemp).toFixed(1) }}</div>
+                    <div class="kpi-sub font-mono gt-xs">SUMA DE ASIGNATURAS</div>
                   </div>
-
-                  <!-- Grilla de Materias (High Accessibility & Readability) -->
-                   <div v-if="et.materias?.length" :class="$q.screen.lt.md ? 'q-px-md q-mt-md' : 'q-px-xl q-mt-lg'">
-                       <div class="row q-col-gutter-y-md">
-                         <div v-for="mat in et.materias" :key="mat.id" class="col-12">
-                           <q-card class="bg-black-30 border-red-low hover-card shadow-12 overflow-hidden" style="border-radius:14px; min-height: 80px;">
-                               <q-item class="q-pa-md items-center">
-                                 <!-- Info de Materia -->
-                                 <q-item-section>
-                                    <div class="text-white font-head text-weight-bolder uppercase tracking-tight" 
-                                         :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'" 
-                                         style="line-height:1.2;">
-                                         {{ mat.nombre }}
-                                    </div>
-                                    <div class="text-caption text-grey-6 font-mono tracking-tighter q-mt-xs" style="font-size:10px">
-                                       <span class="text-red-9 font-weight-bolder">{{ mat.codigo }}</span> · {{ mat.horas }} HORAS CARGA ACADÉMICA
-                                    </div>
-                                 </q-item-section>
-
-                                 <!-- Acciones -->
-                                 <q-item-section side>
-                                   <div class="row no-wrap q-gutter-x-sm bg-black-20 rounded-12 q-pa-xs border-red-low shadow-inner">
-                                      <q-btn flat round icon="video_settings" color="red-9" size="md" @click="gestionarLms(mat)">
-                                         <q-tooltip class="bg-dark shadow-24">AULA VIRTUAL (LMS)</q-tooltip>
-                                      </q-btn>
-                                      <q-btn flat round icon="edit" color="white" size="md" @click="editarMateria(mat, et.id)" />
-                                      <q-btn flat round icon="delete" color="red-10" size="md" @click="eliminarMateria(mat.id)" />
-                                   </div>
-                                 </q-item-section>
-                               </q-item>
-                           </q-card>
-                       </div>
-                    </div>
-                  </div>
-
-
-                  <!-- Botón Añadir Materia (Refined Solid Style) -->
-                  <div class="q-mt-xl row justify-center">
-                     <q-btn color="grey-10" icon="add_circle" label="Añadir Asignatura" size="md" @click="abrirNuevaMateria(et.id)" no-caps 
-                        class="font-mono text-weight-bolder rounded-12 q-px-xl shadow-24 border-red-low" />
-                  </div>
-
-
-
-
                 </div>
-              </template>
-              
-              <div v-if="!progTemp?.etapas?.length" class="q-pa-xl text-center text-grey-7 font-mono uppercase border-red-low rounded-20 bg-black-20">
-                   Sin fases registradas en el syllabus.
+                <!-- FASES -->
+                <div class="col-4 col-sm-3">
+                  <div class="kpi-card kpi-tierra">
+                    <div class="kpi-bg-icon gt-xs"><q-icon name="layers" size="64px" /></div>
+                    <div class="kpi-label font-mono">FASES</div>
+                    <div class="kpi-value text-blue-3">{{ progTemp?.etapas?.length || 0 }}</div>
+                    <div class="kpi-sub font-mono gt-xs">MÓDULOS REGISTRADOS</div>
+                  </div>
+                </div>
+                <!-- SIM -->
+                <div class="col-4 col-sm-3">
+                  <div class="kpi-card kpi-sim">
+                    <div class="kpi-bg-icon gt-xs"><q-icon name="videogame_asset" size="64px" /></div>
+                    <div class="kpi-label font-mono">SIM.</div>
+                    <div class="kpi-value text-grey-3">{{ Number(progTemp?.horas_sim_max || 0).toFixed(1) }}</div>
+                    <div class="kpi-sub font-mono gt-xs">MÁX. PERMITIDO</div>
+                  </div>
+                </div>
               </div>
-            </q-list>
+
+              <!-- ══ SECCIÓN FASES ══ -->
+              <div class="row items-center q-mb-lg" style="gap:12px">
+                <div class="syllabus-section-line"></div>
+                <span class="font-mono text-grey-5 text-uppercase" style="font-size:9px; letter-spacing:3px; white-space:nowrap">
+                  Módulos de Instrucción Registrados
+                </span>
+                <div class="syllabus-section-line" style="flex:1"></div>
+                <q-badge outline color="grey-7" :label="`${progTemp?.etapas?.length || 0} fases`" class="font-mono" style="font-size:9px" />
+              </div>
+
+              <!-- LISTA DE FASES -->
+              <div class="q-gutter-y-lg">
+                <template v-for="(et, n) in progTemp?.etapas" :key="et.id">
+                  <div class="fase-block">
+
+                    <!-- Cabecera de Fase -->
+                    <div class="fase-header">
+
+                      <!-- Fila 1: Número + Título + Botones -->
+                      <div class="row items-start no-wrap q-gutter-x-md">
+                        <!-- Número -->
+                        <div class="fase-numero flex-shrink-0">
+                          <span class="font-mono">{{ String(et.orden || n + 1).padStart(2, '0') }}</span>
+                        </div>
+
+                        <!-- Título + descripción -->
+                        <div class="col">
+                          <div class="font-head text-weight-bolder text-white uppercase"
+                               style="font-size:clamp(14px, 2.5vw, 18px); line-height:1.3; word-break:break-word">
+                            {{ et.nombre }}
+                          </div>
+                          <div class="text-grey-6 font-mono q-mt-xs" style="font-size:10px; line-height:1.5" v-if="et.descripcion">
+                            {{ et.descripcion }}
+                          </div>
+                          <!-- Métricas inline en móvil -->
+                          <div class="row items-center q-gutter-x-sm q-mt-sm">
+                            <div class="fase-metric">
+                              <div class="fase-metric-val text-amber-4">{{ sumaHorasEtapa(et).toFixed(1) }}h</div>
+                              <div class="fase-metric-lbl font-mono">HRS ACAD.</div>
+                            </div>
+                            <div class="fase-metric-sep"></div>
+                            <div class="fase-metric">
+                              <div class="fase-metric-val text-grey-5">{{ et.materias?.length || 0 }}</div>
+                              <div class="fase-metric-lbl font-mono">ASIGNAT.</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="row items-center q-gutter-x-xs flex-shrink-0">
+                          <q-btn flat round icon="edit" color="grey-4" size="sm"
+                            style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px"
+                            @click="editarEtapa(et)">
+                            <q-tooltip>Editar Fase</q-tooltip>
+                          </q-btn>
+                          <q-btn flat round icon="delete" color="red-9" size="sm"
+                            style="background:rgba(255,50,50,0.08); border:1px solid rgba(255,50,50,0.2); border-radius:10px"
+                            @click="eliminarEtapa(et.id)">
+                            <q-tooltip>Eliminar Fase</q-tooltip>
+                          </q-btn>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Materias -->
+                    <div v-if="et.materias?.length" class="materias-list q-mt-md" :class="$q.screen.lt.md ? '' : 'q-pl-lg'">
+                      <div v-for="mat in et.materias" :key="mat.id" class="materia-row row items-center">
+                        <div class="materia-dot flex-shrink-0"></div>
+                        <div class="col q-px-md" style="min-width:0">
+                          <div class="text-white text-weight-bold" style="font-size:clamp(12px, 2.5vw, 14px); word-break:break-word; line-height:1.3">
+                            {{ mat.nombre }}
+                          </div>
+                          <div class="row items-center q-gutter-x-sm q-mt-xs">
+                            <q-badge color="red-10" :label="mat.codigo" class="font-mono" style="font-size:8px; padding:2px 6px" />
+                            <span class="font-mono text-grey-6" style="font-size:9px">{{ mat.horas }} HRS ACADÉMICAS</span>
+                          </div>
+                        </div>
+                        <div class="materia-actions row no-wrap q-gutter-x-xs">
+                          <q-btn flat round icon="video_settings" color="red-9" size="sm" @click="gestionarLms(mat)">
+                            <q-tooltip>Aula Virtual (LMS)</q-tooltip>
+                          </q-btn>
+                          <q-btn flat round icon="edit" color="grey-4" size="sm" @click="editarMateria(mat, et.id)">
+                            <q-tooltip>Editar Materia</q-tooltip>
+                          </q-btn>
+                          <q-btn flat round icon="delete" color="red-10" size="sm" @click="eliminarMateria(mat.id)">
+                            <q-tooltip>Eliminar Materia</q-tooltip>
+                          </q-btn>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Añadir Materia -->
+                    <div class="q-mt-md" :class="$q.screen.lt.md ? '' : 'q-pl-lg'">
+                      <q-btn flat no-caps icon="add" label="Añadir asignatura" size="sm" color="grey-6"
+                        class="font-mono add-materia-btn"
+                        @click="abrirNuevaMateria(et.id)" />
+                    </div>
+
+                  </div>
+                </template>
+
+                <div v-if="!progTemp?.etapas?.length"
+                  class="text-center text-grey-7 font-mono q-pa-xl"
+                  style="border:1px dashed rgba(255,255,255,0.08); border-radius:16px; letter-spacing:2px; font-size:11px; text-transform:uppercase">
+                  Sin fases registradas en el syllabus.
+                </div>
+              </div>
+
+              <div style="height: 40px" />
             </div>
-          </div>
-        </q-scroll-area>
-
-
+          </q-scroll-area>
         </q-card-section>
       </q-card>
-
     </q-dialog>
 
     <q-dialog v-model="dialogEtapa" persistent backdrop-filter="blur(15px)">
@@ -793,187 +808,383 @@
 
     <!-- ════ DIÁLOGO: GESTIÓN LMS (AULA VIRTUAL ADMIN) ════ -->
     <q-dialog v-model="dialogLms" persistent maximized transition-show="slide-up" transition-hide="slide-down">
-      <q-card class="bg-dark-page text-white overflow-hidden">
-         <!-- Navbar del LMS -->
-         <!-- Navbar del LMS Responsivo -->
-         <q-toolbar class="border-bottom-border bg-black-20 no-wrap" :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-lg'">
-            <q-btn flat round dense icon="arrow_back" @click="dialogLms = false" class="q-mr-sm" />
-            <q-toolbar-title class="font-head text-weight-bolder uppercase tracking-widest overflow-hidden" :style="$q.screen.lt.md ? 'font-size:11px' : ''">
-               <span v-if="$q.screen.gt.sm">Gestión de Aula Virtual: </span>
-               <span class="text-red-9">{{ matActiva?.nombre }}</span>
-            </q-toolbar-title>
-            <q-btn color="red-9" icon="save" :label="$q.screen.gt.sm ? 'Sincronizar LMS' : ''" @click="dialogLms = false" class="premium-btn q-px-md" />
-         </q-toolbar>
+      <q-card class="lms-dialog text-white overflow-hidden flex column">
 
-         <!-- Tabs en segunda fila para Móvil -->
-         <div class="bg-black-20 border-bottom-border">
-            <q-tabs v-model="tabLms" dense active-color="red-9" indicator-color="red-9" 
-               no-caps outside-arrows mobile-arrows
-               class="text-grey-5">
-               <q-tab name="lecciones" :label="$q.screen.gt.sm ? 'Lecciones y Contenido' : 'Lecciones'" icon="smart_display" />
-               <q-tab name="preguntas" :label="$q.screen.gt.sm ? 'Banco de Preguntas' : 'Banco'" icon="quiz" />
-               <q-tab name="config"   :label="$q.screen.gt.sm ? 'Configuración' : 'Config'" icon="settings" />
-            </q-tabs>
-         </div>
+        <!-- ══ HEADER LMS ══ -->
+        <div class="lms-header no-wrap row items-center q-px-lg q-px-md-xl" style="min-height:64px; flex-shrink:0">
+          <q-btn flat round dense icon="arrow_back" @click="dialogLms = false" color="grey-5" class="q-mr-md lms-back-btn" />
+          <div class="col overflow-hidden">
+            <div class="font-mono text-grey-6" style="font-size:8px; letter-spacing:2px; text-transform:uppercase; line-height:1">
+              Gestión de Aula Virtual
+            </div>
+            <div class="font-head text-weight-bolder ellipsis" style="font-size:18px; line-height:1.3">
+              <span class="text-grey-4">Módulo: </span>
+              <span class="text-red-4">{{ matActiva?.nombre }}</span>
+            </div>
+          </div>
+          <q-btn unelevated color="red-9" icon="save" :label="$q.screen.gt.sm ? 'Sincronizar LMS' : ''"
+            @click="dialogLms = false" class="premium-btn q-ml-md" style="border-radius:10px">
+            <q-tooltip v-if="$q.screen.lt.md">Sincronizar LMS</q-tooltip>
+          </q-btn>
+        </div>
 
-          <q-scroll-area :style="`height: calc(100vh - ${$q.screen.lt.md ? '100px' : '80px'})`">
-            <q-tab-panels v-model="tabLms" animated class="bg-transparent">
-               
-               <!-- PANEL: LECCIONES -->
-               <q-tab-panel name="lecciones" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
-                  <div class="row justify-between items-center q-mb-xl flex-wrap q-gutter-y-md">
-                     <div>
-                        <div class="text-white font-head text-weight-bolder uppercase tracking-tighter" :class="$q.screen.lt.md ? 'text-h6' : 'text-h5'">Contenidos de Video</div>
-                        <div class="text-caption text-grey-6 font-mono uppercase" style="font-size:9px">Estructura teórica del módulo</div>
-                     </div>
-                     <q-btn color="red-9" icon="add" :label="$q.screen.gt.xs ? 'Añadir Nueva Lección' : 'Añadir'" @click="abrirNuevaLeccion" class="premium-btn q-px-md" />
+        <!-- ══ TABS ══ -->
+        <div class="lms-tabs-bar">
+          <q-tabs v-model="tabLms" dense active-color="red-4" indicator-color="red-9"
+            no-caps outside-arrows mobile-arrows align="left"
+            :class="$q.screen.lt.md ? 'q-px-md' : 'q-px-xl'"
+            style="min-height:48px">
+            <q-tab name="lecciones" icon="smart_display"
+              :label="$q.screen.gt.xs ? 'Lecciones y Contenido' : 'Lecciones'" />
+            <q-tab name="preguntas" icon="quiz"
+              :label="$q.screen.gt.xs ? 'Banco de Preguntas' : 'Banco'">
+              <q-badge v-if="bancoPreguntas?.length" floating color="red-9" :label="bancoPreguntas.length" style="font-size:8px" />
+            </q-tab>
+            <q-tab name="config" icon="settings"
+              :label="$q.screen.gt.xs ? 'Configuración' : 'Config'" />
+          </q-tabs>
+        </div>
+
+        <!-- ══ CONTENIDO ══ -->
+        <q-scroll-area class="col" style="flex:1">
+          <q-tab-panels v-model="tabLms" animated class="bg-transparent">
+
+            <!-- ─── PANEL LECCIONES ─── -->
+            <q-tab-panel name="lecciones" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+
+              <!-- Cabecera de sección -->
+              <div class="row items-center justify-between q-mb-xl">
+                <div class="row items-center" style="gap:12px">
+                  <div class="lms-section-icon">
+                    <q-icon name="video_library" size="22px" color="red-4" />
                   </div>
-
-                  <div v-if="!lecciones?.length" class="text-center q-pa-xl border-red-low rounded-20 bg-black-20">
-                     <q-icon name="video_library" size="64px" color="grey-8" class="q-mb-md" />
-                     <div class="text-h6 text-grey-6 font-mono uppercase">Sin lecciones cargadas</div>
-                  </div>
-
-                  <div class="row q-col-gutter-md">
-                    <div v-for="lec in lecciones" :key="lec.id" class="col-12 col-md-6">
-                      <q-card class="bg-black-20 border-red-low shadow-10 overflow-hidden hover-card" style="border-radius:16px">
-                        <q-item class="q-pa-md items-center">
-                          <q-item-section avatar v-if="$q.screen.gt.xs">
-                             <div class="kpi-icon-premium shadow-24 bg-red-low flex flex-center" style="width: 48px; height: 48px; border-radius: 12px;">
-                                <q-icon name="play_circle" color="red-9" size="24px" class="glow-primary" />
-                             </div>
-                          </q-item-section>
-                          <q-item-section>
-                             <div class="text-white font-head text-weight-bolder uppercase tracking-tighter" :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'" style="line-height: 1.2;">{{ lec.titulo }}</div>
-                             <div class="text-caption text-grey-6 font-mono ellipsis q-mt-xs" style="font-size:9px">{{ lec.video_url || lec.contenido_url || 'Sin enlace' }}</div>
-                          </q-item-section>
-                          <q-item-section side>
-                             <div class="row no-wrap q-gutter-x-xs bg-black-30 rounded-12 q-pa-xs border-red-low">
-                                <q-btn flat round icon="edit" color="white" size="sm" @click="editarLeccion(lec)" />
-                                <q-btn flat round icon="delete" color="red-10" size="sm" @click="eliminarLeccion(lec.id)" />
-                             </div>
-                          </q-item-section>
-                        </q-item>
-                      </q-card>
+                  <div>
+                    <div class="text-white font-head text-weight-bolder" style="font-size:20px">Contenidos de Video</div>
+                    <div class="font-mono text-grey-6" style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase">
+                      {{ lecciones?.length || 0 }} lección{{ lecciones?.length !== 1 ? 'es' : '' }} · Estructura teórica del módulo
                     </div>
                   </div>
-               </q-tab-panel>
+                </div>
+                <q-btn unelevated color="red-9" icon="add"
+                  :label="$q.screen.gt.xs ? 'Añadir Nueva Lección' : ''"
+                  @click="abrirNuevaLeccion" class="premium-btn" style="border-radius:10px" />
+              </div>
 
-               <!-- PANEL: PREGUNTAS -->
-               <q-tab-panel name="preguntas" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
-                  <div class="row justify-between items-center q-mb-xl flex-wrap q-gutter-y-md">
-                     <div>
-                        <div class="text-white font-head text-weight-bolder uppercase tracking-tighter" :class="$q.screen.lt.md ? 'text-h6' : 'text-h5'">Banco de Reactivos</div>
-                        <div class="text-caption text-grey-6 font-mono uppercase" style="font-size:9px">Evaluación de competencia técnica UAEAC</div>
-                     </div>
-                     <q-btn color="red-9" icon="add" :label="$q.screen.gt.xs ? 'Añadir Nueva Pregunta' : 'Añadir'" @click="abrirNuevaPregunta" class="premium-btn q-px-md" />
+              <!-- Empty state -->
+              <div v-if="!lecciones?.length" class="lms-empty-state">
+                <q-icon name="video_library" size="56px" color="grey-8" class="q-mb-md" />
+                <div class="font-mono text-grey-6 text-uppercase" style="font-size:11px; letter-spacing:2px">Sin lecciones cargadas</div>
+                <div class="text-grey-8 q-mt-xs" style="font-size:12px">Añade la primera lección para comenzar</div>
+              </div>
+
+              <!-- Lista de lecciones -->
+              <div v-else class="lms-lecciones-list">
+                <template v-for="(lec, idx) in lecciones" :key="lec.id">
+                  <!-- Fila de lección -->
+                  <div class="leccion-card row items-center no-wrap"
+                    :class="leccionExpandida === lec.id ? 'leccion-card--open' : ''">
+                    <div class="leccion-num font-mono">{{ String(idx + 1).padStart(2, '0') }}</div>
+                    <div class="leccion-play-icon q-mx-md">
+                      <q-icon name="play_circle_filled" size="36px" color="red-9" />
+                    </div>
+                    <div class="col overflow-hidden">
+                      <div class="text-white font-head text-weight-bold ellipsis" style="font-size:14px">{{ lec.titulo }}</div>
+                      <div class="font-mono text-grey-6 ellipsis q-mt-xs" style="font-size:9px">
+                        {{ lec.video_url || lec.contenido_url || 'Sin enlace' }}
+                      </div>
+                    </div>
+                    <!-- Badge preguntas -->
+                    <q-chip
+                      clickable
+                      size="sm"
+                      class="font-mono q-mx-sm"
+                      :color="preguntasDeLeccion(lec.id).length ? 'red-10' : 'grey-9'"
+                      text-color="white"
+                      :icon="preguntasDeLeccion(lec.id).length ? 'quiz' : 'add_circle_outline'"
+                      :label="`${preguntasDeLeccion(lec.id).length} quiz`"
+                      style="font-size:9px"
+                      @click="toggleLeccionPreguntas(lec)"
+                    >
+                      <q-tooltip>Gestionar preguntas del quiz de esta lección</q-tooltip>
+                    </q-chip>
+                    <div class="leccion-actions row no-wrap q-gutter-x-xs">
+                      <q-btn flat round icon="edit" color="grey-4" size="sm" @click="editarLeccion(lec)">
+                        <q-tooltip>Editar lección</q-tooltip>
+                      </q-btn>
+                      <q-btn flat round icon="delete" color="red-9" size="sm" @click="eliminarLeccion(lec.id)">
+                        <q-tooltip>Eliminar lección</q-tooltip>
+                      </q-btn>
+                    </div>
                   </div>
 
+                  <!-- Panel inline de preguntas de la lección -->
+                  <div v-if="leccionExpandida === lec.id" class="leccion-preguntas-panel">
+                    <div class="row items-center justify-between q-mb-md">
+                      <div class="row items-center" style="gap:8px">
+                        <q-icon name="quiz" color="amber-4" size="16px" />
+                        <span class="font-mono text-grey-5 text-uppercase" style="font-size:9px; letter-spacing:1.5px">
+                          Quiz · {{ lec.titulo }}
+                        </span>
+                        <q-badge outline color="grey-7" :label="`${preguntasDeLeccion(lec.id).length} pregunta${preguntasDeLeccion(lec.id).length !== 1 ? 's' : ''}`" class="font-mono" style="font-size:7px" />
+                      </div>
+                      <q-btn unelevated size="sm" icon="add" label="Añadir pregunta" color="amber-9"
+                        style="border-radius:8px; font-size:10px"
+                        @click="abrirNuevaPreguntaLeccion(lec)" />
+                    </div>
 
+                    <div v-if="!preguntasDeLeccion(lec.id).length" class="text-grey-7 font-mono text-center q-py-lg" style="font-size:10px; letter-spacing:1px">
+                      SIN PREGUNTAS — este quiz no evaluará al estudiante
+                    </div>
 
-                  <div v-if="!bancoPreguntas?.length" class="text-center q-pa-xl border-red-low rounded-20 bg-black-20">
-                     <q-icon name="quiz" size="64px" color="grey-8" class="q-mb-md" />
-                     <div class="text-h6 text-grey-6 font-mono uppercase">Sin reactivos registrados</div>
-                  </div>
-
-                  <div class="row q-col-gutter-md">
-                     <div v-for="preg in bancoPreguntas" :key="preg.id" class="col-12 col-md-6">
-                        <q-card class="bg-black-20 border-red-low shadow-10 overflow-hidden hover-card" style="border-radius:16px">
-                           <q-item class="q-pa-md items-center">
-                              <q-item-section avatar v-if="$q.screen.gt.xs">
-                                 <div class="kpi-icon-premium shadow-24 bg-red-low flex flex-center" style="width: 48px; height: 48px; border-radius: 12px;">
-                                    <q-icon name="help_center" color="red-9" size="24px" class="glow-primary" />
-                                 </div>
-                              </q-item-section>
-                              <q-item-section>
-                                 <div class="text-white font-head text-weight-bolder uppercase tracking-tighter" :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'" style="line-height: 1.2;">{{ preg.pregunta }}</div>
-                                 <div class="row items-center q-gutter-x-sm q-mt-xs">
-                                    <q-badge outline color="grey-7" :label="`${preg.opciones?.length || 0} OPCIONES`" class="font-mono" style="font-size:8px" />
-                                    <q-badge color="emerald" label="RESPUESTA CARGADA" class="font-mono" style="font-size:8px" v-if="preg.respuesta_correcta" />
-                                 </div>
-                              </q-item-section>
-                              <q-item-section side>
-                                 <div class="row no-wrap q-gutter-x-xs bg-black-30 rounded-12 q-pa-xs border-red-low">
-                                    <q-btn flat round icon="edit" color="white" size="sm" @click="editarPregunta(preg)" />
-                                    <q-btn flat round icon="delete" color="red-10" size="sm" @click="eliminarPregunta(preg.id)" />
-                                 </div>
-                              </q-item-section>
-                           </q-item>
-                        </q-card>
-                     </div>
-                  </div>
-
-               </q-tab-panel>
-
-               <!-- PANEL: CONFIG -->
-               <q-tab-panel name="config" class="q-pa-xl">
-                  <q-card class="premium-glass-card q-pa-xl shadow-24 border-red-low" style="max-width: 600px">
-                     <div class="text-h5 font-head text-weight-bolder q-mb-xl uppercase text-red-9">Parámetros de Evaluación</div>
-                     <q-form class="q-gutter-y-lg">
-                        <q-input v-model.number="matActiva.nota_minima" type="number" filled dark label="NOTA MÍNIMA PARA APROBAR (%)" class="premium-input-login" prefix="%" />
-                        <q-input v-model.number="matActiva.duracion_minutos" type="number" filled dark label="DURACIÓN EXAMEN (MINUTOS)" class="premium-input-login" />
-                        <q-input v-model.number="matActiva.max_intentos" type="number" filled dark label="NÚMERO MÁXIMO DE INTENTOS" class="premium-input-login" />
-                        <div class="row q-col-gutter-md">
-                           <div class="col-12">
-                              <q-input v-model="matActiva.link_meet" filled dark label="ENLACE DE REUNIÓN (GOOGLE MEET / EXTERNO)" class="premium-input-login">
-                                 <template #append>
-                                    <q-btn flat dense icon="calendar_month" color="red-9" @click="programarEnGoogle" label="GENERAR EVENTO">
-                                       <q-tooltip>Abrir Google Calendar con estos datos</q-tooltip>
-                                    </q-btn>
-                                 </template>
-                              </q-input>
-                           </div>
+                    <div v-else class="q-gutter-y-xs">
+                      <div v-for="(preg, pi) in preguntasDeLeccion(lec.id)" :key="preg.id"
+                        class="lec-preg-row row items-center no-wrap">
+                        <span class="font-mono text-amber-9 q-mr-sm" style="font-size:10px; flex-shrink:0; width:20px">
+                          {{ String(pi+1).padStart(2,'0') }}
+                        </span>
+                        <div class="col overflow-hidden">
+                          <div class="text-white ellipsis" style="font-size:12px">{{ preg.pregunta }}</div>
+                          <div class="row items-center q-gutter-x-xs q-mt-xs">
+                            <q-badge v-if="preg.respuesta_correcta" color="teal-9" label="✓ OK" class="font-mono" style="font-size:7px; padding:1px 5px" />
+                            <q-badge v-else outline color="red-9" label="Sin resp." class="font-mono" style="font-size:7px" />
+                          </div>
                         </div>
+                        <q-btn flat round icon="edit" color="grey-5" size="xs" @click="editarPreguntaLeccion(preg, lec)" />
+                        <q-btn flat round icon="delete" color="red-9" size="xs" @click="eliminarPregunta(preg.id)" />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </q-tab-panel>
 
-                        <div class="row q-col-gutter-lg q-mt-sm">
-                           <div class="col-12 col-md-6">
-                              <div class="text-caption text-grey-7 font-mono q-mb-xs uppercase" style="font-size: 10px">Inicia:</div>
-                              <q-input filled v-model="matActiva.sesion_viva_inicio" dark placeholder="Seleccione fecha y hora" class="premium-input-login">
-                                 <template v-slot:prepend>
-                                 <q-icon name="event" class="cursor-pointer text-red-9">
-                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                       <q-date v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
-                                    </q-popup-proxy>
-                                 </q-icon>
-                                 </template>
-                                 <template v-slot:append>
-                                 <q-icon name="schedule" class="cursor-pointer text-red-9">
-                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                       <q-time v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
-                                    </q-popup-proxy>
-                                 </q-icon>
-                                 </template>
-                              </q-input>
-                           </div>
-                           <div class="col-12 col-md-6">
-                              <div class="text-caption text-grey-7 font-mono q-mb-xs uppercase" style="font-size: 10px">Finaliza:</div>
-                              <q-input filled v-model="matActiva.sesion_viva_fin" dark placeholder="Seleccione fecha y hora" class="premium-input-login">
-                                 <template v-slot:prepend>
-                                 <q-icon name="event" class="cursor-pointer text-red-9">
-                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                       <q-date v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
-                                    </q-popup-proxy>
-                                 </q-icon>
-                                 </template>
-                                 <template v-slot:append>
-                                 <q-icon name="schedule" class="cursor-pointer text-red-9">
-                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                       <q-time v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
-                                    </q-popup-proxy>
-                                 </q-icon>
-                                 </template>
-                              </q-input>
-                           </div>
+            <!-- ─── PANEL PREGUNTAS ─── -->
+            <q-tab-panel name="preguntas" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+
+              <!-- Cabecera de sección -->
+              <div class="row items-center justify-between q-mb-xl">
+                <div class="row items-center" style="gap:12px">
+                  <div class="lms-section-icon lms-section-icon--amber">
+                    <q-icon name="quiz" size="22px" color="amber-4" />
+                  </div>
+                  <div>
+                    <div class="text-white font-head text-weight-bolder" style="font-size:20px">Banco de Reactivos</div>
+                    <div class="font-mono text-grey-6" style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase">
+                      {{ bancoPreguntas?.length || 0 }} pregunta{{ bancoPreguntas?.length !== 1 ? 's' : '' }} · Evaluación de competencia técnica UAEAC
+                    </div>
+                  </div>
+                </div>
+                <q-btn unelevated color="red-9" icon="add"
+                  :label="$q.screen.gt.xs ? 'Añadir Pregunta' : ''"
+                  @click="abrirNuevaPregunta" class="premium-btn" style="border-radius:10px" />
+              </div>
+
+              <!-- Empty state -->
+              <div v-if="!bancoPreguntas?.length" class="lms-empty-state">
+                <q-icon name="quiz" size="56px" color="grey-8" class="q-mb-md" />
+                <div class="font-mono text-grey-6 text-uppercase" style="font-size:11px; letter-spacing:2px">Sin reactivos registrados</div>
+              </div>
+
+              <!-- Lista de preguntas -->
+              <div v-else class="lms-preguntas-list">
+                <div v-for="(preg, idx) in bancoPreguntas" :key="preg.id" class="pregunta-card">
+                  <!-- Número + icono -->
+                  <div class="row items-start no-wrap" style="gap:14px">
+                    <div class="pregunta-num font-mono">{{ String(idx + 1).padStart(2, '0') }}</div>
+                    <div class="col overflow-hidden">
+                      <div class="text-white text-weight-medium" style="font-size:13px; line-height:1.4">
+                        {{ preg.pregunta }}
+                      </div>
+                      <div class="row items-center q-gutter-x-sm q-mt-sm">
+                        <q-badge outline color="grey-7" :label="`${preg.opciones?.length || 0} opciones`" class="font-mono" style="font-size:7px; padding:2px 6px" />
+                        <q-badge v-if="preg.respuesta_correcta" color="teal-9" label="✓ Respuesta OK" class="font-mono" style="font-size:7px; padding:2px 6px" />
+                        <q-badge v-else outline color="red-9" label="Sin respuesta" class="font-mono" style="font-size:7px; padding:2px 6px" />
+                      </div>
+                    </div>
+                    <div class="row no-wrap q-gutter-x-xs" style="flex-shrink:0">
+                      <q-btn flat round icon="edit" color="grey-4" size="sm" @click="editarPregunta(preg)">
+                        <q-tooltip>Editar</q-tooltip>
+                      </q-btn>
+                      <q-btn flat round icon="delete" color="red-9" size="sm" @click="eliminarPregunta(preg.id)">
+                        <q-tooltip>Eliminar</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </q-tab-panel>
+
+            <!-- ─── PANEL CONFIG ─── -->
+            <q-tab-panel name="config" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'">
+              <div style="max-width:680px">
+
+                <!-- Bloque: Evaluación -->
+                <div class="lms-config-block q-mb-xl">
+                  <div class="lms-config-block-title">
+                    <q-icon name="assessment" size="18px" color="red-4" class="q-mr-sm" />
+                    Parámetros de Evaluación
+                  </div>
+                  <div class="row q-col-gutter-md q-mt-md">
+                    <div class="col-12 col-sm-4">
+                      <q-input v-model.number="matActiva.nota_minima" type="number" filled dark
+                        label="NOTA MÍNIMA (%)" class="premium-input-login">
+                        <template #prepend><q-icon name="grade" color="red-9" size="18px" /></template>
+                      </q-input>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                      <q-input v-model.number="matActiva.duracion_minutos" type="number" filled dark
+                        label="DURACIÓN (MIN)" class="premium-input-login">
+                        <template #prepend><q-icon name="timer" color="red-9" size="18px" /></template>
+                      </q-input>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                      <q-input v-model.number="matActiva.max_intentos" type="number" filled dark
+                        label="MÁX. INTENTOS" class="premium-input-login">
+                        <template #prepend><q-icon name="repeat" color="red-9" size="18px" /></template>
+                      </q-input>
+                    </div>
+                  </div>
+
+                  <!-- Distribución de pesos -->
+                  <div class="q-mt-xl">
+                    <div class="font-mono text-grey-5 q-mb-md" style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase">
+                      Distribución de la Nota Final
+                    </div>
+
+                    <!-- Barra visual -->
+                    <div class="peso-bar q-mb-lg">
+                      <div class="peso-bar-quiz" :style="`width:${matActiva.peso_quices ?? 40}%`">
+                        <span class="font-mono">Quices {{ matActiva.peso_quices ?? 40 }}%</span>
+                      </div>
+                      <div class="peso-bar-exam" :style="`width:${matActiva.peso_examen ?? 60}%`">
+                        <span class="font-mono">Examen {{ matActiva.peso_examen ?? 60 }}%</span>
+                      </div>
+                    </div>
+
+                    <!-- Slider quices -->
+                    <div class="row items-center q-gutter-x-md q-mb-sm">
+                      <q-icon name="quiz" color="blue-4" size="18px" />
+                      <div class="col">
+                        <div class="row items-center justify-between q-mb-xs">
+                          <span class="text-grey-5 font-mono" style="font-size:10px">QUICES (promedio lecciones)</span>
+                          <span class="font-mono text-blue-4 text-weight-bold" style="font-size:14px">{{ matActiva.peso_quices ?? 40 }}%</span>
                         </div>
+                        <q-slider v-model="matActiva.peso_quices" :min="0" :max="100" :step="5"
+                          color="blue-5" track-color="grey-9"
+                          @update:model-value="v => matActiva.peso_examen = 100 - v" />
+                      </div>
+                    </div>
 
-                        <q-input v-model="matActiva.video_url" filled dark label="VIDEO INTRODUCTORIO (YOUTUBE/DRIVE)" class="premium-input-login" />
-                        <q-btn color="red-10" label="Guardar Configuración General" @click="guardarConfigGeneral" class="full-width premium-btn q-py-lg shadow-24" :loading="guardandoLms" />
-                     </q-form>
-                  </q-card>
-               </q-tab-panel>
+                    <!-- Slider examen (derivado) -->
+                    <div class="row items-center q-gutter-x-md">
+                      <q-icon name="description" color="red-4" size="18px" />
+                      <div class="col">
+                        <div class="row items-center justify-between q-mb-xs">
+                          <span class="text-grey-5 font-mono" style="font-size:10px">EXAMEN FINAL</span>
+                          <span class="font-mono text-red-4 text-weight-bold" style="font-size:14px">{{ matActiva.peso_examen ?? 60 }}%</span>
+                        </div>
+                        <q-slider v-model="matActiva.peso_examen" :min="0" :max="100" :step="5"
+                          color="red-5" track-color="grey-9"
+                          @update:model-value="v => matActiva.peso_quices = 100 - v" />
+                      </div>
+                    </div>
 
-            </q-tab-panels>
-         </q-scroll-area>
+                    <div v-if="(matActiva.peso_quices ?? 40) + (matActiva.peso_examen ?? 60) !== 100"
+                      class="q-mt-sm row items-center text-orange-5 font-mono" style="font-size:10px">
+                      <q-icon name="warning" class="q-mr-xs" />
+                      Los pesos deben sumar 100%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloque: Sesión en Vivo -->
+                <div class="lms-config-block q-mb-xl">
+                  <div class="lms-config-block-title">
+                    <q-icon name="videocam" size="18px" color="red-4" class="q-mr-sm" />
+                    Sesión en Vivo (Briefing)
+                  </div>
+                  <div class="q-mt-md q-gutter-y-md">
+                    <q-input v-model="matActiva.link_meet" filled dark
+                      label="ENLACE GOOGLE MEET / EXTERNO" class="premium-input-login">
+                      <template #prepend><q-icon name="link" color="red-9" size="18px" /></template>
+                      <template #append>
+                        <q-btn flat dense icon="calendar_month" color="red-9" @click="programarEnGoogle" no-caps
+                          label="Generar evento" style="font-size:11px">
+                          <q-tooltip>Abrir Google Calendar</q-tooltip>
+                        </q-btn>
+                      </template>
+                    </q-input>
+                    <div class="row q-col-gutter-md">
+                      <div class="col-12 col-sm-6">
+                        <div class="font-mono text-grey-6 q-mb-xs" style="font-size:9px; letter-spacing:1px; text-transform:uppercase">
+                          Inicio de sesión
+                        </div>
+                        <q-input filled v-model="matActiva.sesion_viva_inicio" dark
+                          placeholder="Fecha y hora" class="premium-input-login">
+                          <template v-slot:prepend>
+                            <q-icon name="event" class="cursor-pointer text-red-9">
+                              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                <q-date v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
+                              </q-popup-proxy>
+                            </q-icon>
+                          </template>
+                          <template v-slot:append>
+                            <q-icon name="schedule" class="cursor-pointer text-red-9">
+                              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                <q-time v-model="matActiva.sesion_viva_inicio" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
+                              </q-popup-proxy>
+                            </q-icon>
+                          </template>
+                        </q-input>
+                      </div>
+                      <div class="col-12 col-sm-6">
+                        <div class="font-mono text-grey-6 q-mb-xs" style="font-size:9px; letter-spacing:1px; text-transform:uppercase">
+                          Fin de sesión
+                        </div>
+                        <q-input filled v-model="matActiva.sesion_viva_fin" dark
+                          placeholder="Fecha y hora" class="premium-input-login">
+                          <template v-slot:prepend>
+                            <q-icon name="event" class="cursor-pointer text-red-9">
+                              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                <q-date v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" dark color="red-9" />
+                              </q-popup-proxy>
+                            </q-icon>
+                          </template>
+                          <template v-slot:append>
+                            <q-icon name="schedule" class="cursor-pointer text-red-9">
+                              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                <q-time v-model="matActiva.sesion_viva_fin" mask="YYYY-MM-DD HH:mm" format24h dark color="red-9" />
+                              </q-popup-proxy>
+                            </q-icon>
+                          </template>
+                        </q-input>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bloque: Contenido -->
+                <div class="lms-config-block q-mb-xl">
+                  <div class="lms-config-block-title">
+                    <q-icon name="play_circle" size="18px" color="red-4" class="q-mr-sm" />
+                    Video Introductorio
+                  </div>
+                  <div class="q-mt-md">
+                    <q-input v-model="matActiva.video_url" filled dark
+                      label="URL YOUTUBE / GOOGLE DRIVE" class="premium-input-login">
+                      <template #prepend><q-icon name="smart_display" color="red-9" size="18px" /></template>
+                    </q-input>
+                  </div>
+                </div>
+
+                <q-btn color="red-10" label="Guardar Configuración General" icon="save"
+                  @click="guardarConfigGeneral" class="full-width premium-btn q-py-md shadow-24"
+                  :loading="guardandoLms" style="border-radius:12px; font-size:13px; letter-spacing:0.5px" />
+              </div>
+            </q-tab-panel>
+
+          </q-tab-panels>
+        </q-scroll-area>
       </q-card>
     </q-dialog>
 
@@ -1082,7 +1293,7 @@
     <q-dialog v-model="dialogNuevoEstudiante" persistent backdrop-filter="blur(15px)">
       <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" :class="$q.screen.lt.md ? 'q-pa-lg' : 'q-pa-xl'" style="width:min(900px, 95vw);">
          <div class="row items-center justify-between q-mb-xl border-bottom-border pb-md">
-            <div class="text-h5 text-white font-head text-weight-bolder uppercase">Inscripción RAC 141 (Nuevo Cadete)</div>
+            <div class="text-h5 text-white font-head text-weight-bolder uppercase">Inscripción RAC 141 (Nuevo Estudiante)</div>
             <q-btn flat round dense icon="close" @click="dialogNuevoEstudiante = false" color="grey-6" class="bg-black-20 hover-red" />
          </div>
          
@@ -1259,7 +1470,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
@@ -1312,22 +1523,36 @@ const progForm    = ref({
 const etapaForm   = ref({ nombre: '', descripcion: '', horas_vuelo: 0, horas_tierra: 0, simulador: 0, numero: 1 })
 const materiaForm = ref({ nombre: '', codigo: '', horas: 0, etapa_id: null, tipo: 'teorica', nota_minima: 75, rac_referencia: '' })
 
-const bancoPreguntas = ref([])
-const lecciones      = ref([])
-const tabLms         = ref('lecciones')
-const loadingLms     = ref(false)
-const guardandoLms   = ref(false)
-const tabEtapa       = ref(null)
+const todasLasPreguntas = ref([])   // raw: todas las preguntas de la materia
+const bancoPreguntas    = computed(() => todasLasPreguntas.value.filter(p => !p.leccion_id))
+const lecciones         = ref([])
+const tabLms            = ref('lecciones')
+const loadingLms        = ref(false)
+const guardandoLms      = ref(false)
+const tabEtapa          = ref(null)
+const leccionExpandida  = ref(null)  // id de lección con preguntas abiertas
 
 const dialogNuevaLeccion  = ref(false)
 const dialogNuevaPregunta = ref(false)
 const leccionForm = ref({ titulo: '', video_url: '', descripcion: '', orden: 1 })
-const preguntaForm = ref({ pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1 })
+const preguntaForm = ref({ pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1, leccion_id: null })
+
+const preguntasDeLeccion = (lecId) => todasLasPreguntas.value.filter(p => p.leccion_id == lecId)
+
+const sumaHorasEtapa = (et) =>
+  (et?.materias || []).reduce((sum, m) => sum + Number(m.horas || 0), 0)
+
+const sumaHorasProg = (prog) => {
+  if (!prog?.etapas?.length) return 0
+  return prog.etapas.reduce((sum, et) => sum + sumaHorasEtapa(et), 0)
+}
 
 const dialogNuevoEstudiante = ref(false)
 const guardandoNuevoEst     = ref(false)
 const programasOptions      = ref([])
 const programasFilteredOptions = ref([])
+const tiposCatalogo         = ref(['PPL', 'CPL', 'ATPL', 'HABILITACION'])
+const tiposFiltrados        = ref(['PPL', 'CPL', 'ATPL', 'HABILITACION'])
 const estForm = ref({ nombres: '', apellidos: '', tipo_documento: 'CC', num_documento: '', fecha_nacimiento: '', fecha_ingreso: dayjs().format('YYYY-MM-DD'), programa_id: null, observaciones: '' })
 
 const dialogNota       = ref(false)
@@ -1392,7 +1617,7 @@ const planForm = ref({ id: null, instructor_id: null, materia_id: null, fecha: d
 const materiasTodasOptions = ref([])
 
 const columnsEstudiantes = [
-  { name: 'nombre',   label: 'NOMBRE DEL CADETE', align: 'left' },
+  { name: 'nombre',   label: 'NOMBRE DEL ESTUDIANTE', align: 'left' },
   { name: 'estado',   label: 'STATUS UAEAC',       align: 'center' },
   { name: 'acciones', label: 'EXPEDIENTE',          align: 'right' }
 ]
@@ -1411,14 +1636,18 @@ const getEstadoColor = (e) => ({ 'activo': 'emerald', 'volando': 'blue-9', 'grad
 async function cargarDatos() {
   loadingProgramas.value = true; loadingEstudiantes.value = true; loadingVuelo.value = true; loadingPlanes.value = true
   try {
-    const [ps, es, vs, as, ins, pl] = await Promise.all([
+    const [ps, es, vs, as, ins, pl, tp] = await Promise.all([
       api.get('/programas'),
       api.get('/estudiantes', { params: { q: filtroBusqueda.value } }),
       api.get('/vuelos'),
       api.get('/aeronaves'),
       api.get('/instructores'),
-      api.get('/planes-clase')
+      api.get('/planes-clase'),
+      api.get('/programas/tipos'),
     ])
+
+    tiposCatalogo.value  = tp.data.data || tiposCatalogo.value
+    tiposFiltrados.value = [...tiposCatalogo.value]
 
     programas.value     = ps.data.data || ps.data || []
     programasOptions.value = programas.value.map(p => ({ label: p.nombre, value: p.id }))
@@ -1455,7 +1684,7 @@ async function cargarDatos() {
 async function eliminarPrograma(prog) {
   $q.dialog({
     title: `<span class="text-red-9 font-head uppercase">Eliminar PIA: ${prog.nombre}</span>`,
-    message: 'Esta acción eliminará permanentemente el programa académico y todas sus fases. Los cadetes inscritos quedarán sin programa asociado.',
+    message: 'Esta acción eliminará permanentemente el programa académico y todas sus fases. Los estudiantes inscritos quedarán sin programa asociado.',
     html: true,
     dark: true,
     ok: { color: 'red-10', label: 'ELIMINAR PERMANENTEMENTE', unelevated: true },
@@ -1610,8 +1839,8 @@ async function cargarContenidoLms() {
     api.get(`/gestion-materias/${matActiva.value.id}/lecciones`),
     api.get(`/gestion-materias/${matActiva.value.id}/preguntas`)
   ])
-  lecciones.value = lecs.data.data
-  bancoPreguntas.value = pregs.data.data
+  lecciones.value         = lecs.data.data
+  todasLasPreguntas.value = pregs.data.data
 }
 
 async function guardarConfigGeneral() {
@@ -1665,8 +1894,22 @@ async function guardarLeccion() {
   } catch { $q.notify({ color: 'negative', message: 'Error al procesar la lección.' }) }
 }
 
+function toggleLeccionPreguntas(lec) {
+  leccionExpandida.value = leccionExpandida.value === lec.id ? null : lec.id
+}
+
+function abrirNuevaPreguntaLeccion(lec) {
+  preguntaForm.value = { pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1, leccion_id: lec.id }
+  dialogNuevaPregunta.value = true
+}
+
+function editarPreguntaLeccion(preg, lec) {
+  preguntaForm.value = { ...preg, leccion_id: lec.id }
+  dialogNuevaPregunta.value = true
+}
+
 function abrirNuevaPregunta() {
-  preguntaForm.value = { pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1 }
+  preguntaForm.value = { pregunta: '', opciones: ['', '', '', ''], respuesta_correcta: '', nivel_dificultad: 1, leccion_id: null }
   dialogNuevaPregunta.value = true
 }
 
@@ -1761,6 +2004,16 @@ onMounted(() => {
   cargarEndorsements()
   cargarCertRecientes()
 })
+// ── Tipos de Programa ──
+function filtrarTipos(val, update) {
+  update(() => {
+    const needle = val.toUpperCase().trim()
+    tiposFiltrados.value = needle === ''
+      ? tiposCatalogo.value
+      : tiposCatalogo.value.filter(t => t.includes(needle))
+  })
+}
+
 // ── Acciones Estudiante ──
 function filterProgramas(val, update) {
   if (val === '') {
@@ -1940,6 +2193,428 @@ const abrirDialogHabilitar = (mat) => {
 
 <style lang="scss" scoped>
 
+/* ═══════════════════════════════════════════════
+   SYLLABUS DIALOG — Premium Redesign
+   ═══════════════════════════════════════════════ */
+
+.syllabus-dialog {
+  background: #0a0c10;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.syllabus-header {
+  background: linear-gradient(135deg, rgba(161,11,19,0.12) 0%, rgba(0,0,0,0) 60%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+
+.syllabus-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(161,11,19,0.15);
+  border: 1px solid rgba(161,11,19,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── KPI Cards ── */
+.kpi-card {
+  position: relative;
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  overflow: hidden;
+  height: 100%;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  .kpi-bg-icon {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .kpi-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: clamp(18px, 4.5vw, 36px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kpi-sub {
+    font-size: 7px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    margin-top: 6px;
+  }
+}
+
+.kpi-vuelo {
+  background: linear-gradient(135deg, rgba(161,11,19,0.25) 0%, rgba(161,11,19,0.08) 100%);
+  border: 1px solid rgba(161,11,19,0.35);
+  box-shadow: 0 0 30px rgba(161,11,19,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.kpi-tierra {
+  background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.06) 100%);
+  border: 1px solid rgba(59,130,246,0.25);
+  box-shadow: 0 0 30px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.kpi-sim {
+  background: linear-gradient(135deg, rgba(100,100,120,0.2) 0%, rgba(100,100,120,0.06) 100%);
+  border: 1px solid rgba(150,150,170,0.2);
+  box-shadow: 0 0 30px rgba(100,100,120,0.06), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+@media (max-width: 599px) {
+  .kpi-card {
+    padding: 12px 10px 10px;
+    min-height: 80px;
+  }
+}
+
+/* ── Section divider ── */
+.syllabus-section-line {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  width: 24px;
+}
+
+/* ── Fase Block ── */
+.fase-block {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 20px 20px 16px;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: rgba(161,11,19,0.3);
+  }
+}
+
+.fase-header {
+  gap: 16px;
+}
+
+.fase-numero {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(161,11,19,0.15);
+  border: 1px solid rgba(161,11,19,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f87171;
+  flex-shrink: 0;
+}
+
+.fase-metric {
+  text-align: center;
+  .fase-metric-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .fase-metric-lbl {
+    font-size: 7px;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+}
+.fase-metric-sep {
+  width: 1px;
+  height: 32px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Materias ── */
+.materias-list {
+  border-left: 2px solid rgba(161,11,19,0.2);
+  margin-left: 22px;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.materia-row {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-left: -12px;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(161,11,19,0.08);
+    border-color: rgba(161,11,19,0.2);
+  }
+}
+
+.materia-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(161,11,19,0.6);
+  border: 1px solid rgba(161,11,19,0.8);
+  flex-shrink: 0;
+  margin-left: -3px;
+}
+
+.materia-actions {
+  flex-shrink: 0;
+}
+
+.add-materia-btn {
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 4px 14px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  &:hover {
+    border-color: rgba(161,11,19,0.4);
+    color: #f87171 !important;
+  }
+}
+
+/* ══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   LMS DIALOG — Premium Redesign
+   ═══════════════════════════════════════════════ */
+
+.lms-dialog {
+  background: #080a0e;
+  border: 0;
+}
+
+.lms-header {
+  background: linear-gradient(90deg, rgba(161,11,19,0.10) 0%, transparent 50%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+
+.lms-back-btn {
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.lms-tabs-bar {
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+/* ── Section Icon ── */
+.lms-section-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(161,11,19,0.15);
+  border: 1px solid rgba(161,11,19,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.lms-section-icon--amber {
+  background: rgba(217,119,6,0.15);
+  border-color: rgba(217,119,6,0.3);
+}
+
+/* ── Empty State ── */
+.lms-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  border: 1px dashed rgba(255,255,255,0.07);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.015);
+}
+
+/* ── Lecciones List ── */
+.lms-lecciones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leccion-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(161,11,19,0.07);
+    border-color: rgba(161,11,19,0.25);
+  }
+  &.leccion-card--open {
+    border-color: rgba(161,11,19,0.4);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background: rgba(161,11,19,0.07);
+  }
+}
+
+.leccion-preguntas-panel {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(161,11,19,0.3);
+  border-top: none;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  padding: 16px;
+  margin-bottom: 0;
+}
+
+.lec-preg-row {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+  gap: 8px;
+  transition: background 0.15s;
+  &:hover { background: rgba(255,255,255,0.06); }
+}
+
+/* Barra de distribución de pesos */
+.peso-bar {
+  display: flex;
+  height: 32px;
+  border-radius: 8px;
+  overflow: hidden;
+  gap: 2px;
+}
+.peso-bar-quiz {
+  background: linear-gradient(90deg, rgba(59,130,246,0.7), rgba(59,130,246,0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #93c5fd;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  min-width: 40px;
+  overflow: hidden;
+}
+.peso-bar-exam {
+  background: linear-gradient(90deg, rgba(161,11,19,0.6), rgba(161,11,19,0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fca5a5;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  min-width: 40px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.leccion-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(161,11,19,0.7);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  width: 24px;
+}
+
+.leccion-play-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+  .leccion-card:hover & { opacity: 1; }
+}
+
+.leccion-actions {
+  flex-shrink: 0;
+}
+
+/* ── Preguntas List ── */
+.lms-preguntas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pregunta-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.12);
+  }
+}
+
+.pregunta-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(217,119,6,0.7);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  width: 24px;
+}
+
+/* ── Config Blocks ── */
+.lms-config-block {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 20px 20px 18px;
+}
+
+.lms-config-block-title {
+  display: flex;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ══════════════════════════════════════════════ */
+
 .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
 
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -1976,6 +2651,12 @@ const abrirDialogHabilitar = (mat) => {
     border: 1px solid rgba(255,255,255,0.05) !important; transition: all 0.3s ease;
     &::before, &::after { display: none; }
     &:hover { border-color: rgba(161,11,19,0.5) !important; }
+  }
+  :deep(.q-field__label) {
+    white-space: nowrap;
+    overflow: visible;
+    font-size: 10px !important;
+    letter-spacing: 0.5px;
   }
   &.q-field--focused :deep(.q-field__control) { border-color: #A10B13 !important; background: rgba(161,11,19,0.04) !important; }
 }

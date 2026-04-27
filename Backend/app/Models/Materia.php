@@ -16,6 +16,7 @@ class Materia extends Model
         'link_meet', 'documento_url', 'video_url', 'temario',
         'max_intentos', 'costo_reintento', 'duracion_minutos',
         'sesion_viva_inicio', 'sesion_viva_fin',
+        'peso_quices', 'peso_examen',
     ];
 
     protected $casts = [

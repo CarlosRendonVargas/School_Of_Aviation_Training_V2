@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\NominaController;
 use App\Http\Controllers\Api\GastoOperativoController;
 use App\Http\Controllers\Api\CorrespondenciaController;
 use App\Http\Controllers\Api\PermisoController;
+use App\Http\Controllers\Api\RolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     Route::post('auth/logout',          [AuthController::class, 'logout']);
     Route::get('auth/me',               [AuthController::class, 'me']);
+    Route::put('auth/perfil',           [AuthController::class, 'updatePerfil']);
+    Route::post('auth/foto',            [AuthController::class, 'subirFoto']);
     Route::post('auth/change-password', [AuthController::class, 'changePassword']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
@@ -91,6 +94,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('programas')->group(function () {
         Route::get('/',          [ProgramaController::class, 'index']);
+        Route::get('/tipos',     [ProgramaController::class, 'tipos']);
         Route::post('/',         [ProgramaController::class, 'store']);
         Route::put('{id}',       [ProgramaController::class, 'update']);
         Route::post('{id}/etapas', [ProgramaController::class, 'storeEtapa']);
@@ -103,10 +107,18 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('roles',      [UsuarioController::class, 'roles']);
         Route::post('/',         [UsuarioController::class, 'store']);
         Route::put('{id}',       [UsuarioController::class, 'update']);
+        Route::delete('{id}',    [UsuarioController::class, 'destroy']);
         Route::post('{id}/reset',[UsuarioController::class, 'resetPassword']);
     });
 
     Route::get('auditoria', [UsuarioController::class, 'auditoria']);
+
+    Route::prefix('roles')->group(function () {
+        Route::get('/',       [RolController::class, 'index']);
+        Route::post('/',      [RolController::class, 'store']);
+        Route::put('{id}',    [RolController::class, 'update']);
+        Route::delete('{id}', [RolController::class, 'destroy']);
+    });
 
     Route::prefix('estudiantes')->group(function () {
         Route::get('/',               [EstudianteController::class, 'index']);
@@ -333,6 +345,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     // --- Permisos de Módulos (Matriz dinámica) ---
     Route::get('permisos/matrix',  [PermisoController::class, 'matrix']);
     Route::put('permisos/matrix',  [PermisoController::class, 'update']);
+    Route::post('permisos/reset',  [PermisoController::class, 'reset']);
 
     // --- Correspondencia UAEAC ---
     Route::prefix('correspondencia')->group(function () {

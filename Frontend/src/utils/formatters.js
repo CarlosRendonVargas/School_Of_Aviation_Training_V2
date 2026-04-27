@@ -4,13 +4,19 @@
  * Optimizadas para Colombia (COP, formato de fecha colombiano, ICAO).
  */
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import 'dayjs/locale/es'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import duration from 'dayjs/plugin/duration'
 
+dayjs.extend(utc)
+dayjs.extend(timezone)
 dayjs.extend(relativeTime)
 dayjs.extend(duration)
 dayjs.locale('es')
+
+const TZ = 'America/Bogota'
 
 // ── Fechas ────────────────────────────────────────────────────────────────────
 
@@ -18,21 +24,32 @@ dayjs.locale('es')
 export const formatFecha = (fecha) =>
   fecha ? dayjs(fecha).format('ddd. D MMM YYYY') : '—'
 
-/** '2025-06-15' o '2025-06-15T00:00:00Z' → '15/06/2025' (zona Bogotá) */
+/** '2025-06-15' o '2025-06-15T00:00:00Z' → '15/06/2025' (solo fecha, sin conversión de hora) */
 export const formatFechaCO = (fecha) => {
   if (!fecha) return '—'
-  // Tomar solo la parte de fecha (YYYY-MM-DD) para evitar desplazamiento de zona horaria
   const solo = typeof fecha === 'string' ? fecha.substring(0, 10) : fecha
   return dayjs(solo).format('DD/MM/YYYY')
 }
 
-/** '2025-06-15T14:30:00' → '14:30' */
+/**
+ * Timestamp UTC → fecha y hora Bogotá.
+ * '2026-04-26T17:47:13Z' → '26/04/2026 12:47'
+ */
+export const formatTimestampCO = (ts, fmt = 'DD/MM/YYYY HH:mm') => {
+  if (!ts) return '—'
+  return dayjs.utc(ts).tz(TZ).format(fmt)
+}
+
+/** Timestamp UTC → solo hora Bogotá. '2026-04-26T17:47:13Z' → '12:47' */
+export const formatHoraCO = (ts) => formatTimestampCO(ts, 'HH:mm')
+
+/** Campo de hora local sin zona (formularios). '14:30:00' → '14:30' */
 export const formatHora = (dt) =>
   dt ? dayjs(dt).format('HH:mm') : '—'
 
-/** '2025-06-15' → 'hace 3 días' o 'en 5 días' */
+/** Timestamp UTC → 'hace 3 días' relativo a hora Bogotá */
 export const formatRelativo = (fecha) =>
-  fecha ? dayjs(fecha).fromNow() : '—'
+  fecha ? dayjs.utc(fecha).tz(TZ).fromNow() : '—'
 
 /** Días hasta una fecha */
 export const diasHasta = (fecha) =>

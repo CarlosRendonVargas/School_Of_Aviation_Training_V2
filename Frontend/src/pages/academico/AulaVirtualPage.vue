@@ -22,6 +22,26 @@
       <q-btn flat label="Reintentar" color="red-9" icon="refresh" class="q-mt-md" @click="cargarMaterias" />
     </div>
 
+    <!-- Sin matrícula -->
+    <div v-if="sinMatricula && !materiaActiva" class="flex flex-center q-pa-xl">
+      <q-card class="premium-glass-card shadow-24 text-center" style="max-width:520px; border-radius:20px">
+        <q-card-section class="q-pa-xl">
+          <q-icon name="assignment_late" color="orange-9" size="72px" class="q-mb-lg" style="filter:drop-shadow(0 0 20px rgba(234,88,12,.4))" />
+          <div class="text-h5 text-white font-head text-weight-bolder q-mb-md">Sin Matrícula Activa</div>
+          <div class="text-grey-5 font-mono q-mb-xl" style="font-size:13px; line-height:1.8">
+            No estás inscrito en ningún programa académico.<br>
+            Contacta a la administración para completar tu proceso de matrícula y acceder al Aula Virtual.
+          </div>
+          <div class="row q-col-gutter-md justify-center q-pa-md rounded-12" style="background:rgba(234,88,12,.06); border:1px solid rgba(234,88,12,.2)">
+            <div class="col-auto">
+              <q-icon name="info" color="orange-9" size="20px" class="q-mr-xs" />
+              <span class="text-orange-9 font-mono text-caption text-weight-bold">RAC 141 · REQUIERE INSCRIPCIÓN FORMAL</span>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </div>
+
     <!-- ════ LISTA DE MATERIAS (HANGAR DE ESTUDIO) ════ -->
     <div class="row q-col-gutter-xl" v-if="!materiaActiva && !cargandoMaterias && !errorMaterias">
       <div v-for="m in materias" :key="m.id" class="col-12 col-md-4 col-lg-3 animate-slide-up">
@@ -451,6 +471,7 @@ const materiaActiva = ref(null)
 const tabAula = ref('lecciones')
 const cargandoMaterias = ref(false)
 const errorMaterias = ref('')
+const sinMatricula = ref(false)
 
 // Examen State
 const dialogExamen = ref(false)
@@ -487,12 +508,17 @@ const preguntaActual = computed(() => preguntas.value[currentQuestionIndex.value
 const cargarMaterias = async () => {
     cargandoMaterias.value = true
     errorMaterias.value = ''
+    sinMatricula.value = false
     try {
         const { data } = await api.get('/aula-virtual/mis-materias')
         materias.value = data.data ?? []
         if (materias.value.length === 0) errorMaterias.value = 'No hay módulos disponibles para tu programa. Contacta a la administración.'
     } catch (e) {
-        errorMaterias.value = e.response?.data?.mensaje ?? 'Error al cargar los módulos. Verifica tu conexión.'
+        if (e.response?.data?.codigo === 'SIN_MATRICULA') {
+            sinMatricula.value = true
+        } else {
+            errorMaterias.value = e.response?.data?.mensaje ?? 'Error al cargar los módulos. Verifica tu conexión.'
+        }
     } finally {
         cargandoMaterias.value = false
     }

@@ -19,15 +19,18 @@ class MateriaController extends Controller
         $materia = Materia::findOrFail($id);
         
         $data = $request->validate([
-            'link_meet' => 'nullable|string',
-            'documento_url' => 'nullable|string',
-            'video_url' => 'nullable|string',
-            'temario' => 'nullable|string',
-            'max_intentos' => 'nullable|integer',
-            'costo_reintento' => 'nullable|numeric',
-            'duracion_minutos' => 'nullable|integer',
-            'sesion_viva_inicio' => 'nullable|date',
-            'sesion_viva_fin' => 'nullable|date',
+            'link_meet'         => 'nullable|string',
+            'documento_url'     => 'nullable|string',
+            'video_url'         => 'nullable|string',
+            'temario'           => 'nullable|string',
+            'nota_minima'       => 'nullable|numeric|min:0|max:100',
+            'max_intentos'      => 'nullable|integer',
+            'costo_reintento'   => 'nullable|numeric',
+            'duracion_minutos'  => 'nullable|integer',
+            'sesion_viva_inicio'=> 'nullable|date',
+            'sesion_viva_fin'   => 'nullable|date',
+            'peso_quices'       => 'nullable|integer|min:0|max:100',
+            'peso_examen'       => 'nullable|integer|min:0|max:100',
         ]);
 
         $materia->update($data);

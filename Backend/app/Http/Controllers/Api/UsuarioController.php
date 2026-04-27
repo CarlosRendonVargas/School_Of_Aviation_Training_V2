@@ -73,8 +73,16 @@ class UsuarioController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($usuario, $request) {
             $usuario->update($request->only('rol_id', 'activo'));
-            if ($usuario->persona) {
-                $usuario->persona->update($request->only('nombres', 'apellidos', 'num_documento', 'telefono'));
+            $personaData = array_filter($request->only('nombres', 'apellidos', 'num_documento', 'telefono'), fn($v) => $v !== null);
+            if (!empty($personaData)) {
+                \App\Models\Persona::updateOrCreate(
+                    ['usuario_id' => $usuario->id],
+                    array_merge([
+                        'tipo_documento'   => 'CC',
+                        'num_documento'    => 'USR-' . $usuario->id,
+                        'fecha_nacimiento' => '1990-01-01',
+                    ], $personaData)
+                );
             }
         });
 
@@ -87,6 +95,23 @@ class UsuarioController extends Controller
         $request->validate(['password' => 'required|string|min:6']);
         $usuario->update(['password_hash' => \Illuminate\Support\Facades\Hash::make($request->password)]);
         return response()->json(['ok' => true]);
+    }
+
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        $usuario = Usuario::findOrFail($id);
+
+        if ($request->user()->id === (int) $id) {
+            return response()->json(['ok' => false, 'mensaje' => 'No puedes eliminar tu propia cuenta.'], 403);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($usuario) {
+            $usuario->persona?->delete();
+            $usuario->tokens()->delete();
+            $usuario->delete();
+        });
+
+        return response()->json(['ok' => true, 'mensaje' => 'Usuario eliminado correctamente.']);
     }
 
     public function auditoria(): JsonResponse

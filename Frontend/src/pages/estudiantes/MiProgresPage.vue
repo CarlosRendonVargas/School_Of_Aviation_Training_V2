@@ -15,6 +15,12 @@
 
     <q-skeleton v-if="cargando" type="rect" height="400px" dark class="premium-glass-card" />
 
+    <div v-else-if="!progreso" class="text-center q-pa-xl">
+      <q-icon name="flight_takeoff" size="72px" color="grey-8" class="q-mb-lg" />
+      <div class="text-h6 text-grey-6 font-head q-mb-sm">Sin expediente de vuelo activo</div>
+      <div class="text-caption text-grey-7 font-mono">El progreso académico está disponible una vez que el estudiante tenga matrícula activa en un programa RAC 141.</div>
+    </div>
+
     <template v-else-if="progreso">
 
       <!-- ══ Bloque de Identificación de Expediente ══ -->

@@ -61,7 +61,7 @@
             <div class="row q-col-gutter-xl">
               <!-- Info Personal -->
               <div class="col-12 col-md-4">
-                <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-lg">Identificación de Cadete</div>
+                <div class="text-subtitle2 text-grey-6 font-mono uppercase tracking-widest q-mb-lg">Identificación de Estudiante</div>
                 <div class="q-gutter-y-sm">
                    <div v-for="campo in datosPersonales" :key="campo.label" 
                       class="premium-glass-card q-pa-md flex items-center justify-between border-red-low">
@@ -168,7 +168,7 @@
                         <div class="row items-center justify-between q-mt-md border-top-border pt-sm">
                            <div>
                               <div class="text-grey-6 font-mono uppercase" style="font-size:8px">FECHA EVAL.</div>
-                              <div class="text-white font-mono" style="font-size:11px">{{ dayjs(props.row.fecha_evaluacion).format('DD/MM/YYYY') }}</div>
+                              <div class="text-white font-mono" style="font-size:11px">{{ formatFechaCO(props.row.fecha_evaluacion) }}</div>
                            </div>
                            <div class="text-right">
                               <div class="text-grey-6 font-mono uppercase" style="font-size:8px">RESULTADO</div>
@@ -200,7 +200,7 @@
                       <div class="row q-col-gutter-lg">
                          <div class="col-6">
                             <div class="text-caption text-grey-7 font-mono uppercase">EMISIÓN</div>
-                            <div class="text-white font-mono text-weight-bold">{{ dayjs(cm.fecha_emision).format('DD/MM/YYYY') }}</div>
+                            <div class="text-white font-mono text-weight-bold">{{ formatFechaCO(cm.fecha_emision) }}</div>
                          </div>
                          <div class="col-6">
                             <div class="text-caption text-grey-7 font-mono uppercase text-right">VENCIMIENTO</div>
@@ -425,7 +425,7 @@ const columnasNotas = [
   { name: 'nota', label: 'EVAL.', field: 'nota', align: 'center' },
   { name: 'aprobado', label: 'RESULTADO', field: 'aprobado', align: 'center' },
   { name: 'intento', label: 'INT.', field: 'intento_num', align: 'center' },
-  { name: 'fecha', label: 'FECHA EXAMEN', field: row => row.fecha_evaluacion ? dayjs(row.fecha_evaluacion).format('DD/MM/YYYY') : 'N/A', align: 'right' },
+  { name: 'fecha', label: 'FECHA EXAMEN', field: row => formatFechaCO(row.fecha_evaluacion), align: 'right' },
 ]
 
 const columnasBitacora = [

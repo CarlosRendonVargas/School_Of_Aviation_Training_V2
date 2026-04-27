@@ -34,7 +34,11 @@ class AulaVirtualController extends Controller
 
             $estudiante = $persona->estudiante;
             if (!$estudiante) {
-                return response()->json(['ok' => false, 'mensaje' => 'No es un perfil de estudiante'], 403);
+                return response()->json([
+                    'ok'     => false,
+                    'codigo' => 'SIN_MATRICULA',
+                    'mensaje'=> 'No tienes matrícula activa en ningún programa. Contacta a la administración para completar tu proceso de inscripción.',
+                ], 403);
             }
 
             $materias = Materia::whereHas('etapa', function($q) use ($estudiante) {
@@ -324,15 +328,17 @@ class AulaVirtualController extends Controller
 
             $promedioLecciones = $mejorNotaPorLeccion->count() > 0 ? floatval($mejorNotaPorLeccion->avg('nota_max')) : 0;
 
-            // Lógica inteligente: Si no hay lecciones creadas, el examen vale el 100%
+            // Pesos configurables por materia (defecto RAC 141: 40% quices, 60% examen)
             $totalLeccionesMateria = LeccionMateria::where('materia_id', $id)->count();
-            
+
             if ($totalLeccionesMateria > 0) {
-                $notaFinalFinal = round(($promedioLecciones * 0.4) + ($notaExamen * 0.6), 2);
-                $obs = "Calculado RAC 141 (Materia con lecciones): 40% Quices (".round($promedioLecciones,1)."%) y 60% Examen (".round($notaExamen,1)."%)";
+                $pQ = ($materia->peso_quices ?? 40) / 100;
+                $pE = ($materia->peso_examen  ?? 60) / 100;
+                $notaFinalFinal = round(($promedioLecciones * $pQ) + ($notaExamen * $pE), 2);
+                $obs = "RAC 141: " . round($pQ*100) . "% Quices (" . round($promedioLecciones,1) . "%) + " . round($pE*100) . "% Examen (" . round($notaExamen,1) . "%)";
             } else {
                 $notaFinalFinal = round($notaExamen, 2);
-                $obs = "Nota 100% examen final (Materia sin lecciones configuradas)";
+                $obs = "Nota 100% examen final (materia sin lecciones configuradas)";
             }
             
             $aprobado = $notaFinalFinal >= ($materia->nota_minima ?? 75);

@@ -104,11 +104,11 @@
           <div class="row q-gutter-md">
             <div v-if="enmiendaActiva?.fecha_envio" class="col-auto">
               <div class="font-mono text-grey-6" style="font-size:9px">ENVIADA UAEAC</div>
-              <div class="text-amber-5 font-mono" style="font-size:12px">{{ enmiendaActiva?.fecha_envio }}</div>
+              <div class="text-amber-5 font-mono" style="font-size:12px">{{ formatFechaCO(enmiendaActiva?.fecha_envio) }}</div>
             </div>
             <div v-if="enmiendaActiva?.fecha_respuesta" class="col-auto">
               <div class="font-mono text-grey-6" style="font-size:9px">RESPUESTA RECIBIDA</div>
-              <div class="text-green-5 font-mono" style="font-size:12px">{{ enmiendaActiva?.fecha_respuesta }}</div>
+              <div class="text-green-5 font-mono" style="font-size:12px">{{ formatFechaCO(enmiendaActiva?.fecha_respuesta) }}</div>
             </div>
           </div>
         </div>
@@ -182,6 +182,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'store/auth'
 import { api } from 'boot/axios'
+import { formatFechaCO } from 'src/utils/formatters'
 
 const $q   = useQuasar()
 const auth = useAuthStore()
@@ -239,7 +240,7 @@ const columnas = [
   { name: 'documento',       label: 'Documento',    field: row => row.documento?.titulo, align: 'left' },
   { name: 'descripcion',     label: 'Descripción',  field: 'descripcion', align: 'left' },
   { name: 'estado',          label: 'Estado',       field: 'estado',      align: 'center' },
-  { name: 'fecha_envio',     label: 'Enviada',      field: 'fecha_envio', align: 'center' },
+  { name: 'fecha_envio',     label: 'Enviada',      field: row => formatFechaCO(row.fecha_envio), align: 'center' },
   { name: 'acciones',        label: '',             field: 'id',          align: 'center' },
 ]
 

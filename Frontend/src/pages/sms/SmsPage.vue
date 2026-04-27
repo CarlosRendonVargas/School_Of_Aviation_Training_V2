@@ -86,7 +86,7 @@
                       {{ r.descripcion }}
                     </q-item-label>
                     <q-item-label caption class="font-mono text-grey-6 uppercase tracking-widest" :style="$q.screen.lt.md ? 'font-size:8px' : 'font-size:9px'">
-                       {{ r.tipo || 'HALLAZGO' }} · #{{ r.id }} · {{ r.fecha_evento?.slice(0, 10) }}
+                       {{ r.tipo || 'HALLAZGO' }} · #{{ r.id }} · {{ formatFechaCO(r.fecha_evento) }}
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side v-if="$q.screen.gt.xs">
@@ -138,7 +138,7 @@
                       <div class="riesgo-hex-indicator shadow-24" :style="`background:${bgRiesgo(props.row.nivel_riesgo)}; width:36px; height:36px; font-size:14px`" title="Nivel de Riesgo">
                         {{ props.row.nivel_riesgo }}
                       </div>
-                      <span class="font-mono text-grey-6" style="font-size:11px">{{ props.row.fecha_evento?.slice(0, 10) }}</span>
+                      <span class="font-mono text-grey-6" style="font-size:11px">{{ formatFechaCO(props.row.fecha_evento) }}</span>
                     </div>
 
                     <div class="text-white text-weight-bold q-mb-sm" style="line-height:1.3">
@@ -296,7 +296,7 @@ const columnasReportes = [
   { name: 'nivel_riesgo', label: 'RIESGO', field: 'nivel_riesgo', align: 'center' },
   { name: 'tipo', label: 'TIPO EVENTO', field: 'tipo', align: 'left' },
   { name: 'descripcion', label: 'HALLAZGO / OBSERVACIÓN TÉCNICA', field: 'descripcion', align: 'left' },
-  { name: 'fecha_evento', label: 'FECHA REG.', field: 'fecha_evento', align: 'center' },
+  { name: 'fecha_evento', label: 'FECHA REG.', field: row => formatFechaCO(row.fecha_evento), align: 'center' },
   { name: 'notificado_uaeac', label: 'UAEAC', field: 'notificado_uaeac', align: 'center' },
   { name: 'estado', label: 'ESTATUS', field: 'estado', align: 'center' }
 ]

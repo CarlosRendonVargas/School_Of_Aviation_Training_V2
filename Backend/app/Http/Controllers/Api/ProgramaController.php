@@ -15,6 +15,15 @@ class ProgramaController extends Controller
         return response()->json(['ok' => true, 'data' => $programas]);
     }
 
+    public function tipos(): JsonResponse
+    {
+        $base = ['PPL', 'CPL', 'ATPL', 'HABILITACION'];
+        $enDb = Programa::distinct()->pluck('tipo')->filter()->values()->toArray();
+        $todos = array_values(array_unique(array_merge($base, $enDb)));
+        sort($todos);
+        return response()->json(['ok' => true, 'data' => $todos]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -66,7 +75,6 @@ class ProgramaController extends Controller
     public function storeEtapa(Request $request, $programaId): JsonResponse
     {
         $data = $request->validate([
-            'numero' => 'required|integer',
             'nombre' => 'required|string',
             'horas_tierra' => 'nullable|numeric',
             'horas_vuelo' => 'nullable|numeric',
@@ -74,6 +82,7 @@ class ProgramaController extends Controller
         ]);
 
         $data['programa_id'] = $programaId;
+        $data['numero'] = (\App\Models\Etapa::where('programa_id', $programaId)->max('numero') ?? 0) + 1;
         $etapa = \App\Models\Etapa::create($data);
 
         return response()->json(['ok' => true, 'data' => $etapa]);
@@ -83,7 +92,6 @@ class ProgramaController extends Controller
     {
         $etapa = \App\Models\Etapa::findOrFail($id);
         $data = $request->validate([
-            'numero' => 'sometimes|integer',
             'nombre' => 'sometimes|string',
             'horas_tierra' => 'nullable|numeric',
             'horas_vuelo' => 'nullable|numeric',
