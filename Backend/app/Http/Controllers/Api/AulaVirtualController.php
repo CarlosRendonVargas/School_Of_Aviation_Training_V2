@@ -10,6 +10,7 @@ use App\Models\BancoPregunta;
 use App\Models\LeccionMateria;
 use App\Models\Estudiante;
 use App\Models\ReintentoAutorizado;
+use App\Models\Certificado;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -50,30 +51,59 @@ class AulaVirtualController extends Controller
                 $q->where('estudiante_id', $estudiante->id)->where('usado', false);
             }])
             ->get()
-            ->map(function($m) use ($estudiante) {
-                $mejorNota = $m->notas->max('nota');
-                $aprobado = $m->notas->where('aprobado', true)->count() > 0;
+            ->map(function($m) use ($estudiante, $usuario) {
+                $notaMinima = $m->nota_minima ?? 75;
+                $mejorNota  = $m->notas->max('nota');
+                // Recalculate dynamically so a changed nota_minima is always respected
+                $aprobado   = $m->notas->where('aprobado', true)->count() > 0
+                              || ($mejorNota !== null && $mejorNota >= $notaMinima);
                 
                 // Verificación manual por si el eager loading falla
                 $habilitadoManual = \App\Models\ReintentoAutorizado::where('estudiante_id', $estudiante->id)
                     ->where('materia_id', $m->id)
                     ->where('usado', false)
                     ->exists();
+
+                // Backfill: auto-create certificate if approved but no cert exists yet
+                if ($aprobado && $mejorNota !== null) {
+                    $certExiste = Certificado::where('estudiante_id', $estudiante->id)
+                        ->where('tipo', 'aprobacion_examen')
+                        ->where('descripcion', 'like', '%[M' . $m->id . ']%')
+                        ->exists();
+                    if (!$certExiste) {
+                        $anio   = now()->year;
+                        $ultimo = DB::table('certificados_emitidos')
+                            ->where('numero_certificado', 'like', "AE-{$anio}-%")
+                            ->count();
+                        $numero = sprintf('AE-%d-%04d', $anio, $ultimo + 1);
+                        Certificado::create([
+                            'numero_certificado' => $numero,
+                            'tipo'               => 'aprobacion_examen',
+                            'estudiante_id'      => $estudiante->id,
+                            'emitido_por'        => $usuario->id,
+                            'etapa_id'           => $m->etapa_id ?? null,
+                            'programa_id'        => $estudiante->programa_id ?? null,
+                            'fecha_emision'      => now()->toDateString(),
+                            'descripcion'        => $m->nombre . ' — Nota final: ' . $mejorNota . '% [M' . $m->id . ']',
+                        ]);
+                    }
+                }
                 
                 return [
-                    'id' => $m->id,
-                    'codigo' => $m->codigo,
-                    'nombre' => $m->nombre,
-                    'horas' => $m->horas,
-                    'etapa' => $m->etapa->nombre,
-                    'nota_max' => $mejorNota,
-                    'aprobado' => $aprobado,
-                    'intentos' => $m->notas->count(),
-                    'habilitado' => $habilitadoManual,
-                    'link_meet' => $m->link_meet,
+                    'id'               => $m->id,
+                    'codigo'           => $m->codigo,
+                    'nombre'           => $m->nombre,
+                    'horas'            => $m->horas,
+                    'etapa'            => $m->etapa->nombre,
+                    'nota_max'         => $mejorNota,
+                    'nota_minima'      => $m->nota_minima ?? 75,
+                    'aprobado'         => $aprobado,
+                    'intentos'         => $m->notas->count(),
+                    'habilitado'       => $habilitadoManual,
+                    'link_meet'        => $m->link_meet,
                     'sesion_viva_inicio' => $m->sesion_viva_inicio,
-                    'sesion_viva_fin' => $m->sesion_viva_fin,
-                    'has_docs' => !empty($m->documento_url)
+                    'sesion_viva_fin'  => $m->sesion_viva_fin,
+                    'has_docs'         => !empty($m->documento_url)
                 ];
             });
 
@@ -171,7 +201,7 @@ class AulaVirtualController extends Controller
     public function calificarQuizLeccion(Request $request, $id): JsonResponse
     {
         $request->validate(['respuestas' => 'nullable|array']);
-        $leccion = LeccionMateria::findOrFail($id);
+        $leccion = LeccionMateria::with('materia')->findOrFail($id);
         $estudiante = $request->user()->persona?->estudiante;
 
         if (!$estudiante) return response()->json(['ok' => false], 403);
@@ -216,7 +246,16 @@ class AulaVirtualController extends Controller
             ]);
         }
 
-        return response()->json(['ok' => true, 'resultado' => $notaInstancia]);
+        $notaMinima = $leccion->materia->nota_minima ?? 75;
+        $aprobado   = $notaFinal >= $notaMinima;
+
+        return response()->json([
+            'ok' => true,
+            'resultado' => array_merge($notaInstancia->toArray(), [
+                'aprobado' => $aprobado,
+                'nota'     => $notaFinal,
+            ])
+        ]);
     }
 
     /**
@@ -234,7 +273,15 @@ class AulaVirtualController extends Controller
                 ->where('materia_id', $id)
                 ->where('aprobado', true)
                 ->exists();
-            
+
+            // Also check against current nota_minima in case it was changed after the exam
+            if (!$yaAprobo) {
+                $mejorNotaActual = NotaAcademica::where('estudiante_id', $estudiante->id)
+                    ->where('materia_id', $id)
+                    ->max('nota');
+                $yaAprobo = $mejorNotaActual !== null && $mejorNotaActual >= ($materia->nota_minima ?? 75);
+            }
+
             if ($yaAprobo) {
                 return response()->json(['ok' => false, 'mensaje' => 'Ya has aprobado esta materia.'], 403);
             }
@@ -363,13 +410,42 @@ class AulaVirtualController extends Controller
                 ->where('usado', false)
                 ->update(['usado' => true]);
 
+            // Auto-generate certificate when student passes for the first time
+            $certificadoNumero = null;
+            if ($aprobado) {
+                $certExiste = Certificado::where('estudiante_id', $estudiante->id)
+                    ->where('tipo', 'aprobacion_examen')
+                    ->where('descripcion', 'like', '%[M' . $id . ']%')
+                    ->exists();
+
+                if (!$certExiste) {
+                    $anio   = now()->year;
+                    $ultimo = DB::table('certificados_emitidos')
+                        ->where('numero_certificado', 'like', "AE-{$anio}-%")
+                        ->count();
+                    $certificadoNumero = sprintf('AE-%d-%04d', $anio, $ultimo + 1);
+
+                    Certificado::create([
+                        'numero_certificado' => $certificadoNumero,
+                        'tipo'               => 'aprobacion_examen',
+                        'estudiante_id'      => $estudiante->id,
+                        'emitido_por'        => $request->user()->id,
+                        'etapa_id'           => $materia->etapa_id ?? null,
+                        'programa_id'        => $estudiante->programa_id ?? null,
+                        'fecha_emision'      => now()->toDateString(),
+                        'descripcion'        => $materia->nombre . ' — Nota final: ' . $notaFinalFinal . '% [M' . $id . ']',
+                    ]);
+                }
+            }
+
             return response()->json([
                 'ok' => true,
                 'resultado' => [
-                    'nota' => $notaFinalFinal,
-                    'aprobado' => $aprobado,
-                    'aciertos' => $aciertos,
-                    'total' => $totalPreguntas
+                    'nota'              => $notaFinalFinal,
+                    'aprobado'          => $aprobado,
+                    'aciertos'          => $aciertos,
+                    'total'             => $totalPreguntas,
+                    'certificado'       => $certificadoNumero,
                 ]
             ]);
         } catch (\Throwable $e) {

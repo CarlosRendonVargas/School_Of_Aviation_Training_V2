@@ -97,6 +97,42 @@ class MateriaController extends Controller
     /**
      * Elimina una pregunta.
      */
+    public function importarPreguntas(Request $request, $materiaId): JsonResponse
+    {
+        $request->validate([
+            'preguntas'                         => 'required|array|min:1',
+            'preguntas.*.pregunta'              => 'required|string',
+            'preguntas.*.opciones'              => 'required|array|min:2',
+            'preguntas.*.respuesta_correcta'    => 'required|string',
+            'preguntas.*.nivel_dificultad'      => 'nullable|integer|min:1|max:3',
+        ]);
+
+        Materia::findOrFail($materiaId);
+
+        $creadas = 0;
+        foreach ($request->preguntas as $p) {
+            BancoPregunta::create([
+                'materia_id'        => $materiaId,
+                'leccion_id'        => null,
+                'pregunta'          => $p['pregunta'],
+                'opciones'          => $p['opciones'],
+                'respuesta_correcta'=> $p['respuesta_correcta'],
+                'nivel_dificultad'  => $p['nivel_dificultad'] ?? 1,
+                'activo'            => true,
+            ]);
+            $creadas++;
+        }
+
+        return response()->json(['ok' => true, 'creadas' => $creadas, 'mensaje' => "{$creadas} preguntas importadas al banco del examen final."]);
+    }
+
+    public function showPregunta($materiaId, $id): JsonResponse
+    {
+        $pregunta = BancoPregunta::where('materia_id', $materiaId)->findOrFail($id);
+        $pregunta->makeVisible('respuesta_correcta');
+        return response()->json(['ok' => true, 'data' => $pregunta]);
+    }
+
     public function destroyPregunta($materiaId, $id): JsonResponse
     {
         $pregunta = BancoPregunta::where('materia_id', $materiaId)->findOrFail($id);

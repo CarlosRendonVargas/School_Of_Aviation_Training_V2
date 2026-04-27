@@ -974,9 +974,23 @@
                     </div>
                   </div>
                 </div>
-                <q-btn unelevated color="red-9" icon="add"
-                  :label="$q.screen.gt.xs ? 'Añadir Pregunta' : ''"
-                  @click="abrirNuevaPregunta" class="premium-btn" style="border-radius:10px" />
+                <div class="row q-gutter-sm">
+                  <q-btn outline color="grey-5" icon="download"
+                    :label="$q.screen.gt.xs ? 'Plantilla CSV' : ''"
+                    @click="descargarPlantilla" style="border-radius:10px; font-size:11px">
+                    <q-tooltip>Descargar plantilla para importar preguntas</q-tooltip>
+                  </q-btn>
+                  <q-btn outline color="amber-5" icon="upload_file"
+                    :label="$q.screen.gt.xs ? 'Importar CSV' : ''"
+                    style="border-radius:10px; font-size:11px"
+                    @click="$refs.inputCsv.click()">
+                    <q-tooltip>Importar preguntas desde archivo CSV</q-tooltip>
+                  </q-btn>
+                  <input ref="inputCsv" type="file" accept=".csv" style="display:none" @change="procesarArchivoCsv" />
+                  <q-btn unelevated color="red-9" icon="add"
+                    :label="$q.screen.gt.xs ? 'Añadir Pregunta' : ''"
+                    @click="abrirNuevaPregunta" class="premium-btn" style="border-radius:10px" />
+                </div>
               </div>
 
               <!-- Empty state -->
@@ -1215,6 +1229,69 @@
              <q-btn type="submit" color="red-10" label="Guardar Pregunta" class="full-width premium-btn q-py-md q-mt-md" />
           </q-form>
        </q-card>
+    </q-dialog>
+
+    <!-- ════ DIÁLOGO: PREVISUALIZAR IMPORTACIÓN CSV ════ -->
+    <q-dialog v-model="dialogImportar" backdrop-filter="blur(15px)" persistent>
+      <q-card class="premium-glass-card shadow-24 border-red-top rounded-20" style="width:min(780px, 95vw); max-height:90vh; display:flex; flex-direction:column;">
+        <div class="row items-center justify-between q-pa-xl border-bottom-border" style="flex-shrink:0">
+          <div class="row items-center" style="gap:12px">
+            <q-icon name="upload_file" color="amber-5" size="28px" />
+            <div>
+              <div class="text-white font-head text-weight-bolder" style="font-size:18px">Previsualización de Importación</div>
+              <div class="font-mono text-grey-6" style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase">
+                {{ preguntasImportadas.length }} pregunta(s) detectadas · Examen Final
+              </div>
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" v-close-popup color="grey-7" />
+        </div>
+
+        <div style="overflow-y:auto; flex:1; padding:20px 28px">
+          <div v-if="!preguntasImportadas.length" class="text-center q-pa-xl text-grey-6 font-mono" style="font-size:11px">
+            No se detectaron preguntas válidas en el archivo.
+          </div>
+          <div v-else class="q-gutter-y-sm">
+            <div v-for="(p, idx) in preguntasImportadas" :key="idx"
+              class="premium-glass-card q-pa-md border-red-low rounded-12"
+              :class="!p.respuesta_correcta ? 'border-negative' : ''">
+              <div class="row items-start no-wrap" style="gap:12px">
+                <div class="font-mono text-amber-5 text-weight-bolder" style="font-size:11px; flex-shrink:0; width:28px">
+                  {{ String(idx+1).padStart(2,'0') }}
+                </div>
+                <div class="col">
+                  <div class="text-white" style="font-size:12px; line-height:1.5; margin-bottom:8px">{{ p.pregunta }}</div>
+                  <div class="row q-gutter-xs">
+                    <q-badge v-for="(op, oi) in p.opciones" :key="oi"
+                      :color="op === p.respuesta_correcta ? 'teal-8' : 'grey-9'"
+                      :label="`${['A','B','C','D'][oi]}: ${op}`"
+                      class="font-mono" style="font-size:9px; padding:3px 8px" />
+                  </div>
+                  <div v-if="!p.respuesta_correcta" class="text-red-5 font-mono q-mt-xs" style="font-size:9px">
+                    ⚠ Sin respuesta correcta válida — verifica la columna RESPUESTA_CORRECTA
+                  </div>
+                </div>
+                <q-badge :color="p.nivel_dificultad === 3 ? 'red-9' : p.nivel_dificultad === 2 ? 'orange-8' : 'blue-8'"
+                  :label="['','FÁCIL','MEDIO','DIFÍCIL'][p.nivel_dificultad] || 'FÁCIL'"
+                  class="font-mono" style="font-size:8px; flex-shrink:0" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row justify-between items-center q-pa-xl border-top-border" style="flex-shrink:0; gap:12px">
+          <div class="font-mono text-grey-6" style="font-size:10px">
+            ✓ Verde = respuesta correcta &nbsp;|&nbsp; Rojo = fila con error
+          </div>
+          <div class="row q-gutter-sm">
+            <q-btn flat label="Cancelar" color="grey-6" v-close-popup />
+            <q-btn unelevated color="red-9" icon="upload" label="Importar al Examen Final"
+              class="premium-btn" :loading="guardandoImport"
+              :disable="!preguntasImportadas.length"
+              @click="confirmarImport" />
+          </div>
+        </div>
+      </q-card>
     </q-dialog>
 
     <q-dialog v-model="dialogVuelo" persistent backdrop-filter="blur(15px)">
@@ -1636,7 +1713,7 @@ const getEstadoColor = (e) => ({ 'activo': 'emerald', 'volando': 'blue-9', 'grad
 async function cargarDatos() {
   loadingProgramas.value = true; loadingEstudiantes.value = true; loadingVuelo.value = true; loadingPlanes.value = true
   try {
-    const [ps, es, vs, as, ins, pl, tp] = await Promise.all([
+    const [ps, es, vs, as, ins, pl, tp] = await Promise.allSettled([
       api.get('/programas'),
       api.get('/estudiantes', { params: { q: filtroBusqueda.value } }),
       api.get('/vuelos'),
@@ -1646,32 +1723,43 @@ async function cargarDatos() {
       api.get('/programas/tipos'),
     ])
 
-    tiposCatalogo.value  = tp.data.data || tiposCatalogo.value
-    tiposFiltrados.value = [...tiposCatalogo.value]
+    const ok = r => r.status === 'fulfilled' ? r.value : null
 
-    programas.value     = ps.data.data || ps.data || []
-    programasOptions.value = programas.value.map(p => ({ label: p.nombre, value: p.id }))
-    
-    materiasTodasOptions.value = []
-    programas.value.forEach(p => {
-       p.etapas?.forEach(et => {
+    const psD  = ok(ps);  const esD  = ok(es);  const vsD = ok(vs)
+    const asD  = ok(as);  const insD = ok(ins); const plD = ok(pl); const tpD = ok(tp)
+
+    if (tpD) { tiposCatalogo.value = tpD.data.data || tiposCatalogo.value; tiposFiltrados.value = [...tiposCatalogo.value] }
+
+    if (psD) {
+      programas.value = psD.data.data || psD.data || []
+      programasOptions.value = programas.value.map(p => ({ label: p.nombre, value: p.id }))
+      materiasTodasOptions.value = []
+      programas.value.forEach(p => {
+        p.etapas?.forEach(et => {
           et.materias?.forEach(m => {
-             materiasTodasOptions.value.push({ label: `${m.codigo} - ${m.nombre} (${p.codigo})`, value: m.id })
+            materiasTodasOptions.value.push({ label: `${m.codigo} - ${m.nombre} (${p.codigo})`, value: m.id })
           })
-       })
-    })
+        })
+      })
+    }
 
-    estudiantes.value   = es.data.data?.data || es.data.data || es.data || []
-    misionesVuelo.value = vs.data.data || vs.data || []
-    planesClase.value   = pl.data.data || pl.data || []
-
-    estudiantesOptions.value  = estudiantes.value.map(e => ({ label: `${e.persona?.nombres} ${e.persona?.apellidos}`, value: e.id }))
-    
-    const rawAeronaves    = as.data.data || as.data || []
-    aeronavesOptions.value = rawAeronaves.map(a => ({ label: `${a.matricula} · ${a.modelo}`, value: a.id }))
-    
-    const rawInstructores = ins.data.data || ins.data || []
-    instructoresOptions.value = rawInstructores.map(i => ({ label: `Cpt. ${i.persona?.nombres} ${i.persona?.apellidos}`, value: i.id }))
+    if (esD) {
+      estudiantes.value = esD.data.data?.data || esD.data.data || esD.data || []
+      estudiantesOptions.value = estudiantes.value.map(e => ({ label: `${e.persona?.nombres} ${e.persona?.apellidos}`, value: e.id }))
+    }
+    if (vsD) misionesVuelo.value = vsD.data.data || vsD.data || []
+    if (plD) planesClase.value   = plD.data.data || plD.data || []
+    if (asD) {
+      const rawAeronaves = asD.data.data || asD.data || []
+      aeronavesOptions.value = rawAeronaves.map(a => ({ label: `${a.matricula} · ${a.modelo}`, value: a.id }))
+    }
+    if (insD) {
+      const rawInstructores = insD.data.data || insD.data || []
+      instructoresOptions.value = rawInstructores.map(i => ({
+        label: `${i.persona?.nombres ?? ''} ${i.persona?.apellidos ?? ''}`.trim() || i.persona?.num_documento || `Instructor #${i.id}`,
+        value: i.id
+      }))
+    }
 
   } catch (e) {
     console.error("Error al cargar datos:", e)
@@ -1932,6 +2020,96 @@ async function guardarPregunta() {
   } catch { $q.notify({ color: 'negative', message: 'Error al guardar reactivo.' }) }
 }
 
+// ── Importar Preguntas desde CSV ──
+const dialogImportar      = ref(false)
+const preguntasImportadas = ref([])
+const importandoCsv       = ref(false)
+const guardandoImport     = ref(false)
+
+function descargarPlantilla() {
+  const cabecera = 'PREGUNTA,OPCION_A,OPCION_B,OPCION_C,OPCION_D,RESPUESTA_CORRECTA,NIVEL_DIFICULTAD'
+  const filas = [
+    '"¿Cuál es la velocidad de pérdida (Vs) del Cessna 172?","45 kt","55 kt","65 kt","35 kt","A","1"',
+    '"¿Qué significa la sigla RAC?","Reglamentos Aeronáuticos de Colombia","Registro Aéreo Civil","Radar de Control","Ruta Aérea Colombiana","A","1"',
+    '"¿Cuántos grados por segundo corresponde a un viraje estándar?","3°/seg","2°/seg","1°/seg","5°/seg","A","2"',
+    '"¿Cuál es el efecto del viento en cola sobre la distancia de aterrizaje?","La aumenta","La disminuye","No la afecta","La duplica","A","2"',
+    '"¿Qué instrumento indica la altitud de la aeronave?","Altímetro","Variómetro","Anemómetro","Horizonte artificial","A","1"',
+  ]
+  const csv = [cabecera, ...filas].join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `Plantilla_ExamenFinal_${matActiva.value?.codigo || 'Materia'}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function parsearCsv(texto) {
+  const lineas = texto.trim().split(/\r?\n/).filter(l => l.trim())
+  const filas  = []
+  for (const linea of lineas) {
+    const cols = []
+    let col = '', dentroComilla = false
+    for (let i = 0; i < linea.length; i++) {
+      const c = linea[i]
+      if (c === '"') { dentroComilla = !dentroComilla }
+      else if (c === ',' && !dentroComilla) { cols.push(col.trim()); col = '' }
+      else { col += c }
+    }
+    cols.push(col.trim())
+    filas.push(cols)
+  }
+  return filas
+}
+
+function procesarArchivoCsv(e) {
+  const archivo = e.target.files[0]
+  if (!archivo) return
+  importandoCsv.value = true
+  const reader = new FileReader()
+  reader.onload = ev => {
+    const filas = parsearCsv(ev.target.result)
+    const mapa  = { A: 0, B: 1, C: 2, D: 3 }
+    const preguntas = []
+    for (let i = 1; i < filas.length; i++) {
+      const [pregunta, a, b, c, d, resp, nivel] = filas[i]
+      if (!pregunta || !a) continue
+      const opciones = [a, b, c, d].filter(Boolean)
+      const idxResp  = mapa[(resp || '').toUpperCase().trim()]
+      preguntas.push({
+        pregunta:           pregunta,
+        opciones:           opciones,
+        respuesta_correcta: idxResp !== undefined ? opciones[idxResp] : '',
+        nivel_dificultad:   parseInt(nivel) || 1,
+        _respLetra:         (resp || '').toUpperCase().trim(),
+      })
+    }
+    preguntasImportadas.value = preguntas
+    importandoCsv.value = false
+    dialogImportar.value = true
+  }
+  reader.readAsText(archivo, 'UTF-8')
+}
+
+async function confirmarImport() {
+  const invalidas = preguntasImportadas.value.filter(p => !p.respuesta_correcta)
+  if (invalidas.length) {
+    $q.notify({ color: 'warning', message: `${invalidas.length} pregunta(s) sin respuesta correcta válida. Verifica la columna RESPUESTA_CORRECTA (A/B/C/D).` })
+    return
+  }
+  guardandoImport.value = true
+  try {
+    const payload = preguntasImportadas.value.map(({ _respLetra, ...p }) => p)
+    const { data } = await api.post(`/gestion-materias/${matActiva.value.id}/preguntas/importar`, { preguntas: payload })
+    $q.notify({ color: 'emerald', icon: 'upload', message: data.mensaje })
+    dialogImportar.value = false
+    cargarContenidoLms()
+  } catch (e) {
+    $q.notify({ color: 'negative', message: e.response?.data?.message ?? 'Error al importar.' })
+  } finally { guardandoImport.value = false }
+}
+
 // ── Guardar Vuelo ──
 async function guardarVuelo() {
   guardandoVuelo.value = true
@@ -1946,8 +2124,18 @@ async function guardarVuelo() {
 }
 
 // ── Gestión Planes de Clase ──
-function abrirNuevoPlanClase() {
+async function abrirNuevoPlanClase() {
   planForm.value = { id: null, instructor_id: null, materia_id: null, fecha: dayjs().format('YYYY-MM-DD'), duracion_min: 60, estado: 'planificada', objetivos: '', contenido: '', recursos: '' }
+  if (!instructoresOptions.value.length) {
+    try {
+      const { data } = await api.get('/instructores')
+      const lista = data.data || data || []
+      instructoresOptions.value = lista.map(i => ({
+        label: `${i.persona?.nombres ?? ''} ${i.persona?.apellidos ?? ''}`.trim() || `Instructor #${i.id}`,
+        value: i.id
+      }))
+    } catch { /* silencioso */ }
+  }
   dialogPlan.value = true
 }
 

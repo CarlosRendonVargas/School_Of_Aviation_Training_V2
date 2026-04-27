@@ -139,7 +139,7 @@
                 <q-input v-model="form.num_documento" label="NÚMERO DOCUMENTO *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']"/>
               </div>
               <div class="col-12 col-md-5">
-                <q-input v-model="form.fecha_nacimiento" type="date" label="FECHA NACIMIENTO" filled dark class="premium-input-login" stack-label/>
+                <q-input v-model="form.fecha_nacimiento" type="date" label="FECHA NACIMIENTO *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']"/>
               </div>
               <div class="col-12 col-md-6">
                 <q-input v-model="form.telefono" label="TELÉFONO" filled dark class="premium-input-login" stack-label/>
@@ -161,7 +161,7 @@
                 <q-input v-model="form.num_licencia" label="NÚMERO LICENCIA *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']"/>
               </div>
               <div class="col-12 col-md-4">
-                <q-select v-model="form.tipo_licencia" :options="['CPL','ATPL','CFI']" label="CATEGORÍA" filled dark class="premium-input-login" stack-label/>
+                <q-select v-model="form.tipo_licencia" :options="tiposLicencia" emit-value map-options label="CATEGORÍA *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']"/>
               </div>
               <div class="col-12 col-md-4">
                 <q-input v-model="form.venc_licencia" type="date" label="VENCIMIENTO *" filled dark class="premium-input-login" stack-label :rules="[v=>!!v||'Requerido']"/>
@@ -249,7 +249,9 @@ async function guardarNuevo() {
     resetForm()
     cargar()
   } catch (e) {
-    $q.notify({ color: 'negative', message: e.response?.data?.mensaje || 'Error al registrar.' })
+    const errors = e.response?.data?.errors
+    const firstError = errors ? Object.values(errors)[0]?.[0] : null
+    $q.notify({ color: 'negative', message: firstError || e.response?.data?.mensaje || 'Error al registrar.' })
   } finally { guardando.value = false }
 }
 
@@ -262,12 +264,8 @@ function resetForm() {
   }
 }
 
-const puedeCrear = ['admin', 'dir_ops'].includes(authStore.rol)
-const tiposLicencia = [
-  { label: 'CPL (Comercial)',     value: 'CPL' },
-  { label: 'ATPL (Transporte)',   value: 'ATPL' },
-  { label: 'CFI (Instructor)',    value: 'CFI' },
-]
+const puedeCrear  = ['admin', 'dir_ops'].includes(authStore.rol)
+const tiposLicencia = ref([])
 
 const licenciaOk    = (i) => i.venc_licencia ? dayjs(i.venc_licencia).isAfter(dayjs().add(30, 'day')) : true
 const formatearFecha = (f) => f ? dayjs(f).format('DD/MM/YYYY') : 'SIN FECHA'
@@ -284,8 +282,18 @@ async function cargar() {
   } finally { cargando.value = false }
 }
 
+async function cargarTiposLicencia() {
+  try {
+    const { data } = await api.get('/programas/tipos')
+    const lista = data.data || []
+    tiposLicencia.value = lista.map(t => ({ label: t, value: t }))
+  } catch {
+    tiposLicencia.value = ['PPL','CPL','ATPL','HABILITACION'].map(t => ({ label: t, value: t }))
+  }
+}
+
 watch([buscar, filtroLicencia, soloActivos], () => cargar())
-onMounted(cargar)
+onMounted(() => { cargar(); cargarTiposLicencia() })
 </script>
 
 <style lang="scss" scoped>

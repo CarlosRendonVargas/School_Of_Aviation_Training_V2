@@ -49,24 +49,52 @@ class InstructorController extends Controller
             'nombres'          => 'required|string|max:100',
             'apellidos'        => 'required|string|max:100',
             'tipo_documento'   => 'required|string|max:5',
-            'num_documento'    => 'required|string|max:20|unique:personas,num_documento',
-            'fecha_nacimiento' => 'required|date',
+            'num_documento'    => 'required|string|max:20',
+            'fecha_nacimiento' => 'nullable|date',
             'num_licencia'     => 'required|string|max:30',
-            'tipo_licencia'    => 'required|in:CPL,ATPL,CFI',
+            'tipo_licencia'    => 'nullable|string|max:30',
             'venc_licencia'    => 'required|date',
             'horas_totales_pic'=> 'nullable|numeric',
         ]);
 
+        // Block if num_documento already belongs to another person in the system
+        $personaExistente = \App\Models\Persona::with('usuario.rol')->where('num_documento', $data['num_documento'])->first();
+        if ($personaExistente) {
+            $nombre = trim($personaExistente->nombres . ' ' . $personaExistente->apellidos);
+            $rol    = $personaExistente->usuario?->rol?->nombre ?? 'usuario';
+
+            if (\App\Models\Instructor::where('persona_id', $personaExistente->id)->exists()) {
+                return response()->json([
+                    'ok'      => false,
+                    'mensaje' => "El documento ya pertenece al instructor {$nombre}. Si desea actualizarlo, use el botón de editar en la lista.",
+                ], 422);
+            }
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => "El documento ya está registrado para {$nombre} (rol: {$rol}). Si esta persona también es instructor, cambie su rol en Gestión de Usuarios y luego intente de nuevo.",
+            ], 422);
+        }
+
         return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
-            // 1. Usuario
+            // Generate unique email, append random suffix if needed to avoid duplicates
+            $baseEmail = strtolower(
+                preg_replace('/\s+/', '.', trim($data['nombres'])) . '.' .
+                preg_replace('/\s+/', '.', trim($data['apellidos'])) . '@aviation.com'
+            );
+            $email = $baseEmail;
+            $suffix = 1;
+            while (Usuario::where('email', $email)->exists()) {
+                $email = str_replace('@aviation.com', $suffix . '@aviation.com', $baseEmail);
+                $suffix++;
+            }
+
             $usuario = Usuario::create([
-                'email'    => strtolower($data['nombres'].'.'.$data['apellidos'].'@aviation.com'),
-                'password' => \Illuminate\Support\Facades\Hash::make($data['num_documento']),
-                'rol_id'   => \App\Models\Rol::where('nombre', 'instructor')->first()?->id ?? 2,
-                'activo'   => true
+                'email'         => $email,
+                'password_hash' => \Illuminate\Support\Facades\Hash::make($data['num_documento']),
+                'rol_id'        => \App\Models\Rol::where('nombre', 'instructor')->first()?->id ?? 2,
+                'activo'        => true,
             ]);
 
-            // 2. Persona
             $persona = \App\Models\Persona::create([
                 'usuario_id'       => $usuario->id,
                 'nombres'          => $data['nombres'],
@@ -76,7 +104,6 @@ class InstructorController extends Controller
                 'fecha_nacimiento' => $data['fecha_nacimiento'],
             ]);
 
-            // 3. Instructor
             $instructor = \App\Models\Instructor::create([
                 'persona_id'        => $persona->id,
                 'num_licencia'      => $data['num_licencia'],
@@ -86,7 +113,7 @@ class InstructorController extends Controller
                 'activo'            => true,
             ]);
 
-            return response()->json(['ok'   => true, 'data' => $instructor], 201);
+            return response()->json(['ok' => true, 'data' => $instructor], 201);
         });
     }
 
@@ -150,7 +177,7 @@ class InstructorController extends Controller
 
         $dataInstructor = $request->validate([
             'num_licencia'      => 'sometimes|string|max:50',
-            'tipo_licencia'     => 'sometimes|in:PPL,CPL,ATPL,CFI,CFII,MEI',
+            'tipo_licencia'     => 'sometimes|string|max:30',
             'venc_licencia'     => 'sometimes|nullable|date',
             'horas_totales_pic' => 'sometimes|numeric|min:0',
             'horas_instruccion' => 'sometimes|numeric|min:0',

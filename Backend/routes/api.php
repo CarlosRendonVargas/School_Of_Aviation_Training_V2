@@ -207,10 +207,12 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('gestion-materias')->group(function () {
         Route::put('{id}/lms',              [MateriaController::class, 'updateLms']);
-        Route::get('{id}/preguntas',        [MateriaController::class, 'preguntas']);
-        Route::post('{id}/preguntas',       [MateriaController::class, 'storePregunta']);
-        Route::put('{id}/preguntas/{preg}', [MateriaController::class, 'updatePregunta']);
-        Route::delete('{id}/preguntas/{preg}', [MateriaController::class, 'destroyPregunta']);
+        Route::get('{id}/preguntas',              [MateriaController::class, 'preguntas']);
+        Route::post('{id}/preguntas',             [MateriaController::class, 'storePregunta']);
+        Route::post('{id}/preguntas/importar',    [MateriaController::class, 'importarPreguntas']);
+        Route::get('{id}/preguntas/{preg}',       [MateriaController::class, 'showPregunta']);
+        Route::put('{id}/preguntas/{preg}',       [MateriaController::class, 'updatePregunta']);
+        Route::delete('{id}/preguntas/{preg}',    [MateriaController::class, 'destroyPregunta']);
 
         Route::get('{id}/lecciones',        [MateriaController::class, 'lecciones']);
         Route::post('{id}/lecciones',       [MateriaController::class, 'storeLeccion']);

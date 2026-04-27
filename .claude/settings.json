@@ -4,7 +4,8 @@
       "Bash(git commit -m ' *)",
       "Bash(npx vue-tsc *)",
       "Bash(node_modules/.bin/quasar build *)",
-      "Bash(php -r \"echo realpath\\('c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/storage'\\) ?: 'NO SYMLINK';\")"
+      "Bash(php -r \"echo realpath\\('c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/storage'\\) ?: 'NO SYMLINK';\")",
+      "Read(//c/c/wamp64/www/School_Of_Aviation_Training_V2/Backend/storage/logs/**)"
     ],
     "additionalDirectories": [
       "c:\\wamp64\\www\\School_Of_Aviation_Training_V2\\Backend\\storage\\app\\private\\public\\fotos"

@@ -42,39 +42,90 @@
       </q-card>
     </div>
 
-    <!-- ════ LISTA DE MATERIAS (HANGAR DE ESTUDIO) ════ -->
-    <div class="row q-col-gutter-xl" v-if="!materiaActiva && !cargandoMaterias && !errorMaterias">
-      <div v-for="m in materias" :key="m.id" class="col-12 col-md-4 col-lg-3 animate-slide-up">
-        <q-card class="premium-glass-card hover-row full-height flex column overflow-hidden shadow-24 border-red-low">
-          <div class="status-gradient-line" :class="m.aprobado ? 'bg-emerald' : 'bg-red-9'"></div>
-          
-          <q-card-section class="q-pa-xl">
-            <div class="row items-center justify-between q-mb-lg">
-                <q-badge outline color="red-9" class="font-mono text-weight-bold" :label="m.codigo" />
-                <q-chip v-if="m.aprobado" color="emerald" text-color="white" icon="verified" size="xs" dense class="shadow-24">APROBADO</q-chip>
-                <q-chip v-else-if="m.habilitado" color="blue-9" text-color="white" icon="check_circle" size="xs" dense class="shadow-24">HABILITADO</q-chip>
-                <q-chip v-else color="red-9" text-color="white" icon="pending_actions" size="xs" dense class="shadow-24">EN CURSO</q-chip>
+    <!-- ════ LISTA DE MATERIAS ════ -->
+    <div class="row q-col-gutter-lg" v-if="!materiaActiva && !cargandoMaterias && !errorMaterias">
+      <div v-for="(m, idx) in materias" :key="m.id"
+           class="col-12 col-sm-6 col-lg-4 col-xl-3 animate-slide-up"
+           :style="`animation-delay:${idx * 0.06}s`">
+
+        <q-card class="modulo-card flex column full-height overflow-hidden shadow-24"
+                :class="m.aprobado ? 'modulo-aprobado' : m.habilitado ? 'modulo-habilitado' : (m.intentos > 0 && !m.aprobado) ? 'modulo-reprobado' : 'modulo-curso'">
+
+          <!-- Barra de estado superior -->
+          <div class="modulo-top-bar" :class="m.aprobado ? 'bar-aprobado' : m.habilitado ? 'bar-habilitado' : (m.intentos > 0 && !m.aprobado) ? 'bar-reprobado' : 'bar-curso'" />
+
+          <!-- Cabecera -->
+          <div class="q-pa-lg q-pb-sm">
+            <div class="row items-center justify-between no-wrap q-mb-md" style="gap:8px">
+              <span class="modulo-codigo font-mono">{{ m.codigo }}</span>
+              <!-- Chip de estado -->
+              <div class="modulo-estado-chip row items-center no-wrap"
+                   :class="m.aprobado ? 'chip-aprobado' : m.habilitado ? 'chip-habilitado' : (m.intentos > 0 && !m.aprobado) ? 'chip-reprobado' : 'chip-curso'">
+                <q-icon :name="m.aprobado ? 'verified' : m.habilitado ? 'lock_open' : (m.intentos > 0 && !m.aprobado) ? 'cancel' : 'pending_actions'"
+                        size="13px" class="q-mr-xs" />
+                <span>{{ m.aprobado ? 'APROBADO' : m.habilitado ? 'HABILITADO' : (m.intentos > 0 && !m.aprobado) ? 'REPROBADO' : 'EN CURSO' }}</span>
+              </div>
             </div>
-            <div class="text-h6 text-white text-weight-bolder font-head q-mb-sm line-height-1">{{ m.nombre }}</div>
-            <div class="text-caption text-grey-6 font-mono uppercase tracking-widest" style="font-size:9px">{{ m.etapa || 'TEÓRICA' }}</div>
-          </q-card-section>
 
-          <q-card-section class="col q-px-xl">
-             <div class="row q-col-gutter-lg text-center shadow-inner q-pa-md rounded-12 bg-black-20">
-                 <div class="col-6">
-                    <div class="text-grey-7 font-mono uppercase q-mb-xs" style="font-size:9px">PLAN (H)</div>
-                    <div class="text-h5 text-grey-3 font-mono text-weight-bolder">{{ m.horas }}</div>
-                 </div>
-                 <div class="col-6">
-                    <div class="text-grey-7 font-mono uppercase q-mb-xs" style="font-size:9px">SCORE</div>
-                    <div class="text-h5 font-mono text-weight-bolder" :class="m.nota_max >= 75 ? 'text-emerald' : 'text-red-9'">{{ m.nota_max || '0' }}%</div>
-                 </div>
-             </div>
-          </q-card-section>
+            <div class="modulo-nombre q-mb-xs">{{ m.nombre }}</div>
+            <div class="modulo-etapa font-mono">{{ m.etapa }}</div>
+          </div>
 
-          <q-card-actions class="q-pa-xl">
-            <q-btn unelevated color="red-9" label="Entrar a Módulo" class="full-width premium-btn" icon-right="chevron_right" @click="entrarAula(m)" />
-          </q-card-actions>
+          <!-- Score principal -->
+          <div class="q-px-lg q-py-sm col">
+            <div class="score-block q-pa-md rounded-12">
+              <div class="row items-end justify-between q-mb-sm">
+                <div>
+                  <div class="score-etiqueta">PUNTUACIÓN</div>
+                  <div class="score-numero" :class="m.aprobado ? 'score-verde' : (m.nota_max >= m.nota_minima) ? 'score-verde' : m.nota_max > 0 ? 'score-rojo' : 'score-vacio'">
+                    {{ m.nota_max ? Number(m.nota_max).toFixed(0) + '%' : '—' }}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="score-etiqueta">PLAN</div>
+                  <div class="score-horas">{{ m.horas }}<span class="score-horas-u">h</span></div>
+                </div>
+              </div>
+
+              <!-- Barra de progreso -->
+              <div class="progress-track">
+                <div class="progress-fill"
+                     :class="m.aprobado ? 'fill-verde' : m.nota_max >= m.nota_minima ? 'fill-verde' : 'fill-rojo'"
+                     :style="`width:${Math.min(Number(m.nota_max) || 0, 100)}%`" />
+                <!-- Línea de nota mínima -->
+                <div class="threshold-marker" :style="`left:${m.nota_minima ?? 75}%`">
+                  <div class="threshold-line" />
+                  <div class="threshold-label">{{ m.nota_minima ?? 75 }}%</div>
+                </div>
+              </div>
+
+              <!-- Intentos + habilitado -->
+              <div class="row items-center justify-between q-mt-sm">
+                <span class="intentos-text">
+                  {{ m.intentos > 0 ? `${m.intentos} intento${m.intentos > 1 ? 's' : ''}` : 'Sin intentos' }}
+                </span>
+                <span v-if="m.habilitado && !m.aprobado" class="reintento-badge">
+                  <q-icon name="lock_open" size="10px" class="q-mr-xs" />REINTENTO OK
+                </span>
+                <span v-else-if="m.aprobado" class="aprobado-badge">
+                  <q-icon name="check_circle" size="10px" class="q-mr-xs" />COMPETENTE
+                </span>
+                <span v-else-if="m.intentos > 0 && !m.aprobado" class="reprobado-badge">
+                  <q-icon name="warning" size="10px" class="q-mr-xs" />SOLICITAR REINTENTO
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón acción -->
+          <div class="q-pa-lg q-pt-sm">
+            <q-btn unelevated
+                   :color="m.aprobado ? 'teal-8' : 'red-9'"
+                   class="full-width premium-btn"
+                   icon-right="chevron_right"
+                   :label="m.aprobado ? 'Revisar Módulo' : 'Entrar al Módulo'"
+                   @click="entrarAula(m)" />
+          </div>
         </q-card>
       </div>
     </div>
@@ -545,7 +596,9 @@ const finalizarExamen = async () => {
             fraude_intentos: fraudWarnings.value
         })
         const res = data.resultado; dialogExamen.value = false
-        $q.dialog({ title: res.aprobado ? '¡ÉXITO EN CERTIFICACIÓN!' : 'RESULTADO INSUFICIENTE', message: `Calificación final: ${res.nota.toFixed(0)}%. ${res.aprobado ? 'Capacidad teórica demostrada, excelente trabajo.' : 'Revisar material de estudio y reintentar.'}`, color: res.aprobado ? 'emerald' : 'red-9', ok: 'Confirmar' }).onOk(cerrarTodo)
+        const notaNum = Number(res.nota ?? 0)
+        const certMsg = res.certificado ? `\n\nCertificado emitido: ${res.certificado}` : ''
+        $q.dialog({ title: res.aprobado ? '¡ÉXITO EN CERTIFICACIÓN!' : 'RESULTADO INSUFICIENTE', message: `Calificación final: ${notaNum.toFixed(0)}%. ${res.aprobado ? 'Capacidad teórica demostrada, excelente trabajo.' + certMsg : 'Revisar material de estudio y reintentar.'}`, color: res.aprobado ? 'emerald' : 'red-9', ok: 'Confirmar' }).onOk(cerrarTodo)
     } finally { 
         enviandoExamen.value = false
         cleanupAntiFraude()
@@ -919,5 +972,107 @@ const formatFecha = (f) => {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+// ═════════ TARJETAS DE MÓDULO ═════════
+.modulo-card {
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  &:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important; }
+}
+.modulo-aprobado   { border-color: rgba(16,185,129,0.25) !important; &:hover { border-color: rgba(16,185,129,0.5) !important; } }
+.modulo-habilitado { border-color: rgba(59,130,246,0.25) !important; &:hover { border-color: rgba(59,130,246,0.5) !important; } }
+.modulo-reprobado  { border-color: rgba(220,38,38,0.45) !important;  &:hover { border-color: rgba(220,38,38,0.75) !important; } }
+.modulo-curso      { border-color: rgba(161,11,19,0.2) !important;   &:hover { border-color: rgba(161,11,19,0.45) !important; } }
+
+.modulo-top-bar { height: 4px; width: 100%; flex-shrink: 0; }
+.bar-aprobado  { background: linear-gradient(90deg, #10b981, #34d399); }
+.bar-habilitado{ background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.bar-reprobado { background: linear-gradient(90deg, #7f1d1d, #dc2626); }
+.bar-curso     { background: linear-gradient(90deg, #a10b13, #ef4444); }
+
+.modulo-codigo {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: #ef4444; font-weight: 700; background: rgba(161,11,19,0.15);
+  border: 1px solid rgba(161,11,19,0.3); padding: 3px 10px; border-radius: 6px;
+}
+.modulo-estado-chip {
+  font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.chip-aprobado  { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.chip-habilitado{ background: rgba(59,130,246,0.18); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.chip-reprobado { background: rgba(220,38,38,0.22);  color: #fca5a5; border: 1px solid rgba(220,38,38,0.45); }
+.chip-curso     { background: rgba(161,11,19,0.18); color: #f87171; border: 1px solid rgba(161,11,19,0.3); }
+
+.modulo-nombre {
+  font-size: clamp(14px, 2.2vw, 17px);
+  font-weight: 700; color: #fff; line-height: 1.3;
+  font-family: var(--font-head, inherit);
+}
+.modulo-etapa {
+  font-size: 9px; color: #6b7280; letter-spacing: 1px; text-transform: uppercase;
+  line-height: 1.4; margin-top: 4px;
+}
+
+// ── Score block ──
+.score-block {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.score-etiqueta { font-size: 8px; color: #6b7280; letter-spacing: 2px; text-transform: uppercase; font-family: monospace; margin-bottom: 2px; }
+.score-numero {
+  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 800; line-height: 1; font-family: monospace;
+}
+.score-verde { color: #10b981; text-shadow: 0 0 12px rgba(16,185,129,0.4); }
+.score-rojo  { color: #ef4444; text-shadow: 0 0 12px rgba(239,68,68,0.35); }
+.score-vacio { color: #4b5563; }
+.score-horas { font-size: 22px; font-weight: 700; color: #d1d5db; font-family: monospace; line-height: 1; }
+.score-horas-u { font-size: 12px; color: #9ca3af; margin-left: 2px; }
+
+// ── Barra de progreso ──
+.progress-track {
+  position: relative; height: 8px; background: rgba(255,255,255,0.07);
+  border-radius: 99px; overflow: visible; margin: 6px 0 14px;
+}
+.progress-fill {
+  height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(0.23,1,0.32,1);
+  min-width: 3px;
+}
+.fill-verde { background: linear-gradient(90deg, #059669, #10b981); box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+.fill-rojo  { background: linear-gradient(90deg, #991b1b, #ef4444); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+
+.threshold-marker {
+  position: absolute; top: -4px; transform: translateX(-50%);
+}
+.threshold-line {
+  width: 2px; height: 16px; background: rgba(251,191,36,0.7);
+  border-radius: 2px; margin: 0 auto;
+}
+.threshold-label {
+  font-size: 8px; color: #fbbf24; font-family: monospace; font-weight: 700;
+  text-align: center; margin-top: 2px; white-space: nowrap;
+  transform: translateX(-40%); display: block;
+}
+
+// ── Badges inferiores ──
+.intentos-text { font-size: 9px; color: #6b7280; font-family: monospace; letter-spacing: 1px; text-transform: uppercase; }
+.reintento-badge {
+  font-size: 8px; font-weight: 700; color: #60a5fa; letter-spacing: 1px;
+  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
+  padding: 2px 8px; border-radius: 10px; display: flex; align-items: center;
+}
+.aprobado-badge {
+  font-size: 8px; font-weight: 700; color: #34d399; letter-spacing: 1px;
+  background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25);
+  padding: 2px 8px; border-radius: 10px; display: flex; align-items: center;
+}
+.reprobado-badge {
+  font-size: 8px; font-weight: 700; color: #fca5a5; letter-spacing: 1px;
+  background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.35);
+  padding: 2px 8px; border-radius: 10px; display: flex; align-items: center;
 }
 </style>
