@@ -57,7 +57,7 @@ class AuthController extends Controller
             'usuario' => [
                 'id'             => $usuario->id,
                 'email'          => $usuario->email,
-                'nombre_completo'=> $usuario->nombre_completo,
+                'nombre_completo' => $usuario->nombre_completo,
                 'rol'            => $usuario->rol?->nombre,
                 'foto_url'       => $usuario->persona?->foto_url,
             ],
@@ -99,8 +99,8 @@ class AuthController extends Controller
                     'ciudad'        => $usuario->persona->ciudad,
                 ] : null,
                 'permisos'        => $usuario->rol?->permisos()
-                                        ->where('activo', true)
-                                        ->get(['modulo', 'accion']),
+                    ->where('activo', true)
+                    ->get(['modulo', 'accion']),
             ],
         ]);
     }
@@ -146,8 +146,8 @@ class AuthController extends Controller
                     'ciudad'        => $usuario->persona->ciudad,
                 ] : null,
                 'permisos'        => $usuario->rol?->permisos()
-                                        ->where('activo', true)
-                                        ->get(['modulo', 'accion']),
+                    ->where('activo', true)
+                    ->get(['modulo', 'accion']),
             ],
         ]);
     }
@@ -170,23 +170,26 @@ class AuthController extends Controller
                 'apellidos'       => 'Nombre',
                 'tipo_documento'  => 'CC',
                 'num_documento'   => 'USR-' . $usuario->id,
-                'fecha_nacimiento'=> '1990-01-01',
+                'fecha_nacimiento' => '1990-01-01',
             ]);
             $usuario->setRelation('persona', $persona);
         }
 
-        // Eliminar foto anterior si existe
+        // 1. Eliminar foto anterior (Guardamos solo el path en la BD)
         if ($usuario->persona->foto_url) {
-            $oldRelPath = str_replace(Storage::disk('public')->url(''), '', $usuario->persona->foto_url);
-            Storage::disk('public')->delete($oldRelPath);
+            Storage::disk('public')->delete($usuario->persona->getRawOriginal('foto_url'));
         }
 
+        // 2. Guardar el archivo y obtener solo el path relativo
         $path = $request->file('foto')->store('fotos', 'public');
-        $url  = Storage::disk('public')->url($path);
 
-        $usuario->persona->update(['foto_url' => $url]);
+        // 3. Actualizar la base de datos con el path
+        $usuario->persona->update(['foto_url' => $path]);
 
-        return response()->json(['ok' => true, 'foto_url' => $url]);
+        return response()->json([
+            'ok' => true,
+            'foto_url' => $usuario->persona->foto_url // El Accessor generará la URL automáticamente
+        ]);
     }
 
     /**
