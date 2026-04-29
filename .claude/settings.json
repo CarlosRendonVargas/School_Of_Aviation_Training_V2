@@ -5,7 +5,17 @@
       "Bash(npx vue-tsc *)",
       "Bash(node_modules/.bin/quasar build *)",
       "Bash(php -r \"echo realpath\\('c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/storage'\\) ?: 'NO SYMLINK';\")",
-      "Read(//c/c/wamp64/www/School_Of_Aviation_Training_V2/Backend/storage/logs/**)"
+      "Read(//c/c/wamp64/www/School_Of_Aviation_Training_V2/Backend/storage/logs/**)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('PHP req:', d.get\\('require',{}\\).get\\('php','?'\\)\\); print\\('Laravel:', d.get\\('require',{}\\).get\\('laravel/framework','?'\\)\\)\")",
+      "Bash(npx quasar *)",
+      "Bash(cp -r c:/wamp64/www/School_Of_Aviation_Training_V2/Frontend/dist/spa/assets c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/assets)",
+      "Bash(cp c:/wamp64/www/School_Of_Aviation_Training_V2/Frontend/dist/spa/index.html c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/index.html)",
+      "Bash(cp -r c:/wamp64/www/School_Of_Aviation_Training_V2/Frontend/dist/spa/icons c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/icons)",
+      "Bash(cp c:/wamp64/www/School_Of_Aviation_Training_V2/Frontend/dist/spa/favicon.ico c:/wamp64/www/School_Of_Aviation_Training_V2/Backend/public/favicon.ico)",
+      "Bash(powershell -Command \"Compress-Archive -Path 'Backend\\\\*' -DestinationPath 'Backend_deploy.zip' -Force\")",
+      "Bash(powershell -Command 'Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead\\('\\\\''c:/wamp64/www/School_Of_Aviation_Training_V2/Backend_deploy.zip'\\\\''\\); $zip.Entries.Count; $zip.Dispose\\(\\)')",
+      "Bash(powershell -Command \"try { [System.IO.File]::OpenWrite\\('c:/wamp64/www/School_Of_Aviation_Training_V2/Backend_deploy.zip'\\).Close\\(\\); echo 'FREE' } catch { echo 'LOCKED' }\")",
+      "Read(//c/Users/CARLOS_RENDON_VARGAS/AppData/Local/Temp/claude/c--wamp64-www-School-Of-Aviation-Training-V2/7dd5855d-c53a-45c8-8063-d524c30a7a08/tasks/**)"
     ],
     "additionalDirectories": [
       "c:\\wamp64\\www\\School_Of_Aviation_Training_V2\\Backend\\storage\\app\\private\\public\\fotos"
